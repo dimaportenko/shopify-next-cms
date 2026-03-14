@@ -4,6 +4,8 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "dev:docs": "turbo run dev --filter=docs",
+    "dev:web": "turbo run dev --filter=shopify-next-cms",
     "lint": "turbo run lint"
   },
   "devDependencies": {
