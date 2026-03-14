@@ -1,0 +1,7 @@
+{
+  "commands": {
+    "docs:dev": "turbo run dev --filter=docs",
+    "app:dev": "turbo run dev --filter=shopify-next-cms",
+    "dev": "turbo dev"
+  }
+}
