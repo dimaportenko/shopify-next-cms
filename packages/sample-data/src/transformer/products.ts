@@ -1,6 +1,7 @@
 import type {
   MagentoSimpleProduct,
   MagentoConfigurableProduct,
+  MagentoCategory,
   ShopifyProductInput,
   ShopifyVariantInput,
   ShopifyImageInput,
@@ -373,34 +374,86 @@ export function transformAllProducts(
   return products;
 }
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/**
+ * Build a lookup from category leaf name → collection handle using category hierarchy.
+ * E.g. category name "Bags" with path "Gear" → handle "gear-bags"
+ */
+function buildCategoryNameToHandle(categories: MagentoCategory[]): Map<string, string> {
+  const nameToHandle = new Map<string, string>();
+  for (const cat of categories) {
+    const pathParts = cat.path ? cat.path.split("/").filter(Boolean) : [];
+    const title = [...pathParts, cat.name].join(" - ");
+    nameToHandle.set(cat.name, slugify(title));
+  }
+  return nameToHandle;
+}
+
+/**
+ * Convert a category path from product data into a collection handle.
+ * Paths like "Default Category/Men/Tops/Jackets" → strip "Default Category/",
+ * then build handle from remaining segments joined with " - ".
+ */
+function categoryPathToHandle(categoryPath: string): string {
+  const cleaned = categoryPath.replace(/^Default Category\/?/, "").trim();
+  if (!cleaned) return "";
+  const parts = cleaned.split("/").map((p) => p.trim()).filter(Boolean);
+  return slugify(parts.join(" - "));
+}
+
+/**
+ * Build a map of SKU → collection handles for product-to-collection assignment.
+ */
 export function buildProductCollectionMap(
   simple: MagentoSimpleProduct[],
   configurable: MagentoConfigurableProduct[],
+  categories: MagentoCategory[],
 ): Map<string, string[]> {
-  // SKU → category names
+  const nameToHandle = buildCategoryNameToHandle(categories);
   const map = new Map<string, string[]>();
 
   for (const p of simple) {
     if (p.category) {
-      map.set(
-        p.sku,
-        p.category
+      let handles: string[];
+      if (p.category.includes("/")) {
+        // Full paths (from ConfigurableSampleData child variants)
+        handles = p.category
           .split(",")
+          .map((c) => categoryPathToHandle(c))
+          .filter(Boolean);
+      } else {
+        // Newline-separated leaf names (from CatalogSampleData)
+        handles = p.category
+          .split(/[\n,]/)
           .map((c) => c.trim())
-          .filter(Boolean),
-      );
+          .filter(Boolean)
+          .map((name) => nameToHandle.get(name) ?? slugify(name))
+          .filter(Boolean);
+      }
+      if (handles.length > 0) map.set(p.sku, handles);
     }
   }
 
   for (const p of configurable) {
     if (p.categories) {
-      map.set(
-        p.sku,
-        p.categories
-          .split(",")
-          .map((c) => c.trim())
-          .filter(Boolean),
-      );
+      // Configurable product categories are comma-separated full paths
+      const handles = p.categories
+        .split(",")
+        .map((c) => categoryPathToHandle(c))
+        .filter(Boolean);
+      if (handles.length === 0) continue;
+
+      // Use first child variant SKU as key (matches productIdMap in importer)
+      // because the parent SKU (e.g. MH01) is not stored in productIdMap
+      const variations = parseConfigurableVariations(p.configurable_variations);
+      const keySku = variations[0]?.sku ?? p.sku;
+      map.set(keySku, handles);
     }
   }
 

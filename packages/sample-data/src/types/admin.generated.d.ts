@@ -29,6 +29,19 @@ export type CollectionDeleteMutationVariables = AdminTypes.Exact<{
 
 export type CollectionDeleteMutation = { collectionDelete?: AdminTypes.Maybe<Pick<AdminTypes.CollectionDeletePayload, 'deletedCollectionId'>> };
 
+export type PublicationsQueryVariables = AdminTypes.Exact<{ [key: string]: never; }>;
+
+
+export type PublicationsQuery = { publications: { edges: Array<{ node: Pick<AdminTypes.Publication, 'id' | 'name'> }> } };
+
+export type PublishablePublishMutationVariables = AdminTypes.Exact<{
+  id: AdminTypes.Scalars['ID']['input'];
+  input: Array<AdminTypes.PublicationInput> | AdminTypes.PublicationInput;
+}>;
+
+
+export type PublishablePublishMutation = { publishablePublish?: AdminTypes.Maybe<{ userErrors: Array<Pick<AdminTypes.UserError, 'field' | 'message'>> }> };
+
 export type CollectionAddProductsMutationVariables = AdminTypes.Exact<{
   id: AdminTypes.Scalars['ID']['input'];
   productIds: Array<AdminTypes.Scalars['ID']['input']> | AdminTypes.Scalars['ID']['input'];
@@ -67,19 +80,6 @@ export type ProductDeleteMutationVariables = AdminTypes.Exact<{
 
 export type ProductDeleteMutation = { productDelete?: AdminTypes.Maybe<Pick<AdminTypes.ProductDeletePayload, 'deletedProductId'>> };
 
-export type PublicationsQueryVariables = AdminTypes.Exact<{ [key: string]: never; }>;
-
-
-export type PublicationsQuery = { publications: { edges: Array<{ node: Pick<AdminTypes.Publication, 'id' | 'name'> }> } };
-
-export type PublishablePublishMutationVariables = AdminTypes.Exact<{
-  id: AdminTypes.Scalars['ID']['input'];
-  input: Array<AdminTypes.PublicationInput> | AdminTypes.PublicationInput;
-}>;
-
-
-export type PublishablePublishMutation = { publishablePublish?: AdminTypes.Maybe<{ userErrors: Array<Pick<AdminTypes.UserError, 'field' | 'message'>> }> };
-
 export type StoreCountsQueryVariables = AdminTypes.Exact<{ [key: string]: never; }>;
 
 
@@ -88,19 +88,19 @@ export type StoreCountsQuery = { productsCount?: AdminTypes.Maybe<Pick<AdminType
 interface GeneratedQueryTypes {
   "#graphql\n  query CollectionByHandle($handle: String!) {\n    collectionByHandle(handle: $handle) {\n      id\n      handle\n      title\n    }\n  }\n": {return: CollectionByHandleQuery, variables: CollectionByHandleQueryVariables},
   "#graphql\n  query CollectionsList {\n    collections(first: 50) {\n      edges {\n        node {\n          id\n          title\n        }\n      }\n      pageInfo {\n        hasNextPage\n      }\n    }\n  }\n": {return: CollectionsListQuery, variables: CollectionsListQueryVariables},
+  "#graphql\n  query Publications {\n    publications(first: 20) {\n      edges {\n        node {\n          id\n          name\n        }\n      }\n    }\n  }\n": {return: PublicationsQuery, variables: PublicationsQueryVariables},
   "#graphql\n  query ProductBySku($query: String!) {\n    products(first: 1, query: $query) {\n      edges {\n        node {\n          id\n          title\n          handle\n        }\n      }\n    }\n  }\n": {return: ProductBySkuQuery, variables: ProductBySkuQueryVariables},
   "#graphql\n  query ProductsList {\n    products(first: 50) {\n      edges {\n        node {\n          id\n          title\n        }\n      }\n      pageInfo {\n        hasNextPage\n      }\n    }\n  }\n": {return: ProductsListQuery, variables: ProductsListQueryVariables},
-  "#graphql\n  query Publications {\n    publications(first: 20) {\n      edges {\n        node {\n          id\n          name\n        }\n      }\n    }\n  }\n": {return: PublicationsQuery, variables: PublicationsQueryVariables},
   "#graphql\n  query StoreCounts {\n    productsCount {\n      count\n    }\n    collectionsCount {\n      count\n    }\n  }\n": {return: StoreCountsQuery, variables: StoreCountsQueryVariables},
 }
 
 interface GeneratedMutationTypes {
   "#graphql\n  mutation CollectionCreate($input: CollectionInput!) {\n    collectionCreate(input: $input) {\n      collection {\n        id\n        handle\n        title\n      }\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: CollectionCreateMutation, variables: CollectionCreateMutationVariables},
   "#graphql\n  mutation CollectionDelete($input: CollectionDeleteInput!) {\n    collectionDelete(input: $input) {\n      deletedCollectionId\n    }\n  }\n": {return: CollectionDeleteMutation, variables: CollectionDeleteMutationVariables},
+  "#graphql\n  mutation PublishablePublish($id: ID!, $input: [PublicationInput!]!) {\n    publishablePublish(id: $id, input: $input) {\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: PublishablePublishMutation, variables: PublishablePublishMutationVariables},
   "#graphql\n  mutation CollectionAddProducts($id: ID!, $productIds: [ID!]!) {\n    collectionAddProducts(id: $id, productIds: $productIds) {\n      collection {\n        id\n      }\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: CollectionAddProductsMutation, variables: CollectionAddProductsMutationVariables},
   "#graphql\n  mutation ProductSet($input: ProductSetInput!, $synchronous: Boolean!) {\n    productSet(input: $input, synchronous: $synchronous) {\n      product {\n        id\n        title\n        handle\n        variants(first: 100) {\n          edges {\n            node {\n              id\n              sku\n            }\n          }\n        }\n      }\n      userErrors {\n        field\n        message\n        code\n      }\n    }\n  }\n": {return: ProductSetMutation, variables: ProductSetMutationVariables},
   "#graphql\n  mutation ProductDelete($input: ProductDeleteInput!) {\n    productDelete(input: $input) {\n      deletedProductId\n    }\n  }\n": {return: ProductDeleteMutation, variables: ProductDeleteMutationVariables},
-  "#graphql\n  mutation PublishablePublish($id: ID!, $input: [PublicationInput!]!) {\n    publishablePublish(id: $id, input: $input) {\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: PublishablePublishMutation, variables: PublishablePublishMutationVariables},
 }
 declare module '@shopify/admin-api-client' {
   type InputMaybe<T> = AdminTypes.InputMaybe<T>;

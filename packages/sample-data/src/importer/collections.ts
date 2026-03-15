@@ -1,7 +1,7 @@
 import type { ShopifyCollectionInput } from "../types.js";
 import type { ShopifyConfig } from "./shopify-client.js";
 import { graphql } from "./shopify-client.js";
-import { debug, error, progress, success } from "../utils/logger.js";
+import { debug, error, info, progress, success } from "../utils/logger.js";
 import type {
   CollectionCreateMutation,
   CollectionCreateMutationVariables,
@@ -10,6 +10,9 @@ import type {
   CollectionsListQuery,
   CollectionDeleteMutation,
   CollectionDeleteMutationVariables,
+  PublicationsQuery,
+  PublishablePublishMutation,
+  PublishablePublishMutationVariables,
 } from "../types/admin.generated.js";
 
 const COLLECTION_CREATE_MUTATION = `#graphql
@@ -61,6 +64,54 @@ const COLLECTION_DELETE_MUTATION = `#graphql
     }
   }
 `;
+
+const PUBLICATIONS_QUERY = `#graphql
+  query Publications {
+    publications(first: 20) {
+      edges {
+        node {
+          id
+          name
+        }
+      }
+    }
+  }
+`;
+
+const PUBLISHABLE_PUBLISH_MUTATION = `#graphql
+  mutation PublishablePublish($id: ID!, $input: [PublicationInput!]!) {
+    publishablePublish(id: $id, input: $input) {
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+`;
+
+let cachedPublicationIds: string[] | null = null;
+
+async function getPublicationIds(config: ShopifyConfig): Promise<string[]> {
+  if (cachedPublicationIds) return cachedPublicationIds;
+  const result = await graphql<PublicationsQuery>(config, PUBLICATIONS_QUERY);
+  cachedPublicationIds = result.publications.edges.map((e) => e.node.id);
+  info(`Found ${cachedPublicationIds.length} sales channels`);
+  return cachedPublicationIds;
+}
+
+async function publishToAllChannels(config: ShopifyConfig, resourceId: string): Promise<void> {
+  const publicationIds = await getPublicationIds(config);
+  if (publicationIds.length === 0) return;
+
+  await graphql<PublishablePublishMutation, PublishablePublishMutationVariables>(
+    config,
+    PUBLISHABLE_PUBLISH_MUTATION,
+    {
+      id: resourceId,
+      input: publicationIds.map((publicationId) => ({ publicationId })),
+    },
+  );
+}
 
 // handle → Shopify GID
 const collectionIdMap = new Map<string, string>();
@@ -133,6 +184,12 @@ export async function importCollections(
           collection.handle,
           collectionCreate.collection.id,
         );
+        // Publish to all sales channels
+        try {
+          await publishToAllChannels(config, collectionCreate.collection.id);
+        } catch (err) {
+          debug(`Failed to publish collection ${collection.handle}: ${err instanceof Error ? err.message : err}`);
+        }
         created++;
       }
     } catch (err) {

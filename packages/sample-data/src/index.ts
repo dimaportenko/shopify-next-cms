@@ -77,6 +77,7 @@ program
       const productCollectionMap = buildProductCollectionMap(
         simple,
         configurable,
+        categories,
       );
 
       if (options.limit) {
@@ -85,13 +86,10 @@ program
       }
 
       // Build collection membership: handle → SKUs
+      // productCollectionMap already returns SKU → collection handles
       const collectionMembership = new Map<string, string[]>();
-      for (const [sku, categoryNames] of productCollectionMap.entries()) {
-        for (const catName of categoryNames) {
-          const handle = catName
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-|-$/g, "");
+      for (const [sku, handles] of productCollectionMap.entries()) {
+        for (const handle of handles) {
           const existing = collectionMembership.get(handle) ?? [];
           existing.push(sku);
           collectionMembership.set(handle, existing);

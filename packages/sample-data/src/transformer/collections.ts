@@ -8,15 +8,14 @@ function slugify(text: string): string {
     .replace(/^-|-$/g, "");
 }
 
-function buildCollectionTitle(category: MagentoCategory): string {
+function buildCollectionHandle(category: MagentoCategory): string {
   const pathParts = category.path
     ? category.path.split("/").filter(Boolean)
     : [];
-  // If path has parent info, create "Parent - Child" naming
   if (pathParts.length > 0) {
-    return [...pathParts, category.name].join(" - ");
+    return slugify([...pathParts, category.name].join(" - "));
   }
-  return category.name;
+  return slugify(category.name);
 }
 
 export function transformCategoriesToCollections(
@@ -31,8 +30,7 @@ export function transformCategoriesToCollections(
       continue;
     }
 
-    const title = buildCollectionTitle(category);
-    const handle = slugify(title);
+    const handle = buildCollectionHandle(category);
 
     if (seenHandles.has(handle)) {
       debug(`Skipping duplicate collection handle: ${handle}`);
@@ -41,7 +39,7 @@ export function transformCategoriesToCollections(
     seenHandles.add(handle);
 
     collections.push({
-      title,
+      title: category.name,
       handle,
       descriptionHtml: `<p>Products in the ${category.name} category.</p>`,
     });
@@ -57,8 +55,7 @@ export function buildCollectionMembership(
   // category name → handle mapping for product assignment
   const nameToHandle = new Map<string, string>();
   for (const cat of categories) {
-    const title = buildCollectionTitle(cat);
-    nameToHandle.set(cat.name, slugify(title));
+    nameToHandle.set(cat.name, buildCollectionHandle(cat));
   }
   return new Map(
     [...nameToHandle.entries()].map(([name, handle]) => [
