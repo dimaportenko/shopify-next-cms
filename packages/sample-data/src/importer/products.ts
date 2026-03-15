@@ -196,19 +196,56 @@ export async function importProducts(
         }));
       }
 
+      // Collect all files (product images + variant images)
+      const filesSeen = new Set<string>();
+      const files: Array<{ originalSource: string; alt: string; contentType: FileContentType }> = [];
+      for (const img of product.images) {
+        if (!filesSeen.has(img.src)) {
+          filesSeen.add(img.src);
+          files.push({
+            originalSource: img.src,
+            alt: img.altText ?? product.title,
+            contentType: "IMAGE" as FileContentType,
+          });
+        }
+      }
+      // Also add variant-specific images to the files list
+      for (const v of product.variants) {
+        if (v.imageSrc && !filesSeen.has(v.imageSrc)) {
+          filesSeen.add(v.imageSrc);
+          files.push({
+            originalSource: v.imageSrc,
+            alt: product.title,
+            contentType: "IMAGE" as FileContentType,
+          });
+        }
+      }
+      if (files.length > 0) {
+        productSetInput.files = files;
+      }
+
       // Add variants (only when product has options — productSet requires
       // productOptions whenever variants are present)
       if (product.variants.length > 0 && product.options.length > 0) {
-        const variants: ProductVariantSetInput[] = product.variants.map((v) => ({
-          sku: v.sku,
-          price: parseFloat(v.price),
-          optionValues: v.options
-            .map((opt, idx) => ({
-              optionName: product.options[idx],
-              name: opt,
-            }))
-            .filter((ov) => ov.optionName && ov.name),
-        }));
+        const variants: ProductVariantSetInput[] = product.variants.map((v) => {
+          const variant: ProductVariantSetInput = {
+            sku: v.sku,
+            price: parseFloat(v.price),
+            optionValues: v.options
+              .map((opt, idx) => ({
+                optionName: product.options[idx],
+                name: opt,
+              }))
+              .filter((ov) => ov.optionName && ov.name),
+          };
+          if (v.imageSrc) {
+            variant.file = {
+              originalSource: v.imageSrc,
+              contentType: "IMAGE" as FileContentType,
+            };
+          }
+          return variant;
+        });
         productSetInput.variants = variants;
       } else if (product.variants.length === 1) {
         // Simple product: set price/sku on the default variant
@@ -219,15 +256,6 @@ export async function importProducts(
           optionValues: [{ optionName: "Title", name: "Default Title" }],
         }];
         productSetInput.productOptions = [{ name: "Title", values: [{ name: "Default Title" }] }];
-      }
-
-      // Add files (images) inline
-      if (product.images.length > 0) {
-        productSetInput.files = product.images.map((img) => ({
-          originalSource: img.src,
-          alt: img.altText ?? product.title,
-          contentType: "IMAGE" as FileContentType,
-        }));
       }
 
       const result = await graphql<ProductSetMutation, ProductSetMutationVariables>(

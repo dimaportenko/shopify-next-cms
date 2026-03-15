@@ -170,13 +170,18 @@ export function transformConfigurableProduct(
   }
   const options = [...optionNames];
 
-  // Build variants
-  const variants: ShopifyVariantInput[] = variations.map((v) => ({
-    sku: v.sku,
-    price: product.price,
-    inventoryQuantity: 100,
-    options: options.map((opt) => v.options[opt] ?? ""),
-  }));
+  // Build variants with per-variant images
+  const variants: ShopifyVariantInput[] = variations.map((v) => {
+    const variantImages = imageMap.get(v.sku) ?? [];
+    const imageSrc = variantImages[0] ? buildImageUrl(variantImages[0]) : undefined;
+    return {
+      sku: v.sku,
+      price: product.price,
+      inventoryQuantity: 100,
+      options: options.map((opt) => v.options[opt] ?? ""),
+      imageSrc,
+    };
+  });
 
   // If no variants parsed, create a default one
   if (variants.length === 0) {

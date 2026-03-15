@@ -60,6 +60,7 @@ export interface ShopifyVariantInput {
   price: string;
   inventoryQuantity: number;
   options: string[];
+  imageSrc?: string;
 }
 
 export interface ShopifyImageInput {
