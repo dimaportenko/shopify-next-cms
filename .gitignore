@@ -4,6 +4,7 @@ node_modules
 .source
 dist
 out
+.cache
 .env
 .env.*
 !.env.example

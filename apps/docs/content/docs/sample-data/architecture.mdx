@@ -1,0 +1,98 @@
+---
+title: Architecture
+description: Package structure and technical details of the sample data import tool.
+---
+
+## Package structure
+
+```
+packages/sample-data/
+├── src/
+│   ├── index.ts                  # CLI entry point (commander)
+│   ├── types.ts                  # Magento & Shopify type definitions
+│   ├── download.ts               # Git clone & cache management
+│   ├── parser/
+│   │   ├── categories.ts         # Parse category CSVs
+│   │   ├── products.ts           # Parse product CSVs (simple + configurable)
+│   │   └── images.ts             # Parse image mapping CSVs
+│   ├── transformer/
+│   │   ├── collections.ts        # Magento category → Shopify collection
+│   │   └── products.ts           # Magento product → Shopify product
+│   ├── importer/
+│   │   ├── shopify-client.ts     # GraphQL client with rate limiting
+│   │   ├── collections.ts        # Create/delete collections
+│   │   ├── products.ts           # Create/delete products with images
+│   │   └── collects.ts           # Product ↔ collection assignments
+│   └── utils/
+│       ├── csv.ts                # CSV parsing utility
+│       ├── rate-limiter.ts       # API rate limit handler with retry
+│       └── logger.ts             # Logging with progress tracking
+├── package.json
+└── tsconfig.json
+```
+
+## Pipeline
+
+The import follows a four-stage pipeline:
+
+```
+Download → Parse → Transform → Import
+```
+
+### 1. Download
+
+Uses `simple-git` to shallow-clone the Magento sample data repository into `.cache/sample-data/`. Subsequent runs reuse the cache unless `--force` is passed.
+
+### 2. Parse
+
+Reads CSV fixture files from two Magento modules:
+
+- **CatalogSampleData** — simple products (bags, fitness, watches) with image mappings
+- **ConfigurableSampleData** — configurable products (apparel with size/color variants)
+
+The parser uses `csv-parse` in sync mode and returns typed Magento data structures.
+
+### 3. Transform
+
+Converts Magento data into Shopify-compatible structures:
+
+- Categories become flat collections with hierarchical naming
+- Simple products become single-variant Shopify products
+- Configurable products become multi-variant products with options
+- Image paths are resolved to GitHub raw URLs
+- Product attributes are flattened into tags
+
+### 4. Import
+
+Calls the Shopify Admin GraphQL API (version `2025-01`) to create resources in order:
+
+1. **Collections** — created first (needed for product assignment)
+2. **Products** — created with variants, options, and media
+3. **Collects** — assigns products to collections
+
+## Rate limiting
+
+The tool respects Shopify's GraphQL cost-based throttling:
+
+- Tracks available query cost points from API response extensions
+- Automatically waits when points drop below threshold (800/1000)
+- Retries failed requests with exponential backoff (up to 3 retries)
+
+## Idempotency
+
+Before creating any resource, the tool checks if it already exists:
+
+- Products are looked up by SKU via the `products` query
+- Collections are looked up by handle via `collectionByHandle` query
+
+Existing resources are skipped with a log message.
+
+## Dependencies
+
+| Package      | Purpose                    |
+| ------------ | -------------------------- |
+| `commander`  | CLI argument parsing       |
+| `csv-parse`  | CSV file parsing           |
+| `simple-git` | Git clone for data source  |
+| `tsx`        | TypeScript execution (dev) |
+| `tsup`       | TypeScript bundling        |

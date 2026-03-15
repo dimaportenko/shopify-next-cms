@@ -1,0 +1,103 @@
+---
+title: Data Mapping
+description: How Magento 2 product and category data maps to Shopify resources.
+---
+
+## Products
+
+### Simple products
+
+Magento simple products (bags, fitness equipment, watches) become Shopify products with a single variant.
+
+| Magento field  | Shopify field                |
+| -------------- | ---------------------------- |
+| `name`         | `title`                      |
+| `sku`          | `variants[0].sku`            |
+| `price`        | `variants[0].price`          |
+| `description`  | `descriptionHtml`            |
+| `qty`          | `variants[0].inventoryQuantity` |
+| Image mappings | `media[].originalSource`     |
+
+### Configurable products
+
+Magento configurable products (apparel with size/color options) become Shopify products with multiple variants.
+
+| Magento field                | Shopify field              |
+| ---------------------------- | -------------------------- |
+| `name`                       | `title`                    |
+| `configurable_variations`    | `variants[]` with options  |
+| `price`                      | `variants[].price`         |
+| `description`                | `descriptionHtml`          |
+
+The `configurable_variations` field (format: `sku=SKU1,size=S,color=Blue|sku=SKU2,...`) is parsed to extract:
+- **Option names** (e.g., `size`, `color`) → Shopify product options
+- **Option values** per variant → Shopify variant option values
+- **Child SKUs** → individual variant SKUs
+
+Child simple products that belong to a configurable parent are automatically excluded from standalone product creation.
+
+### Product attributes
+
+Magento product attributes are mapped to Shopify tags:
+
+| Attribute        | Tag format                |
+| ---------------- | ------------------------- |
+| `activity`       | `activity:Yoga`           |
+| `material`       | `material:Cotton`         |
+| `style_bags`     | `style_bags:Backpack`     |
+| `pattern`        | `pattern:Solid`           |
+| `climate`        | `climate:Indoor`          |
+| `gender`         | `gender:Men`              |
+
+Category names from the source data are also added as tags.
+
+### Images
+
+Product images are resolved from `images_*.csv` files that map SKU to image path. The images are served directly from the GitHub repository:
+
+```
+https://raw.githubusercontent.com/dimaportenko/magento2-sample-data/2.4-develop/pub/media/catalog/product/...
+```
+
+For configurable products, images from all child variant SKUs and the parent SKU are collected (deduplicated).
+
+## Collections
+
+Magento categories map to Shopify custom collections.
+
+| Magento field | Shopify field    |
+| ------------- | ---------------- |
+| `name`        | `title`          |
+| `url_key`     | `handle`         |
+| `active`      | `published`      |
+| `path`        | Title hierarchy  |
+
+### Naming convention
+
+Since Shopify collections are flat (no nesting), hierarchical categories use a dash-separated naming convention:
+
+| Magento path             | Shopify collection title       |
+| ------------------------ | ------------------------------ |
+| `Men`                    | Men                            |
+| `Men > Tops`             | Men - Tops                     |
+| `Men > Tops > Jackets`   | Men - Tops - Jackets           |
+| `Gear > Bags`            | Gear - Bags                    |
+
+### Created collections
+
+The import creates approximately 30 collections:
+
+**Top-level:** Men, Women, Gear
+
+**Nested:**
+- Men - Tops, Men - Tops - Jackets, Men - Tops - Tees, Men - Bottoms, etc.
+- Women - Tops, Women - Tops - Jackets, Women - Bottoms, etc.
+- Gear - Bags, Gear - Fitness Equipment, Gear - Watches
+
+**Promotional:**
+- Promotions - Women Sale, Promotions - Men Sale
+- Collections - Erin Recommends, Collections - Performance Fabrics, Collections - Eco Friendly
+
+## Collection membership
+
+Products are assigned to collections based on their `category`/`categories` field in the source CSV. A product can belong to multiple collections.

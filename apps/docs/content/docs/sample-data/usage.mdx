@@ -1,0 +1,98 @@
+---
+title: Usage
+description: CLI commands and options for the sample data import tool.
+---
+
+## Commands
+
+```bash
+pnpm sample-data <command> [options]
+```
+
+### `import`
+
+Download source data and import products and collections into Shopify.
+
+```bash
+pnpm sample-data import
+```
+
+#### Options
+
+| Flag                 | Description                                   | Default |
+| -------------------- | --------------------------------------------- | ------- |
+| `--force`            | Re-download source data even if cached        | `false` |
+| `--dry-run`          | Parse and transform without calling APIs      | `false` |
+| `--products-only`    | Import only products, skip collections        | `false` |
+| `--collections-only` | Import only collections, skip products        | `false` |
+| `--limit <n>`        | Import only the first N products              | all     |
+| `--verbose`          | Enable detailed logging                       | `false` |
+
+#### Examples
+
+Preview what will be created:
+
+```bash
+pnpm sample-data import --dry-run
+```
+
+Import only the first 10 products:
+
+```bash
+pnpm sample-data import --limit 10
+```
+
+Import only collections (no products):
+
+```bash
+pnpm sample-data import --collections-only
+```
+
+Re-download source data and import with verbose logging:
+
+```bash
+pnpm sample-data import --force --verbose
+```
+
+### `clean`
+
+Remove all products and collections from the Shopify store.
+
+```bash
+pnpm sample-data clean
+```
+
+<Callout type="warn">
+This deletes **all** products and collections in the store, not just those created by the import tool.
+</Callout>
+
+### `status`
+
+Show the current number of products and collections in the store.
+
+```bash
+pnpm sample-data status
+```
+
+## Idempotency
+
+The import command is idempotent:
+
+- **Products** are matched by SKU. If a product with the same SKU already exists, it is skipped.
+- **Collections** are matched by handle. If a collection with the same handle already exists, it is skipped.
+
+Running `pnpm sample-data import` multiple times is safe — it will only create items that don't already exist.
+
+## Typical workflow
+
+```bash
+# 1. First import — creates everything
+pnpm sample-data import
+
+# 2. Check what was created
+pnpm sample-data status
+
+# 3. Need to start fresh? Clean and re-import
+pnpm sample-data clean
+pnpm sample-data import
+```

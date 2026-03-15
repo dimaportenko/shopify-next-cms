@@ -1,0 +1,36 @@
+---
+title: Overview
+description: Populate your Shopify store with realistic product data from Magento 2 sample catalog.
+---
+
+The Sample Data tool downloads product and category data from [magento2-sample-data](https://github.com/dimaportenko/magento2-sample-data), transforms it into Shopify-compatible format, and imports it into your Shopify store.
+
+This gives developers a one-command way to populate a store with realistic sample data for development, demos, and testing.
+
+## What it creates
+
+| Resource    | Count | Description                                               |
+| ----------- | ----- | --------------------------------------------------------- |
+| Products    | ~191  | Simple and configurable products with variants and images |
+| Collections | ~30   | Categories mapped from Magento's hierarchy                |
+| Images      | ~50   | Product images served from GitHub                         |
+
+## Quick start
+
+```bash
+# 1. Set environment variables
+export SHOPIFY_STORE_URL="your-store.myshopify.com"
+export SHOPIFY_ADMIN_ACCESS_TOKEN="shpat_..."
+
+# 2. Preview what will be created
+pnpm sample-data import --dry-run
+
+# 3. Import everything
+pnpm sample-data import
+```
+
+## Data source
+
+The tool uses the [magento2-sample-data](https://github.com/dimaportenko/magento2-sample-data) repository (branch `2.4-develop`), which provides a well-structured catalog of ~250 products across multiple categories including apparel, bags, fitness equipment, and watches.
+
+The source data is cloned once and cached in `.cache/sample-data/`. Use `--force` to re-download.

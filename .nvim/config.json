@@ -1,5 +1,7 @@
 {
+  "env": ".env",
   "commands": {
+    "sample:data": "pnpm run sample-data import",
     "docs:dev": "pnpm dev:docs",
     "app:dev": "pnpm dev:web",
     "dev": "pnpm dev"

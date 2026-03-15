@@ -1,0 +1,46 @@
+---
+title: Configuration
+description: Environment variables and setup required for the sample data import tool.
+---
+
+## Environment variables
+
+The tool requires two environment variables to connect to your Shopify store's Admin API.
+
+| Variable                     | Required | Description                                    |
+| ---------------------------- | -------- | ---------------------------------------------- |
+| `SHOPIFY_STORE_URL`          | Yes      | Store URL, e.g. `mystore.myshopify.com`        |
+| `SHOPIFY_ADMIN_ACCESS_TOKEN` | Yes      | Admin API access token                         |
+
+### Setting up credentials
+
+1. Go to your Shopify admin at `https://your-store.myshopify.com/admin`
+2. Navigate to **Settings** > **Apps and sales channels** > **Develop apps**
+3. Create a new app (or use an existing one)
+4. Under **API credentials**, configure the Admin API scopes:
+   - `write_products`
+   - `read_products`
+   - `write_publications` (for publishing collections)
+5. Install the app and copy the **Admin API access token**
+
+### Using a `.env` file
+
+Create a `.env` file in the project root (it's already in `.gitignore`):
+
+```bash
+SHOPIFY_STORE_URL=your-store.myshopify.com
+SHOPIFY_ADMIN_ACCESS_TOKEN=shpat_xxxxxxxxxxxxxxxxxxxxx
+```
+
+Then source it before running:
+
+```bash
+source .env
+pnpm sample-data import
+```
+
+## Shopify store requirements
+
+- Works with **development stores** (no paid plan required)
+- The store should ideally be empty before the first import to avoid conflicts
+- The Admin API access token needs product and collection write permissions
