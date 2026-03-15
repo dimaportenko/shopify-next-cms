@@ -217,6 +217,121 @@ export function transformConfigurableProduct(
   };
 }
 
+// Match trailing measurement like "55 cm", "6 foot", "10 inch", "32"
+const SIZE_SUFFIX_RE = /\s+(\d+(?:\.\d+)?(?:\s*(?:cm|mm|m|foot|feet|ft|inch|in|liter|l|oz|lb|kg|g))?)\s*$/i;
+
+function extractBaseName(name: string): string {
+  return name.replace(SIZE_SUFFIX_RE, "").trim();
+}
+
+function extractSize(name: string): string | null {
+  const match = name.match(SIZE_SUFFIX_RE);
+  return match ? match[1] : null;
+}
+
+function extractColorFromSku(sku: string): string | null {
+  // Extract trailing alpha suffix, e.g. "24-WG081-gray" → "gray"
+  const match = sku.match(/-([a-z]+)$/i);
+  return match ? match[1] : null;
+}
+
+function groupSimpleProducts(
+  simpleProducts: MagentoSimpleProduct[],
+  imageMap: Map<string, string[]>,
+): ShopifyProductInput[] {
+  // Step 1: group by base name (strip trailing size measurements)
+  const byBaseName = new Map<string, MagentoSimpleProduct[]>();
+  for (const product of simpleProducts) {
+    const baseName = extractBaseName(product.name);
+    const group = byBaseName.get(baseName) ?? [];
+    group.push(product);
+    byBaseName.set(baseName, group);
+  }
+
+  const results: ShopifyProductInput[] = [];
+  for (const [baseName, group] of byBaseName) {
+    if (group.length === 1) {
+      results.push(transformSimpleProduct(group[0], imageMap));
+      continue;
+    }
+
+    // Detect which dimensions vary across the group
+    const sizes = new Set(group.map((p) => extractSize(p.name)).filter(Boolean));
+    const colors = new Set(group.map((p) => extractColorFromSku(p.sku)).filter(Boolean));
+    const hasSize = sizes.size > 1;
+    const hasColor = colors.size > 1;
+
+    if (!hasSize && !hasColor) {
+      // No detectable variant axes — just use name grouping with SKU suffix
+      const names = new Set(group.map((p) => p.name));
+      if (names.size === group.length) {
+        // All different names, treat as individual products
+        for (const p of group) {
+          results.push(transformSimpleProduct(p, imageMap));
+        }
+        continue;
+      }
+    }
+
+    // Build option names and variant option values
+    const optionNames: string[] = [];
+    if (hasSize) optionNames.push("Size");
+    if (hasColor) optionNames.push("Color");
+    // Fallback: if same name but no detected axes, use SKU suffix
+    if (optionNames.length === 0) optionNames.push("Variant");
+
+    const first = group[0];
+    const attrs = parseAdditionalAttributes(first.additional_attributes);
+    const tags = extractTags(attrs);
+    if (first.category) {
+      tags.push(
+        ...first.category.split(",").map((c) => c.trim()).filter(Boolean),
+      );
+    }
+
+    const images: ShopifyImageInput[] = [];
+    const seenImages = new Set<string>();
+    for (const p of group) {
+      for (const img of imageMap.get(p.sku) ?? []) {
+        const url = buildImageUrl(img);
+        if (!seenImages.has(url)) {
+          seenImages.add(url);
+          images.push({ src: url, altText: baseName });
+        }
+      }
+    }
+
+    const variants: ShopifyVariantInput[] = group.map((p) => {
+      const opts: string[] = [];
+      if (hasSize) opts.push(extractSize(p.name) ?? "Default");
+      if (hasColor) opts.push(extractColorFromSku(p.sku) ?? "Default");
+      if (opts.length === 0) opts.push(extractColorFromSku(p.sku) ?? p.sku);
+      return {
+        sku: p.sku,
+        price: p.price,
+        inventoryQuantity: parseInt(p.qty, 10) || 100,
+        options: opts,
+      };
+    });
+
+    debug(`Grouped ${group.length} simple products as variants of "${baseName}" (options: ${optionNames.join(", ")})`);
+
+    results.push({
+      title: baseName,
+      descriptionHtml: first.description || first.short_description || "",
+      vendor: "Sample Data",
+      productType: attrs["category_gear"] ?? "General",
+      tags,
+      status: "ACTIVE" as ProductStatus,
+      options: optionNames,
+      variants,
+      images,
+    });
+  }
+
+  return results;
+}
+
 export function transformAllProducts(
   simple: MagentoSimpleProduct[],
   configurable: MagentoConfigurableProduct[],
@@ -235,13 +350,15 @@ export function transformAllProducts(
     }
   }
 
-  for (const product of simple) {
-    if (childSkus.has(product.sku)) {
-      debug(`Skipping child variant as standalone: ${product.sku}`);
-      continue;
+  const standaloneSimple = simple.filter((p) => {
+    if (childSkus.has(p.sku)) {
+      debug(`Skipping child variant as standalone: ${p.sku}`);
+      return false;
     }
-    products.push(transformSimpleProduct(product, imageMap));
-  }
+    return true;
+  });
+
+  products.push(...groupSimpleProducts(standaloneSimple, imageMap));
 
   for (const product of configurable) {
     products.push(transformConfigurableProduct(product, imageMap));
