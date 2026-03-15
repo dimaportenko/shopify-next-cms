@@ -144,8 +144,9 @@ export async function importProducts(
         }));
       }
 
-      // Add variants
-      if (product.variants.length > 0) {
+      // Add variants (only when product has options — productSet requires
+      // productOptions whenever variants are present)
+      if (product.variants.length > 0 && product.options.length > 0) {
         const variants: ProductVariantSetInput[] = product.variants.map((v) => ({
           sku: v.sku,
           price: parseFloat(v.price),
@@ -157,6 +158,15 @@ export async function importProducts(
             .filter((ov) => ov.optionName && ov.name),
         }));
         productSetInput.variants = variants;
+      } else if (product.variants.length === 1) {
+        // Simple product: set price/sku on the default variant
+        const v = product.variants[0];
+        productSetInput.variants = [{
+          sku: v.sku,
+          price: parseFloat(v.price),
+          optionValues: [{ optionName: "Title", name: "Default Title" }],
+        }];
+        productSetInput.productOptions = [{ name: "Title", values: [{ name: "Default Title" }] }];
       }
 
       // Add files (images) inline
