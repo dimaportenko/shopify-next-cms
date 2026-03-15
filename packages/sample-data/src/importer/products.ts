@@ -2,9 +2,15 @@ import type { ShopifyProductInput } from "../types.js";
 import type { ShopifyConfig } from "./shopify-client.js";
 import { graphql } from "./shopify-client.js";
 import { debug, error, progress, success } from "../utils/logger.js";
+import type {
+  ProductCreateMutation,
+  ProductBySkuQuery,
+  ProductsListQuery,
+  ProductDeleteMutation,
+} from "../types/admin.generated.js";
 
-const PRODUCT_CREATE_MUTATION = `
-  mutation productCreate($product: ProductCreateInput!, $media: [CreateMediaInput!]) {
+const PRODUCT_CREATE_MUTATION = `#graphql
+  mutation ProductCreate($product: ProductCreateInput!, $media: [CreateMediaInput!]) {
     productCreate(product: $product, media: $media) {
       product {
         id
@@ -27,8 +33,8 @@ const PRODUCT_CREATE_MUTATION = `
   }
 `;
 
-const PRODUCT_BY_SKU_QUERY = `
-  query productBySku($query: String!) {
+const PRODUCT_BY_SKU_QUERY = `#graphql
+  query ProductBySku($query: String!) {
     products(first: 1, query: $query) {
       edges {
         node {
@@ -41,25 +47,29 @@ const PRODUCT_BY_SKU_QUERY = `
   }
 `;
 
-interface ProductCreateResult {
-  productCreate: {
-    product: {
-      id: string;
-      title: string;
-      handle: string;
-      variants: {
-        edges: Array<{ node: { id: string; sku: string } }>;
-      };
-    } | null;
-    userErrors: Array<{ field: string[]; message: string }>;
-  };
-}
+const PRODUCTS_LIST_QUERY = `#graphql
+  query ProductsList {
+    products(first: 50) {
+      edges {
+        node {
+          id
+          title
+        }
+      }
+      pageInfo {
+        hasNextPage
+      }
+    }
+  }
+`;
 
-interface ProductQueryResult {
-  products: {
-    edges: Array<{ node: { id: string; title: string; handle: string } }>;
-  };
-}
+const PRODUCT_DELETE_MUTATION = `#graphql
+  mutation ProductDelete($input: ProductDeleteInput!) {
+    productDelete(input: $input) {
+      deletedProductId
+    }
+  }
+`;
 
 // SKU → Shopify product GID
 const productIdMap = new Map<string, string>();
@@ -84,7 +94,7 @@ export async function importProducts(
     try {
       // Check if product already exists by SKU
       if (primarySku) {
-        const existing = await graphql<ProductQueryResult>(
+        const existing = await graphql<ProductBySkuQuery>(
           config,
           PRODUCT_BY_SKU_QUERY,
           { query: `sku:${primarySku}` },
@@ -151,7 +161,7 @@ export async function importProducts(
         alt: img.altText ?? product.title,
       }));
 
-      const result = await graphql<ProductCreateResult>(
+      const result = await graphql<ProductCreateMutation>(
         config,
         PRODUCT_CREATE_MUTATION,
         {
@@ -160,8 +170,15 @@ export async function importProducts(
         },
       );
 
-      if (result.productCreate.userErrors.length > 0) {
-        const errs = result.productCreate.userErrors
+      const productCreate = result.productCreate;
+      if (!productCreate) {
+        error(`No response for product ${product.title}`);
+        failed++;
+        continue;
+      }
+
+      if (productCreate.userErrors.length > 0) {
+        const errs = productCreate.userErrors
           .map((e) => `${e.field?.join(".")}: ${e.message}`)
           .join("; ");
         error(`Failed to create product ${product.title}: ${errs}`);
@@ -169,8 +186,8 @@ export async function importProducts(
         continue;
       }
 
-      if (result.productCreate.product) {
-        const createdProduct = result.productCreate.product;
+      if (productCreate.product) {
+        const createdProduct = productCreate.product;
         if (primarySku) {
           productIdMap.set(primarySku, createdProduct.id);
         }
@@ -203,17 +220,10 @@ export async function deleteAllProducts(
   let hasMore = true;
 
   while (hasMore) {
-    const result = await graphql<{
-      products: {
-        edges: Array<{ node: { id: string; title: string } }>;
-        pageInfo: { hasNextPage: boolean };
-      };
-    }>(config, `{
-      products(first: 50) {
-        edges { node { id title } }
-        pageInfo { hasNextPage }
-      }
-    }`);
+    const result = await graphql<ProductsListQuery>(
+      config,
+      PRODUCTS_LIST_QUERY,
+    );
 
     const edges = result.products.edges;
     if (edges.length === 0) break;
@@ -221,9 +231,9 @@ export async function deleteAllProducts(
 
     for (const edge of edges) {
       try {
-        await graphql(config, `
-          mutation { productDelete(input: { id: "${edge.node.id}" }) { deletedProductId } }
-        `);
+        await graphql<ProductDeleteMutation>(config, PRODUCT_DELETE_MUTATION, {
+          input: { id: edge.node.id },
+        });
         deleted++;
         debug(`Deleted product: ${edge.node.title}`);
       } catch (err) {

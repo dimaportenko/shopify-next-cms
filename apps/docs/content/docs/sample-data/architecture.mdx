@@ -23,10 +23,15 @@ packages/sample-data/
 │   │   ├── collections.ts        # Create/delete collections
 │   │   ├── products.ts           # Create/delete products with images
 │   │   └── collects.ts           # Product ↔ collection assignments
+│   ├── types/
+│   │   ├── admin.generated.d.ts  # Generated query/mutation types
+│   │   ├── admin.types.d.ts      # Generated Shopify Admin API types
+│   │   └── admin.schema.json     # Introspection schema (gitignored)
 │   └── utils/
 │       ├── csv.ts                # CSV parsing utility
 │       ├── rate-limiter.ts       # API rate limit handler with retry
 │       └── logger.ts             # Logging with progress tracking
+├── .graphqlrc.ts                 # GraphQL codegen configuration
 ├── package.json
 └── tsconfig.json
 ```
@@ -64,7 +69,7 @@ Converts Magento data into Shopify-compatible structures:
 
 ### 4. Import
 
-Calls the Shopify Admin GraphQL API (version `2025-01`) to create resources in order:
+Calls the Shopify Admin GraphQL API (version `2026-04`) to create resources in order:
 
 1. **Collections** — created first (needed for product assignment)
 2. **Products** — created with variants, options, and media
@@ -87,12 +92,49 @@ Before creating any resource, the tool checks if it already exists:
 
 Existing resources are skipped with a log message.
 
+## GraphQL type safety
+
+All GraphQL queries and mutations are validated against the Shopify Admin API schema using [`@shopify/api-codegen-preset`](https://github.com/Shopify/shopify-app-js/tree/main/packages/api-clients/api-codegen-preset). This generates TypeScript types for every operation, ensuring query correctness at compile time.
+
+Queries use the `#graphql` tag so the codegen can discover them:
+
+```ts
+const PRODUCT_BY_SKU_QUERY = `#graphql
+  query ProductBySku($query: String!) {
+    products(first: 1, query: $query) {
+      edges {
+        node { id title handle }
+      }
+    }
+  }
+`;
+```
+
+To regenerate types after modifying queries:
+
+```bash
+pnpm codegen
+```
+
+Generated types live in `src/types/` and are imported directly:
+
+```ts
+import type { ProductBySkuQuery } from "../types/admin.generated.js";
+
+const result = await graphql<ProductBySkuQuery>(config, PRODUCT_BY_SKU_QUERY, {
+  query: `sku:${sku}`,
+});
+// result.products.edges[0].node.id is fully typed
+```
+
 ## Dependencies
 
-| Package      | Purpose                    |
-| ------------ | -------------------------- |
-| `commander`  | CLI argument parsing       |
-| `csv-parse`  | CSV file parsing           |
-| `simple-git` | Git clone for data source  |
-| `tsx`        | TypeScript execution (dev) |
-| `tsup`       | TypeScript bundling        |
+| Package                      | Purpose                              |
+| ---------------------------- | ------------------------------------ |
+| `commander`                  | CLI argument parsing                 |
+| `csv-parse`                  | CSV file parsing                     |
+| `simple-git`                 | Git clone for data source            |
+| `tsx`                        | TypeScript execution (dev)           |
+| `tsup`                       | TypeScript bundling                  |
+| `@shopify/api-codegen-preset`| GraphQL type generation (dev)        |
+| `@graphql-codegen/cli`       | GraphQL codegen runner (dev)         |

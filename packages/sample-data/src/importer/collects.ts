@@ -3,9 +3,10 @@ import { graphql } from "./shopify-client.js";
 import { getCollectionIdMap } from "./collections.js";
 import { getProductIdMap } from "./products.js";
 import { debug, error, info, progress, success } from "../utils/logger.js";
+import type { CollectionAddProductsMutation } from "../types/admin.generated.js";
 
-const COLLECTION_ADD_PRODUCTS_MUTATION = `
-  mutation collectionAddProducts($id: ID!, $productIds: [ID!]!) {
+const COLLECTION_ADD_PRODUCTS_MUTATION = `#graphql
+  mutation CollectionAddProducts($id: ID!, $productIds: [ID!]!) {
     collectionAddProducts(id: $id, productIds: $productIds) {
       collection {
         id
@@ -61,17 +62,14 @@ export async function assignProductsToCollections(
       const batch = uniqueProductIds.slice(j, j + batchSize);
 
       try {
-        const result = await graphql<{
-          collectionAddProducts: {
-            userErrors: Array<{ field: string[]; message: string }>;
-          };
-        }>(config, COLLECTION_ADD_PRODUCTS_MUTATION, {
+        const result = await graphql<CollectionAddProductsMutation>(config, COLLECTION_ADD_PRODUCTS_MUTATION, {
           id: collectionId,
           productIds: batch,
         });
 
-        if (result.collectionAddProducts.userErrors.length > 0) {
-          const errs = result.collectionAddProducts.userErrors
+        const addProducts = result.collectionAddProducts;
+        if (addProducts?.userErrors.length) {
+          const errs = addProducts.userErrors
             .map((e) => e.message)
             .join("; ");
           error(`Failed to assign products to ${handle}: ${errs}`);

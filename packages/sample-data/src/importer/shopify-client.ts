@@ -45,7 +45,7 @@ export async function graphql<T = Record<string, unknown>>(
 ): Promise<T> {
   await throttle();
 
-  const url = `https://${config.storeUrl}/admin/api/2025-01/graphql.json`;
+  const url = `https://${config.storeUrl}/admin/api/2026-04/graphql.json`;
 
   const result = await withRetry(async () => {
     const response = await fetch(url, {

@@ -18,6 +18,18 @@ import {
 import { importProducts, deleteAllProducts } from "./importer/products.js";
 import { assignProductsToCollections } from "./importer/collects.js";
 import { info, setVerbose, success, error } from "./utils/logger.js";
+import type { StoreCountsQuery } from "./types/admin.generated.js";
+
+const STORE_COUNTS_QUERY = `#graphql
+  query StoreCounts {
+    productsCount {
+      count
+    }
+    collectionsCount {
+      count
+    }
+  }
+`;
 
 const program = new Command();
 
@@ -164,38 +176,11 @@ program
 
     try {
       const config = getConfig();
+      const { graphql } = await import("./importer/shopify-client.js");
 
-      const productResult = await import("./importer/shopify-client.js").then(
-        ({ graphql }) =>
-          graphql<{
-            products: { edges: Array<{ node: { id: string } }> };
-          }>(config, `{ products(first: 1) { edges { node { id } } } }`),
-      );
-
-      const collectionResult = await import(
-        "./importer/shopify-client.js"
-      ).then(({ graphql }) =>
-        graphql<{
-          collections: { edges: Array<{ node: { id: string } }> };
-        }>(
-          config,
-          `{ collections(first: 1) { edges { node { id } } } }`,
-        ),
-      );
-
-      // Use count queries
-      const countResult = await import("./importer/shopify-client.js").then(
-        ({ graphql }) =>
-          graphql<{
-            productsCount: { count: number };
-            collectionsCount: { count: number };
-          }>(
-            config,
-            `{
-              productsCount { count }
-              collectionsCount { count }
-            }`,
-          ),
+      const countResult = await graphql<StoreCountsQuery>(
+        config,
+        STORE_COUNTS_QUERY,
       );
 
       info(`Products: ${countResult.productsCount?.count ?? "unknown"}`);

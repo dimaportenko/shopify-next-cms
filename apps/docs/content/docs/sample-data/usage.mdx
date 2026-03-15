@@ -83,6 +83,18 @@ The import command is idempotent:
 
 Running `pnpm sample-data import` multiple times is safe — it will only create items that don't already exist.
 
+## Development
+
+### Regenerate GraphQL types
+
+After modifying any GraphQL query or mutation, regenerate the TypeScript types:
+
+```bash
+pnpm codegen
+```
+
+This fetches the latest Shopify Admin API schema and generates typed interfaces for all operations in `src/types/admin.generated.d.ts`. Run `pnpm typecheck` to verify everything compiles.
+
 ## Typical workflow
 
 ```bash

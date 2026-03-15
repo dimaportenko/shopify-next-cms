@@ -2,9 +2,15 @@ import type { ShopifyCollectionInput } from "../types.js";
 import type { ShopifyConfig } from "./shopify-client.js";
 import { graphql } from "./shopify-client.js";
 import { debug, error, progress, success } from "../utils/logger.js";
+import type {
+  CollectionCreateMutation,
+  CollectionByHandleQuery,
+  CollectionsListQuery,
+  CollectionDeleteMutation,
+} from "../types/admin.generated.js";
 
-const COLLECTION_CREATE_MUTATION = `
-  mutation collectionCreate($input: CollectionInput!) {
+const COLLECTION_CREATE_MUTATION = `#graphql
+  mutation CollectionCreate($input: CollectionInput!) {
     collectionCreate(input: $input) {
       collection {
         id
@@ -19,8 +25,8 @@ const COLLECTION_CREATE_MUTATION = `
   }
 `;
 
-const COLLECTION_BY_HANDLE_QUERY = `
-  query collectionByHandle($handle: String!) {
+const COLLECTION_BY_HANDLE_QUERY = `#graphql
+  query CollectionByHandle($handle: String!) {
     collectionByHandle(handle: $handle) {
       id
       handle
@@ -29,16 +35,29 @@ const COLLECTION_BY_HANDLE_QUERY = `
   }
 `;
 
-interface CollectionCreateResult {
-  collectionCreate: {
-    collection: { id: string; handle: string; title: string } | null;
-    userErrors: Array<{ field: string[]; message: string }>;
-  };
-}
+const COLLECTIONS_LIST_QUERY = `#graphql
+  query CollectionsList {
+    collections(first: 50) {
+      edges {
+        node {
+          id
+          title
+        }
+      }
+      pageInfo {
+        hasNextPage
+      }
+    }
+  }
+`;
 
-interface CollectionByHandleResult {
-  collectionByHandle: { id: string; handle: string; title: string } | null;
-}
+const COLLECTION_DELETE_MUTATION = `#graphql
+  mutation CollectionDelete($input: CollectionDeleteInput!) {
+    collectionDelete(input: $input) {
+      deletedCollectionId
+    }
+  }
+`;
 
 // handle → Shopify GID
 const collectionIdMap = new Map<string, string>();
@@ -61,7 +80,7 @@ export async function importCollections(
 
     try {
       // Check if collection already exists
-      const existing = await graphql<CollectionByHandleResult>(
+      const existing = await graphql<CollectionByHandleQuery>(
         config,
         COLLECTION_BY_HANDLE_QUERY,
         { handle: collection.handle },
@@ -78,7 +97,7 @@ export async function importCollections(
       }
 
       // Create collection
-      const result = await graphql<CollectionCreateResult>(
+      const result = await graphql<CollectionCreateMutation>(
         config,
         COLLECTION_CREATE_MUTATION,
         {
@@ -91,8 +110,15 @@ export async function importCollections(
         },
       );
 
-      if (result.collectionCreate.userErrors.length > 0) {
-        const errs = result.collectionCreate.userErrors
+      const collectionCreate = result.collectionCreate;
+      if (!collectionCreate) {
+        error(`No response for collection ${collection.handle}`);
+        failed++;
+        continue;
+      }
+
+      if (collectionCreate.userErrors.length > 0) {
+        const errs = collectionCreate.userErrors
           .map((e) => e.message)
           .join("; ");
         error(`Failed to create collection ${collection.handle}: ${errs}`);
@@ -100,10 +126,10 @@ export async function importCollections(
         continue;
       }
 
-      if (result.collectionCreate.collection) {
+      if (collectionCreate.collection) {
         collectionIdMap.set(
           collection.handle,
-          result.collectionCreate.collection.id,
+          collectionCreate.collection.id,
         );
         created++;
       }
@@ -128,17 +154,10 @@ export async function deleteAllCollections(
   let hasMore = true;
 
   while (hasMore) {
-    const result = await graphql<{
-      collections: {
-        edges: Array<{ node: { id: string; title: string } }>;
-        pageInfo: { hasNextPage: boolean };
-      };
-    }>(config, `{
-      collections(first: 50) {
-        edges { node { id title } }
-        pageInfo { hasNextPage }
-      }
-    }`);
+    const result = await graphql<CollectionsListQuery>(
+      config,
+      COLLECTIONS_LIST_QUERY,
+    );
 
     const edges = result.collections.edges;
     if (edges.length === 0) break;
@@ -146,9 +165,11 @@ export async function deleteAllCollections(
 
     for (const edge of edges) {
       try {
-        await graphql(config, `
-          mutation { collectionDelete(input: { id: "${edge.node.id}" }) { deletedCollectionId } }
-        `);
+        await graphql<CollectionDeleteMutation>(
+          config,
+          COLLECTION_DELETE_MUTATION,
+          { input: { id: edge.node.id } },
+        );
         deleted++;
         debug(`Deleted collection: ${edge.node.title}`);
       } catch (err) {
