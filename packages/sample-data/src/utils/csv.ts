@@ -1,7 +1,7 @@
 import { parse } from "csv-parse/sync";
 import { readFileSync } from "node:fs";
 
-export function parseCSVFile<T extends Record<string, string>>(
+export function parseCSVFile<T extends object>(
   filePath: string,
 ): T[] {
   const content = readFileSync(filePath, "utf-8");

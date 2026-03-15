@@ -4,6 +4,10 @@
     "sample:data": "pnpm run sample-data import",
     "docs:dev": "pnpm dev:docs",
     "app:dev": "pnpm dev:web",
-    "dev": "pnpm dev"
+    "dev": "pnpm dev",
+    "typecheck": "pnpm typecheck",
+    "typecheck:web": "pnpm typecheck --filter=shopify-next-cms",
+    "typecheck:docs": "pnpm typecheck --filter=docs",
+    "typecheck:sample-data": "pnpm typecheck --filter=@shopify-next-cms/sample-data"
   }
 }

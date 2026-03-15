@@ -7,6 +7,7 @@
     "dev:docs": "turbo run dev --filter=docs",
     "dev:web": "turbo run dev --filter=shopify-next-cms",
     "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
     "sample-data": "pnpm --filter @shopify-next-cms/sample-data sample-data"
   },
   "devDependencies": {
