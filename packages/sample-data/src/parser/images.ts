@@ -5,6 +5,46 @@ import { parseCSVFile } from "../utils/csv.js";
 import { getFixturesPath } from "../download.js";
 import { debug, info } from "../utils/logger.js";
 
+interface ProductRow {
+  sku: string;
+  base_image?: string;
+  additional_images?: string;
+}
+
+function addImage(imageMap: Map<string, string[]>, sku: string, image: string): void {
+  if (!image || !sku) return;
+  const images = imageMap.get(sku) ?? [];
+  if (!images.includes(image)) {
+    images.push(image);
+    imageMap.set(sku, images);
+  }
+}
+
+function extractImagesFromProductRows(
+  filePath: string,
+  imageMap: Map<string, string[]>,
+): number {
+  const rows = parseCSVFile<ProductRow>(filePath);
+  let count = 0;
+  for (const row of rows) {
+    if (!row.sku) continue;
+    if (row.base_image) {
+      addImage(imageMap, row.sku, row.base_image);
+      count++;
+    }
+    if (row.additional_images) {
+      for (const img of row.additional_images.split(",")) {
+        const trimmed = img.trim();
+        if (trimmed) {
+          addImage(imageMap, row.sku, trimmed);
+          count++;
+        }
+      }
+    }
+  }
+  return count;
+}
+
 export function parseImages(
   cacheDir: string,
 ): Map<string, string[]> {
@@ -24,9 +64,7 @@ export function parseImages(
       const parsed = parseCSVFile<MagentoImageMapping>(filePath);
 
       for (const row of parsed) {
-        const images = imageMap.get(row.sku) ?? [];
-        images.push(row.image);
-        imageMap.set(row.sku, images);
+        addImage(imageMap, row.sku, row.image);
       }
       debug(`Parsed ${parsed.length} image mappings from ${file}`);
     }
@@ -44,11 +82,16 @@ export function parseImages(
       const parsed = parseCSVFile<MagentoImageMapping>(filePath);
 
       for (const row of parsed) {
-        const images = imageMap.get(row.sku) ?? [];
-        images.push(row.image);
-        imageMap.set(row.sku, images);
+        addImage(imageMap, row.sku, row.image);
       }
       debug(`Parsed ${parsed.length} image mappings from ${file}`);
+    }
+
+    // Also extract images from the products.csv itself (base_image, additional_images columns)
+    const productsFile = join(configFixtures, "products.csv");
+    if (existsSync(productsFile)) {
+      const count = extractImagesFromProductRows(productsFile, imageMap);
+      debug(`Extracted ${count} inline images from ConfigurableSampleData/products.csv`);
     }
   }
 
