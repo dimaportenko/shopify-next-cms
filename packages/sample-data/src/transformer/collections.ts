@@ -44,7 +44,6 @@ export function transformCategoriesToCollections(
       title,
       handle,
       descriptionHtml: `<p>Products in the ${category.name} category.</p>`,
-      published: category.active !== "0",
     });
   }
 

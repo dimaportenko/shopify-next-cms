@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "fumadocs-mdx && next build",
-    "lint": "next lint",
+    "lint": "eslint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

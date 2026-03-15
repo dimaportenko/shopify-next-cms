@@ -4,9 +4,12 @@ import { graphql } from "./shopify-client.js";
 import { debug, error, progress, success } from "../utils/logger.js";
 import type {
   CollectionCreateMutation,
+  CollectionCreateMutationVariables,
   CollectionByHandleQuery,
+  CollectionByHandleQueryVariables,
   CollectionsListQuery,
   CollectionDeleteMutation,
+  CollectionDeleteMutationVariables,
 } from "../types/admin.generated.js";
 
 const COLLECTION_CREATE_MUTATION = `#graphql
@@ -80,7 +83,7 @@ export async function importCollections(
 
     try {
       // Check if collection already exists
-      const existing = await graphql<CollectionByHandleQuery>(
+      const existing = await graphql<CollectionByHandleQuery, CollectionByHandleQueryVariables>(
         config,
         COLLECTION_BY_HANDLE_QUERY,
         { handle: collection.handle },
@@ -97,7 +100,7 @@ export async function importCollections(
       }
 
       // Create collection
-      const result = await graphql<CollectionCreateMutation>(
+      const result = await graphql<CollectionCreateMutation, CollectionCreateMutationVariables>(
         config,
         COLLECTION_CREATE_MUTATION,
         {
@@ -105,7 +108,6 @@ export async function importCollections(
             title: collection.title,
             handle: collection.handle,
             descriptionHtml: collection.descriptionHtml,
-            published: collection.published,
           },
         },
       );
@@ -165,7 +167,7 @@ export async function deleteAllCollections(
 
     for (const edge of edges) {
       try {
-        await graphql<CollectionDeleteMutation>(
+        await graphql<CollectionDeleteMutation, CollectionDeleteMutationVariables>(
           config,
           COLLECTION_DELETE_MUTATION,
           { input: { id: edge.node.id } },

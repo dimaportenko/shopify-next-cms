@@ -3,15 +3,23 @@ import type { ShopifyConfig } from "./shopify-client.js";
 import { graphql } from "./shopify-client.js";
 import { debug, error, progress, success } from "../utils/logger.js";
 import type {
-  ProductCreateMutation,
+  ProductSetMutation,
+  ProductSetMutationVariables,
   ProductBySkuQuery,
+  ProductBySkuQueryVariables,
   ProductsListQuery,
   ProductDeleteMutation,
+  ProductDeleteMutationVariables,
 } from "../types/admin.generated.js";
+import type {
+  ProductSetInput,
+  ProductVariantSetInput,
+  FileContentType,
+} from "../types/admin.types.js";
 
-const PRODUCT_CREATE_MUTATION = `#graphql
-  mutation ProductCreate($product: ProductCreateInput!, $media: [CreateMediaInput!]) {
-    productCreate(product: $product, media: $media) {
+const PRODUCT_SET_MUTATION = `#graphql
+  mutation ProductSet($input: ProductSetInput!, $synchronous: Boolean!) {
+    productSet(input: $input, synchronous: $synchronous) {
       product {
         id
         title
@@ -28,6 +36,7 @@ const PRODUCT_CREATE_MUTATION = `#graphql
       userErrors {
         field
         message
+        code
       }
     }
   }
@@ -94,7 +103,7 @@ export async function importProducts(
     try {
       // Check if product already exists by SKU
       if (primarySku) {
-        const existing = await graphql<ProductBySkuQuery>(
+        const existing = await graphql<ProductBySkuQuery, ProductBySkuQueryVariables>(
           config,
           PRODUCT_BY_SKU_QUERY,
           { query: `sku:${primarySku}` },
@@ -108,8 +117,8 @@ export async function importProducts(
         }
       }
 
-      // Build product input
-      const productInput: Record<string, unknown> = {
+      // Build productSet input (supports variants inline)
+      const productSetInput: ProductSetInput = {
         title: product.title,
         descriptionHtml: product.descriptionHtml,
         vendor: product.vendor,
@@ -120,7 +129,7 @@ export async function importProducts(
 
       // Add options if present
       if (product.options.length > 0) {
-        productInput.productOptions = product.options.map((name) => ({
+        productSetInput.productOptions = product.options.map((name) => ({
           name,
           values: [
             ...new Set(
@@ -137,48 +146,46 @@ export async function importProducts(
 
       // Add variants
       if (product.variants.length > 0) {
-        productInput.variants = product.variants.map((v) => {
-          const variant: Record<string, unknown> = {
-            sku: v.sku,
-            price: parseFloat(v.price),
-          };
-          if (v.options.length > 0) {
-            variant.optionValues = v.options
-              .map((opt, idx) => ({
-                optionName: product.options[idx],
-                name: opt,
-              }))
-              .filter((ov) => ov.optionName && ov.name);
-          }
-          return variant;
-        });
+        const variants: ProductVariantSetInput[] = product.variants.map((v) => ({
+          sku: v.sku,
+          price: parseFloat(v.price),
+          optionValues: v.options
+            .map((opt, idx) => ({
+              optionName: product.options[idx],
+              name: opt,
+            }))
+            .filter((ov) => ov.optionName && ov.name),
+        }));
+        productSetInput.variants = variants;
       }
 
-      // Build media input for images
-      const media = product.images.map((img) => ({
-        mediaContentType: "IMAGE" as const,
-        originalSource: img.src,
-        alt: img.altText ?? product.title,
-      }));
+      // Add files (images) inline
+      if (product.images.length > 0) {
+        productSetInput.files = product.images.map((img) => ({
+          originalSource: img.src,
+          alt: img.altText ?? product.title,
+          contentType: "IMAGE" as FileContentType,
+        }));
+      }
 
-      const result = await graphql<ProductCreateMutation>(
+      const result = await graphql<ProductSetMutation, ProductSetMutationVariables>(
         config,
-        PRODUCT_CREATE_MUTATION,
+        PRODUCT_SET_MUTATION,
         {
-          product: productInput,
-          media: media.length > 0 ? media : undefined,
+          input: productSetInput,
+          synchronous: true,
         },
       );
 
-      const productCreate = result.productCreate;
-      if (!productCreate) {
+      const productSet = result.productSet;
+      if (!productSet) {
         error(`No response for product ${product.title}`);
         failed++;
         continue;
       }
 
-      if (productCreate.userErrors.length > 0) {
-        const errs = productCreate.userErrors
+      if (productSet.userErrors.length > 0) {
+        const errs = productSet.userErrors
           .map((e) => `${e.field?.join(".")}: ${e.message}`)
           .join("; ");
         error(`Failed to create product ${product.title}: ${errs}`);
@@ -186,8 +193,8 @@ export async function importProducts(
         continue;
       }
 
-      if (productCreate.product) {
-        const createdProduct = productCreate.product;
+      if (productSet.product) {
+        const createdProduct = productSet.product;
         if (primarySku) {
           productIdMap.set(primarySku, createdProduct.id);
         }
@@ -231,7 +238,7 @@ export async function deleteAllProducts(
 
     for (const edge of edges) {
       try {
-        await graphql<ProductDeleteMutation>(config, PRODUCT_DELETE_MUTATION, {
+        await graphql<ProductDeleteMutation, ProductDeleteMutationVariables>(config, PRODUCT_DELETE_MUTATION, {
           input: { id: edge.node.id },
         });
         deleted++;

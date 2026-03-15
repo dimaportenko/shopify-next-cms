@@ -37,16 +37,16 @@ export type CollectionAddProductsMutationVariables = AdminTypes.Exact<{
 
 export type CollectionAddProductsMutation = { collectionAddProducts?: AdminTypes.Maybe<{ collection?: AdminTypes.Maybe<Pick<AdminTypes.Collection, 'id'>>, userErrors: Array<Pick<AdminTypes.UserError, 'field' | 'message'>> }> };
 
-export type ProductCreateMutationVariables = AdminTypes.Exact<{
-  product: AdminTypes.ProductCreateInput;
-  media?: AdminTypes.InputMaybe<Array<AdminTypes.CreateMediaInput> | AdminTypes.CreateMediaInput>;
+export type ProductSetMutationVariables = AdminTypes.Exact<{
+  input: AdminTypes.ProductSetInput;
+  synchronous: AdminTypes.Scalars['Boolean']['input'];
 }>;
 
 
-export type ProductCreateMutation = { productCreate?: AdminTypes.Maybe<{ product?: AdminTypes.Maybe<(
+export type ProductSetMutation = { productSet?: AdminTypes.Maybe<{ product?: AdminTypes.Maybe<(
       Pick<AdminTypes.Product, 'id' | 'title' | 'handle'>
       & { variants: { edges: Array<{ node: Pick<AdminTypes.ProductVariant, 'id' | 'sku'> }> } }
-    )>, userErrors: Array<Pick<AdminTypes.UserError, 'field' | 'message'>> }> };
+    )>, userErrors: Array<Pick<AdminTypes.ProductSetUserError, 'field' | 'message' | 'code'>> }> };
 
 export type ProductBySkuQueryVariables = AdminTypes.Exact<{
   query: AdminTypes.Scalars['String']['input'];
@@ -84,7 +84,7 @@ interface GeneratedMutationTypes {
   "#graphql\n  mutation CollectionCreate($input: CollectionInput!) {\n    collectionCreate(input: $input) {\n      collection {\n        id\n        handle\n        title\n      }\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: CollectionCreateMutation, variables: CollectionCreateMutationVariables},
   "#graphql\n  mutation CollectionDelete($input: CollectionDeleteInput!) {\n    collectionDelete(input: $input) {\n      deletedCollectionId\n    }\n  }\n": {return: CollectionDeleteMutation, variables: CollectionDeleteMutationVariables},
   "#graphql\n  mutation CollectionAddProducts($id: ID!, $productIds: [ID!]!) {\n    collectionAddProducts(id: $id, productIds: $productIds) {\n      collection {\n        id\n      }\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: CollectionAddProductsMutation, variables: CollectionAddProductsMutationVariables},
-  "#graphql\n  mutation ProductCreate($product: ProductCreateInput!, $media: [CreateMediaInput!]) {\n    productCreate(product: $product, media: $media) {\n      product {\n        id\n        title\n        handle\n        variants(first: 100) {\n          edges {\n            node {\n              id\n              sku\n            }\n          }\n        }\n      }\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: ProductCreateMutation, variables: ProductCreateMutationVariables},
+  "#graphql\n  mutation ProductSet($input: ProductSetInput!, $synchronous: Boolean!) {\n    productSet(input: $input, synchronous: $synchronous) {\n      product {\n        id\n        title\n        handle\n        variants(first: 100) {\n          edges {\n            node {\n              id\n              sku\n            }\n          }\n        }\n      }\n      userErrors {\n        field\n        message\n        code\n      }\n    }\n  }\n": {return: ProductSetMutation, variables: ProductSetMutationVariables},
   "#graphql\n  mutation ProductDelete($input: ProductDeleteInput!) {\n    productDelete(input: $input) {\n      deletedProductId\n    }\n  }\n": {return: ProductDeleteMutation, variables: ProductDeleteMutationVariables},
 }
 declare module '@shopify/admin-api-client' {

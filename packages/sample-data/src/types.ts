@@ -41,13 +41,15 @@ export interface MagentoImageMapping {
 
 // Shopify target types
 
+import type { ProductStatus } from "./types/admin.types.js";
+
 export interface ShopifyProductInput {
   title: string;
   descriptionHtml: string;
   vendor: string;
   productType: string;
   tags: string[];
-  status: "ACTIVE" | "DRAFT";
+  status: ProductStatus;
   options: string[];
   variants: ShopifyVariantInput[];
   images: ShopifyImageInput[];
@@ -69,7 +71,6 @@ export interface ShopifyCollectionInput {
   title: string;
   handle: string;
   descriptionHtml: string;
-  published: boolean;
 }
 
 // Transformed data ready for import

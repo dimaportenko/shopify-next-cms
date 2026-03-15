@@ -38,10 +38,13 @@ export function getConfig(): ShopifyConfig {
   };
 }
 
-export async function graphql<T = Record<string, unknown>>(
+export async function graphql<
+  T = Record<string, unknown>,
+  V extends Record<string, unknown> = Record<string, unknown>,
+>(
   config: ShopifyConfig,
   query: string,
-  variables?: Record<string, unknown>,
+  variables?: V,
 ): Promise<T> {
   await throttle();
 

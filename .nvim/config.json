@@ -1,13 +1,16 @@
 {
   "env": ".env",
   "commands": {
-    "sample:data": "pnpm run sample-data import",
+    "sample:data": "pnpm run sample-data import --products-only",
     "docs:dev": "pnpm dev:docs",
     "app:dev": "pnpm dev:web",
     "dev": "pnpm dev",
     "typecheck": "pnpm typecheck",
     "typecheck:web": "pnpm typecheck --filter=shopify-next-cms",
     "typecheck:docs": "pnpm typecheck --filter=docs",
-    "typecheck:sample-data": "pnpm typecheck --filter=@shopify-next-cms/sample-data"
+    "typecheck:sample-data": "pnpm typecheck --filter=@shopify-next-cms/sample-data",
+    "lint": "pnpm lint",
+    "lint:web": "pnpm lint --filter=shopify-next-cms",
+    "lint:docs": "pnpm lint --filter=docs"
   }
 }

@@ -5,6 +5,7 @@ import type {
   ShopifyVariantInput,
   ShopifyImageInput,
 } from "../types.js";
+import type { ProductStatus } from "../types/admin.types.js";
 import { debug, info } from "../utils/logger.js";
 
 const GITHUB_RAW_BASE =
@@ -89,7 +90,7 @@ export function transformSimpleProduct(
     vendor: "Sample Data",
     productType: attrs["category_gear"] ?? "General",
     tags,
-    status: "ACTIVE",
+    status: "ACTIVE" as ProductStatus,
     options: [],
     variants: [
       {
@@ -209,7 +210,7 @@ export function transformConfigurableProduct(
     vendor: "Sample Data",
     productType: attrs["category_gear"] ?? "General",
     tags,
-    status: "ACTIVE",
+    status: "ACTIVE" as ProductStatus,
     options,
     variants,
     images,

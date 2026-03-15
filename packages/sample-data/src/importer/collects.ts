@@ -3,7 +3,7 @@ import { graphql } from "./shopify-client.js";
 import { getCollectionIdMap } from "./collections.js";
 import { getProductIdMap } from "./products.js";
 import { debug, error, info, progress, success } from "../utils/logger.js";
-import type { CollectionAddProductsMutation } from "../types/admin.generated.js";
+import type { CollectionAddProductsMutation, CollectionAddProductsMutationVariables } from "../types/admin.generated.js";
 
 const COLLECTION_ADD_PRODUCTS_MUTATION = `#graphql
   mutation CollectionAddProducts($id: ID!, $productIds: [ID!]!) {
@@ -62,7 +62,7 @@ export async function assignProductsToCollections(
       const batch = uniqueProductIds.slice(j, j + batchSize);
 
       try {
-        const result = await graphql<CollectionAddProductsMutation>(config, COLLECTION_ADD_PRODUCTS_MUTATION, {
+        const result = await graphql<CollectionAddProductsMutation, CollectionAddProductsMutationVariables>(config, COLLECTION_ADD_PRODUCTS_MUTATION, {
           id: collectionId,
           productIds: batch,
         });
