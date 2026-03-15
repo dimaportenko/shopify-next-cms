@@ -21,6 +21,11 @@
       "sourceType": "github",
       "computedHash": "a94b83ddcd2ff1c30722577f693b1bfe32f2e1a83abdd6c08c2d6cc6753b53c8"
     },
+    "shopify-expert": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "computedHash": "bfb5ff1980becb36a178ab75bf6a3967ad9e8553f23cff1248f4f8b3a3bba248"
+    },
     "turborepo": {
       "source": "vercel/turborepo",
       "sourceType": "github",
