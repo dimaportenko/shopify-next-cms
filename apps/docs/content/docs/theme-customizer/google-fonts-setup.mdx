@@ -1,0 +1,80 @@
+---
+title: Google Fonts API Setup
+description: How to obtain and configure a Google Fonts API key for the theme customizer font picker.
+---
+
+The theme customizer includes a font picker that loads fonts from Google Fonts. Without an API key it falls back to a curated list of ~35 popular fonts. With a key you get the full catalog of 1 700+ font families, sorted by popularity.
+
+## Obtaining an API key
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project (or select an existing one)
+3. Navigate to **APIs & Services** > **Library**
+4. Search for **Web Fonts Developer API** and click **Enable**
+5. Go to **APIs & Services** > **Credentials**
+6. Click **Create Credentials** > **API key**
+7. Copy the generated key
+
+### Restricting the key (recommended)
+
+After creating the key, restrict it to reduce abuse risk:
+
+1. Click the key name in the Credentials list
+2. Under **API restrictions**, select **Restrict key**
+3. Choose **Web Fonts Developer API** from the list
+4. Under **Application restrictions**, optionally add HTTP referrer restrictions for your domain
+5. Click **Save**
+
+## Configuration
+
+Add the key to `apps/shopify-next-cms/.env.local`:
+
+```bash
+GOOGLE_FONTS_API_KEY=AIzaSy...your-key-here
+```
+
+An `.env.example` file is included as a template:
+
+```bash
+cp apps/shopify-next-cms/.env.example apps/shopify-next-cms/.env.local
+```
+
+Then fill in the `GOOGLE_FONTS_API_KEY` value.
+
+## How it works
+
+The key is only used **server-side** in the `/api/fonts` route handler. It is never sent to the browser.
+
+```
+Browser  →  /api/fonts  →  Google Fonts API (with key)
+                ↓
+         JSON response (family + category list)
+                ↓
+         Cached for 24 hours (Next.js revalidate)
+```
+
+When a user selects a font in the customizer, the actual font files are loaded directly from `fonts.googleapis.com` via a `<link>` tag — this public CDN does not require an API key.
+
+## Without an API key
+
+If `GOOGLE_FONTS_API_KEY` is not set, the `/api/fonts` route returns a built-in fallback list covering the most popular fonts across all three categories:
+
+| Category | Included fonts |
+| --- | --- |
+| Sans-serif | Inter, Roboto, Open Sans, Poppins, DM Sans, Manrope, and more |
+| Serif | Merriweather, Playfair Display, Lora, EB Garamond, and more |
+| Monospace | JetBrains Mono, Fira Code, Source Code Pro, IBM Plex Mono, and more |
+
+The customizer is fully functional without the key — only the font selection is smaller.
+
+## Production considerations
+
+The font picker loads fonts from Google Fonts CDN for live preview. For production deployments you should embed the chosen fonts via [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to get self-hosting, font-display optimization, and zero layout shift:
+
+```tsx
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"] });
+```
+
+The CSS variable values from the customizer's **Copy CSS** output can be used alongside `next/font` — just set the same `--font-sans` variable to the font's CSS variable.

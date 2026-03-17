@@ -1,4 +1,4 @@
 {
   "root": true,
-  "pages": ["index", "---Sample Data---", "...sample-data"]
+  "pages": ["index", "---Theme Customizer---", "...theme-customizer", "---Sample Data---", "...sample-data"]
 }
