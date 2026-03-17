@@ -393,8 +393,8 @@ const SYSTEM_FONTS: Record<"font-sans" | "font-serif" | "font-mono", string> = {
 };
 
 function extractFontName(value: string): string | null {
-  const match = value.match(/^"([^"]+)"/)
-  return match ? match[1]! : null
+  const match = value.match(/^"([^"]+)"/);
+  return match ? match[1]! : null;
 }
 
 function GoogleFontPicker({
@@ -408,7 +408,8 @@ function GoogleFontPicker({
   value: string;
   onChange: (value: string) => void;
 }) {
-  const { fonts, search, setSearch, loading, selectFont } = useGoogleFonts(slot);
+  const { fonts, search, setSearch, loading, selectFont } =
+    useGoogleFonts(slot);
   const [open, setOpen] = useState(false);
   const currentFontName = extractFontName(value);
   const isSystem = value === SYSTEM_FONTS[slot];
@@ -423,11 +424,13 @@ function GoogleFontPicker({
         <span
           style={
             currentFontName
-              ? { fontFamily: `"${currentFontName}", ${slot === "font-mono" ? "monospace" : slot === "font-serif" ? "serif" : "sans-serif"}` }
+              ? {
+                  fontFamily: `"${currentFontName}", ${slot === "font-mono" ? "monospace" : slot === "font-serif" ? "serif" : "sans-serif"}`,
+                }
               : undefined
           }
         >
-          {isSystem ? "System Default" : currentFontName ?? "Select font..."}
+          {isSystem ? "System Default" : (currentFontName ?? "Select font...")}
         </span>
         <ChevronDown
           className={`size-3.5 transition-transform ${open ? "rotate-180" : ""}`}

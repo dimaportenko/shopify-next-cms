@@ -158,8 +158,23 @@ function applyToDocument(state: ThemeState, resolvedTheme: string | undefined) {
   root.style.setProperty("--radius", `${state.radius}rem`)
   root.style.setProperty("--spacing", `${state.spacing}rem`)
 
+  // Font variables use --custom-font-* prefix to avoid collision with next/font's --font-* vars.
+  // globals.css references these via: --font-sans: var(--custom-font-sans, var(--font-geist-sans, ...))
+  const FONT_KEY_MAP: Record<string, string> = {
+    "font-sans": "custom-font-sans",
+    "font-serif": "custom-font-serif",
+    "font-mono": "custom-font-mono",
+  }
   for (const key of TYPOGRAPHY_KEYS) {
-    root.style.setProperty(`--${key}`, state.typography[key])
+    const cssKey = FONT_KEY_MAP[key] ?? key
+    const value = state.typography[key]
+    const isDefault = value === DEFAULT_TYPOGRAPHY[key]
+    if (isDefault && FONT_KEY_MAP[key]) {
+      // Remove custom override so the CSS fallback (next/font) takes effect
+      root.style.removeProperty(`--${cssKey}`)
+    } else {
+      root.style.setProperty(`--${cssKey}`, value)
+    }
   }
   for (const key of SHADOW_KEYS) {
     root.style.setProperty(`--${key}`, state.shadow[key])
