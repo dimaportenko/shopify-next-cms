@@ -37,6 +37,8 @@ import {
   useThemeCustomizer,
   type HslAdjustments,
 } from "@/hooks/use-theme-customizer";
+import { useGoogleFonts } from "@/hooks/use-google-fonts";
+import { loadGoogleFont } from "@/lib/google-fonts";
 import type {
   ThemeColors,
   ThemeTypography,
@@ -382,80 +384,116 @@ function ColorsTab({
 
 // --- Typography Tab ---
 
-const FONT_PRESETS = {
-  sans: [
-    {
-      label: "System Default",
-      value:
-        'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
-    },
-    { label: "Inter", value: '"Inter", sans-serif' },
-    { label: "Geist", value: '"Geist", sans-serif' },
-    { label: "DM Sans", value: '"DM Sans", sans-serif' },
-    { label: "Plus Jakarta Sans", value: '"Plus Jakarta Sans", sans-serif' },
-    { label: "Manrope", value: '"Manrope", sans-serif' },
-  ],
-  serif: [
-    {
-      label: "System Default",
-      value: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
-    },
-    { label: "Merriweather", value: '"Merriweather", serif' },
-    { label: "Playfair Display", value: '"Playfair Display", serif' },
-    { label: "Lora", value: '"Lora", serif' },
-    { label: "Crimson Text", value: '"Crimson Text", serif' },
-  ],
-  mono: [
-    {
-      label: "System Default",
-      value:
-        'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-    },
-    { label: "JetBrains Mono", value: '"JetBrains Mono", monospace' },
-    { label: "Fira Code", value: '"Fira Code", monospace' },
-    { label: "Source Code Pro", value: '"Source Code Pro", monospace' },
-    { label: "IBM Plex Mono", value: '"IBM Plex Mono", monospace' },
-  ],
+const SYSTEM_FONTS: Record<"font-sans" | "font-serif" | "font-mono", string> = {
+  "font-sans":
+    'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
+  "font-serif": 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
+  "font-mono":
+    'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
 };
 
-function FontSelect({
+function extractFontName(value: string): string | null {
+  const match = value.match(/^"([^"]+)"/)
+  return match ? match[1]! : null
+}
+
+function GoogleFontPicker({
   label,
+  slot,
   value,
-  presets,
   onChange,
 }: {
   label: string;
+  slot: "font-sans" | "font-serif" | "font-mono";
   value: string;
-  presets: { label: string; value: string }[];
   onChange: (value: string) => void;
 }) {
-  const currentPreset = presets.find((p) => p.value === value);
+  const { fonts, search, setSearch, loading, selectFont } = useGoogleFonts(slot);
+  const [open, setOpen] = useState(false);
+  const currentFontName = extractFontName(value);
+  const isSystem = value === SYSTEM_FONTS[slot];
 
   return (
     <div className="flex flex-col gap-1.5">
       <Label className="text-xs">{label}</Label>
-      <select
-        className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-        value={currentPreset ? value : "__custom__"}
-        onChange={(e) => {
-          if (e.target.value !== "__custom__") {
-            onChange(e.target.value);
-          }
-        }}
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-2 text-xs hover:bg-muted/50"
       >
-        {presets.map((p) => (
-          <option key={p.label} value={p.value}>
-            {p.label}
-          </option>
-        ))}
-        {!currentPreset && <option value="__custom__">Custom</option>}
-      </select>
-      <Input
-        className="h-7 font-mono text-xs"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Font family value..."
-      />
+        <span
+          style={
+            currentFontName
+              ? { fontFamily: `"${currentFontName}", ${slot === "font-mono" ? "monospace" : slot === "font-serif" ? "serif" : "sans-serif"}` }
+              : undefined
+          }
+        >
+          {isSystem ? "System Default" : currentFontName ?? "Select font..."}
+        </span>
+        <ChevronDown
+          className={`size-3.5 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && (
+        <div className="flex flex-col rounded-md border border-input bg-background">
+          <div className="border-b p-1.5">
+            <Input
+              placeholder="Search fonts..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-7 text-xs"
+              autoFocus
+            />
+          </div>
+          <div className="max-h-48 overflow-y-auto p-1">
+            <button
+              onClick={() => {
+                onChange(SYSTEM_FONTS[slot]);
+                setOpen(false);
+              }}
+              className={`flex w-full items-center rounded px-2 py-1.5 text-xs hover:bg-muted/50 ${
+                isSystem ? "bg-primary/5 font-medium" : ""
+              }`}
+            >
+              System Default
+            </button>
+            {loading && (
+              <div className="px-2 py-3 text-center text-xs text-muted-foreground">
+                Loading fonts...
+              </div>
+            )}
+            {fonts.map((font) => {
+              const isActive = currentFontName === font.family;
+              return (
+                <button
+                  key={font.family}
+                  onClick={() => {
+                    const fontValue = selectFont(font);
+                    onChange(fontValue);
+                    setOpen(false);
+                  }}
+                  onMouseEnter={() => loadGoogleFont(font.family)}
+                  className={`flex w-full items-center justify-between rounded px-2 py-1.5 text-xs hover:bg-muted/50 ${
+                    isActive ? "bg-primary/5 font-medium" : ""
+                  }`}
+                  style={{
+                    fontFamily: `"${font.family}", ${font.category}`,
+                  }}
+                >
+                  <span>{font.family}</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {font.category}
+                  </span>
+                </button>
+              );
+            })}
+            {!loading && fonts.length === 0 && (
+              <div className="px-2 py-3 text-center text-xs text-muted-foreground">
+                No fonts found
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -474,29 +512,29 @@ function TypographyTab({
       <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">
         <Type className="size-3.5 shrink-0" />
         <span>
-          Custom fonts require embedding via{" "}
-          <code className="font-mono">next/font</code> or a CDN link.
+          Fonts are loaded from Google Fonts for preview. For production, embed
+          via <code className="font-mono">next/font</code>.
         </span>
       </div>
 
       <CollapsibleSection title="Font Family" defaultOpen>
         <div className="flex flex-col gap-4">
-          <FontSelect
+          <GoogleFontPicker
             label="Sans-Serif"
+            slot="font-sans"
             value={typography["font-sans"]}
-            presets={FONT_PRESETS.sans}
             onChange={(v) => onTypographyChange("font-sans", v)}
           />
-          <FontSelect
+          <GoogleFontPicker
             label="Serif"
+            slot="font-serif"
             value={typography["font-serif"]}
-            presets={FONT_PRESETS.serif}
             onChange={(v) => onTypographyChange("font-serif", v)}
           />
-          <FontSelect
+          <GoogleFontPicker
             label="Mono"
+            slot="font-mono"
             value={typography["font-mono"]}
-            presets={FONT_PRESETS.mono}
             onChange={(v) => onTypographyChange("font-mono", v)}
           />
         </div>
