@@ -11,10 +11,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeCustomizer } from "@/components/theme-customizer";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+    <div className="flex min-h-screen items-center justify-center bg-background font-sans">
       <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between gap-10 px-16 py-32 sm:items-start">
         <div className="flex w-full items-center justify-between">
           <div className="flex items-center gap-3">
@@ -29,7 +30,10 @@ export default function Home() {
             <Separator orientation="vertical" className="h-6" />
             <Badge variant="secondary">Shopify CMS</Badge>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <ThemeCustomizer />
+            <ThemeToggle />
+          </div>
         </div>
 
         <Card className="w-full">
