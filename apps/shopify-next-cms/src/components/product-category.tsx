@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
+import Image from "next/image";
+import Link from "next/link";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
-} from "@/components/ui/carousel"
+} from "@/components/ui/carousel";
 
 const categories = [
   {
@@ -59,16 +59,14 @@ const categories = [
       "https://cdn.shadcnstudio.com/ss-assets/blocks/ecommerce/product-category/image-13.png",
     href: "#",
   },
-]
+];
 
 export function ProductCategory() {
   return (
     <section className="py-8 sm:py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12 space-y-4 text-center sm:mb-16 lg:mb-24">
-          <p className="text-sm font-medium uppercase text-primary">
-            Category
-          </p>
+          <p className="text-sm font-medium uppercase text-primary">Category</p>
           <h2 className="text-2xl font-semibold md:text-3xl lg:text-4xl">
             Shop By Category
           </h2>
@@ -94,7 +92,7 @@ export function ProductCategory() {
                   href={category.href}
                   className="flex flex-col items-center justify-center"
                 >
-                  <div className="mb-6 flex size-35 items-center justify-center rounded-full bg-gradient-to-b from-primary/25 to-muted/5 hover:border-2 hover:border-primary">
+                  <div className="mb-6 flex size-35 items-center justify-center rounded-full bg-linear-to-b from-primary/25 to-muted/5 hover:border-2 hover:border-primary">
                     <Image
                       src={category.image}
                       alt={category.name}
@@ -110,10 +108,10 @@ export function ProductCategory() {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="top-12 -left-0 translate-y-0 md:-left-4" />
-          <CarouselNext className="top-12 -right-0 translate-y-0 md:-right-4" />
+          <CarouselPrevious className="top-12 left-0 translate-y-0 md:-left-4" />
+          <CarouselNext className="top-12 right-0 translate-y-0 md:-right-4" />
         </Carousel>
       </div>
     </section>
-  )
+  );
 }
