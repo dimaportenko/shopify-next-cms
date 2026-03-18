@@ -1,0 +1,19 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="card" x1="24" y1="18" x2="232" y2="238" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4F3E7"/>
+      <stop offset="1" stop-color="#F1EFDC"/>
+    </linearGradient>
+    <linearGradient id="box" x1="58" y1="118" x2="212" y2="170" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4C9B38"/>
+      <stop offset="1" stop-color="#58A142"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="24" fill="url(#card)"/>
+  <path d="M26 64C26 59.5817 29.5817 56 34 56H77.5L103 84V108H83V72H34C29.5817 72 26 68.4183 26 64Z" fill="#FCFCFB"/>
+  <path d="M55 116C55 111.582 58.5817 108 63 108H208C212.418 108 216 111.582 216 116V168C216 172.418 212.418 176 208 176H63C58.5817 176 55 172.418 55 168V116Z" fill="url(#box)"/>
+  <circle cx="88" cy="208" r="24" fill="#201F22"/>
+  <circle cx="88" cy="208" r="7" fill="#F4F3E7"/>
+  <circle cx="176" cy="208" r="24" fill="#201F22"/>
+  <circle cx="176" cy="208" r="7" fill="#F4F3E7"/>
+</svg>
