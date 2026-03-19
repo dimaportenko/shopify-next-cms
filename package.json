@@ -8,7 +8,8 @@
     "dev:web": "turbo run dev --filter=shopify-next-cms",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "sample-data": "pnpm --filter @shopify-next-cms/sample-data sample-data"
+    "sample-data": "pnpm --filter @shopify-next-cms/sample-data sample-data",
+    "cms-migrations": "pnpm --filter @shopify-next-cms/cms-migrations cms-migrations"
   },
   "devDependencies": {
     "turbo": "^2"

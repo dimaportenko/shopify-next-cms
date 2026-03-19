@@ -1,0 +1,55 @@
+---
+title: Editor Routes
+description: CMS dashboard, page creation, and editor authentication.
+---
+
+## Dashboard (`/cms`)
+
+The CMS dashboard at `/cms` is a React Server Component that directly fetches all CMS pages from Shopify. It displays each page with its title, slug, status (draft/published), and action buttons for editing, viewing, and deleting.
+
+## Creating Pages (`/cms/new`)
+
+The create page form accepts a title and automatically generates a URL slug. On submit, it calls the `createPageAction` Server Action which creates a new metaobject in Shopify with empty Puck data, then redirects to the editor.
+
+## Editor (`/cms/[slug]/edit`)
+
+The editor page is a client component (`"use client"`) that:
+
+1. Fetches the page data via `GET /api/cms/pages/[slug]`
+2. Renders the full-screen `<Puck>` editor with the page's saved data
+3. On publish, calls the `publishPageAction` Server Action which saves to Shopify and calls `revalidatePath` to invalidate the cached public page
+
+## Authentication
+
+CMS routes are protected by Next.js 16's proxy (`src/proxy.ts`):
+
+```ts
+export function proxy(request: NextRequest) {
+  if (pathname.startsWith("/cms") && !pathname.startsWith("/cms/login")) {
+    const token = request.cookies.get("cms-token")?.value;
+    if (token !== process.env.CMS_SECRET) {
+      return NextResponse.redirect(new URL("/cms/login", request.url));
+    }
+  }
+  return NextResponse.next();
+}
+
+export const proxyConfig = {
+  matcher: ["/cms/:path*"],
+};
+```
+
+The login page (`/cms/login`) sets a `cms-token` cookie when the correct `CMS_SECRET` is entered.
+
+## Server Actions
+
+All mutations use Server Actions defined in `src/app/cms/_lib/actions.ts`:
+
+| Action | Description |
+|--------|-------------|
+| `createPageAction(title, slug)` | Creates a new CMS page metaobject |
+| `publishPageAction(slug, data)` | Saves Puck data and sets status to "published" |
+| `savePageDraftAction(slug, data)` | Saves Puck data without publishing |
+| `deletePageAction(id)` | Deletes a CMS page metaobject |
+
+Each action calls `revalidatePath` to invalidate Next.js caches after mutations.

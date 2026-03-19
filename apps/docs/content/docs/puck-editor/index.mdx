@@ -1,0 +1,60 @@
+---
+title: Overview
+description: Visual page editing with Puck — drag-and-drop CMS for Next.js.
+---
+
+The CMS uses [Puck](https://puckeditor.com) as a visual page editor. Puck is an open-source React component that provides a drag-and-drop interface for composing pages from custom components.
+
+## Architecture
+
+```
+Editor (/cms/[slug]/edit)  →  Server Actions  →  Shopify Metaobjects (Admin API)
+                                                          ↓
+Public Pages (/[slug])     ←  <Render> (RSC)  ←  Storefront API (read)
+```
+
+- **Editor** — Client component using `<Puck>` with drag-and-drop UI
+- **Render** — Server component using `<Render>` for SSR performance
+- **Storage** — Page content stored as JSON in a Shopify Metaobject field
+- **Mutations** — Server Actions for create/update/delete (no REST API routes needed)
+- **Auth** — Simple secret-based proxy (`proxy.ts`) protecting `/cms/*` routes
+
+## Data Flow
+
+1. **Create** — User creates a new page from the CMS dashboard (`/cms/new`)
+2. **Edit** — Puck editor loads page data via API route, provides visual editing
+3. **Publish** — `onPublish` triggers a Server Action that saves to Shopify and revalidates the path
+4. **View** — Public page at `/{slug}` renders via React Server Component using `<Render>`
+
+## Route Structure
+
+```
+src/app/
+  layout.tsx                 # Root layout (shared by storefront + CMS)
+  (storefront)/              # Route group — no URL impact
+    page.tsx                 # Homepage
+    [slug]/page.tsx          # Dynamic CMS pages via <Render>
+  cms/
+    _components/             # Private: Puck block components
+    _lib/
+      config.tsx             # Puck component registry
+      actions.ts             # Server Actions ('use server')
+    layout.tsx               # CMS layout (imports puck.css)
+    page.tsx                 # Dashboard — lists all pages
+    login/page.tsx           # Secret-based login
+    new/page.tsx             # Create page form
+    [slug]/edit/page.tsx     # Puck editor
+  api/
+    cms/pages/[slug]/route.ts  # GET only — editor data loading
+```
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/app/cms/_lib/config.tsx` | Puck configuration — registers all components |
+| `src/app/cms/_lib/actions.ts` | Server Actions for CRUD operations |
+| `src/app/cms/_components/` | Puck block components (Hero, TextBlock, etc.) |
+| `src/app/cms/[slug]/edit/page.tsx` | Puck editor page (`"use client"`) |
+| `src/app/(storefront)/[slug]/page.tsx` | Public page renderer (RSC) |
+| `src/proxy.ts` | Next.js 16 proxy for CMS auth |

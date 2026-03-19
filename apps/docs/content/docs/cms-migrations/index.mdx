@@ -1,0 +1,46 @@
+---
+title: Overview
+description: Versioned schema migrations for Shopify Metaobject definitions.
+---
+
+The `@shopify-next-cms/cms-migrations` package manages Shopify Metaobject definitions through versioned, sequential migrations. It handles initial setup (creating the `cms_page` definition) and future schema changes (adding fields, transforming data).
+
+## Why Migrations?
+
+Shopify Metaobject definitions must exist before you can create instances. Without a migration system:
+
+- First-time setup requires manual GraphQL calls to create definitions
+- Schema changes (adding fields, renaming) need careful coordination
+- There's no record of which changes have been applied to which store
+
+The migration system solves these by providing idempotent, tracked, sequential schema changes.
+
+## Quick Start
+
+```bash
+# Set Shopify credentials
+export SHOPIFY_STORE_URL="your-store.myshopify.com"
+export SHOPIFY_ADMIN_ACCESS_TOKEN="shpat_..."
+
+# Check migration status
+pnpm cms-migrations status
+
+# Preview changes
+pnpm cms-migrations run --dry-run
+
+# Apply migrations
+pnpm cms-migrations run
+```
+
+## How It Works
+
+1. The runner bootstraps a `cms_migration_state` metaobject in Shopify to track applied migrations
+2. Migration files in `src/migrations/` are sorted by ID and executed sequentially
+3. Each migration's `up()` function is idempotent — safe to run multiple times
+4. After each successful migration, the state is updated in Shopify
+
+## Current Migrations
+
+| ID | Description |
+|----|-------------|
+| `0001_create_cms_page` | Creates the `cms_page` metaobject definition with title, slug, puck_data, status, and updated_at fields |

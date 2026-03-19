@@ -1,0 +1,61 @@
+---
+title: Page Rendering
+description: How published CMS pages are rendered on the storefront.
+---
+
+## Public Page Route
+
+Published CMS pages are served at `/{slug}` via the catch-all route `src/app/(storefront)/[slug]/page.tsx`. This is a React Server Component that:
+
+1. Fetches the page data from Shopify using `getCmsPageBySlug(slug)`
+2. Returns `notFound()` if the page doesn't exist or isn't published
+3. Renders the page using Puck's `<Render>` component
+
+```tsx
+export default async function CmsPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const page = await getCmsPageBySlug(slug);
+
+  if (!page || page.status !== "published") {
+    notFound();
+  }
+
+  return <Render config={puckConfig} data={page.puckData} />;
+}
+```
+
+## Route Group: `(storefront)`
+
+The homepage and CMS pages live inside the `(storefront)` route group. This is a Next.js convention that:
+
+- Groups related routes without affecting the URL
+- Separates storefront concerns from `/cms` admin routes
+- Shares the root layout (theme provider, fonts) with CMS routes
+
+## Metadata
+
+Each CMS page generates dynamic metadata via `generateMetadata`:
+
+```tsx
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const page = await getCmsPageBySlug(slug);
+  return { title: page?.title ?? "Page Not Found" };
+}
+```
+
+## Async Params
+
+All dynamic routes use the Next.js 15+/16 async params pattern where `params` is a `Promise` that must be awaited. This applies to both the page component and `generateMetadata`.
+
+## Cache Revalidation
+
+When a page is published via the editor, `revalidatePath(\`/\${slug}\`)` is called in the Server Action. This invalidates the Next.js cache for that specific page, ensuring the next visitor sees the updated content.

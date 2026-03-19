@@ -1,0 +1,34 @@
+---
+title: Overview
+description: How the app integrates with Shopify Admin and Storefront APIs.
+---
+
+The CMS uses two Shopify APIs:
+
+- **Admin API** — For reading and writing CMS page data (Metaobjects)
+- **Storefront API** — For public-facing reads of published pages
+
+Both use GraphQL with auto-generated TypeScript types.
+
+## API Clients
+
+Two thin `fetch` wrappers in `src/lib/shopify/`:
+
+| Client | File | Header | Use Case |
+|--------|------|--------|----------|
+| Admin | `admin-client.ts` | `X-Shopify-Access-Token` | CMS CRUD, dashboard |
+| Storefront | `storefront-client.ts` | `X-Shopify-Storefront-Access-Token` | Public page rendering |
+
+Both share the same error types (`ShopifyApiError`, `ShopifyNetworkError`) defined in `src/lib/shopify/types.ts`.
+
+## Data Storage
+
+CMS page content is stored in Shopify Metaobjects (type: `cms_page`). Each page is a metaobject instance with fields for title, slug, Puck JSON data, status, and timestamp.
+
+See [Metaobject Schema](/docs/shopify-integration/metaobject-schema) for the full field definition.
+
+## Type Safety
+
+All GraphQL operations are type-checked at compile time using `@shopify/api-codegen-preset`. Queries are defined in `*.admin.ts` files with `#graphql` tags, and codegen produces typed response/variable interfaces.
+
+See [GraphQL Codegen](/docs/shopify-integration/graphql-codegen) for setup details.

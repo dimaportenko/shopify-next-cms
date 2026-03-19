@@ -1,0 +1,115 @@
+---
+title: Components
+description: Built-in Puck block components available in the visual editor.
+---
+
+Puck components are defined in `src/app/cms/_components/` and registered in `src/app/cms/_lib/config.tsx`. Each component has editable fields shown in the Puck sidebar and a render function for display.
+
+## Available Blocks
+
+### Hero
+
+Full-width hero section with title, subtitle, and call-to-action button.
+
+| Field | Type | Default |
+|-------|------|---------|
+| `title` | text | "Welcome to our store" |
+| `subtitle` | textarea | "Discover amazing products..." |
+| `ctaText` | text | "Shop Now" |
+| `ctaLink` | text | "/" |
+| `alignment` | select | "center" |
+
+### TextBlock
+
+Content block with customizable alignment.
+
+| Field | Type | Default |
+|-------|------|---------|
+| `content` | textarea | "Enter your text here..." |
+| `alignment` | select | "left" |
+
+### ProductCategory
+
+Wraps the existing `ProductCategory` carousel component with editable heading text.
+
+| Field | Type | Default |
+|-------|------|---------|
+| `heading` | text | "Shop By Category" |
+| `subheading` | textarea | "Explore our gallery..." |
+| `label` | text | "Category" |
+
+### ImageBanner
+
+Full-width image with optional text overlay.
+
+| Field | Type | Default |
+|-------|------|---------|
+| `imageUrl` | text | "" |
+| `alt` | text | "" |
+| `overlayText` | text | "" |
+| `height` | select | "md" (sm/md/lg) |
+
+### Spacer
+
+Vertical spacing utility block.
+
+| Field | Type | Default |
+|-------|------|---------|
+| `size` | select | "md" (sm/md/lg/xl) |
+
+## Component Categories
+
+Components are organized in the Puck sidebar by category:
+
+| Category | Components |
+|----------|-----------|
+| Content | Hero, TextBlock, ImageBanner |
+| Commerce | ProductCategory |
+| Layout | Spacer |
+
+## Adding a New Component
+
+1. Create a component file in `src/app/cms/_components/`:
+
+```tsx
+import type { ComponentConfig } from "@puckeditor/core";
+
+export interface MyBlockProps {
+  title: string;
+}
+
+function MyBlockRender({ title }: MyBlockProps) {
+  return <section><h2>{title}</h2></section>;
+}
+
+export const myBlockConfig: ComponentConfig<MyBlockProps> = {
+  fields: {
+    title: { type: "text" },
+  },
+  defaultProps: {
+    title: "Default Title",
+  },
+  render: MyBlockRender,
+};
+```
+
+2. Register it in `src/app/cms/_lib/config.tsx`:
+
+```tsx
+import { myBlockConfig } from "../_components/my-block";
+import type { MyBlockProps } from "../_components/my-block";
+
+type Props = {
+  // ... existing components
+  MyBlock: MyBlockProps;
+};
+
+export const puckConfig: Config<Props> = {
+  components: {
+    // ... existing components
+    MyBlock: myBlockConfig,
+  },
+};
+```
+
+3. Optionally add it to a category in the `categories` section of the config.

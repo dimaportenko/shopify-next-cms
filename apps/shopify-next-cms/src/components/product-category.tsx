@@ -61,19 +61,26 @@ const categories = [
   },
 ];
 
-export function ProductCategory() {
+interface ProductCategoryProps {
+  heading?: string;
+  subheading?: string;
+  label?: string;
+}
+
+export function ProductCategory({
+  heading = "Shop By Category",
+  subheading = "Explore our gallery to learn more about our amazing products and their features.",
+  label = "Category",
+}: ProductCategoryProps = {}) {
   return (
     <section className="py-8 sm:py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12 space-y-4 text-center sm:mb-16 lg:mb-24">
-          <p className="text-sm font-medium uppercase text-primary">Category</p>
+          <p className="text-sm font-medium uppercase text-primary">{label}</p>
           <h2 className="text-2xl font-semibold md:text-3xl lg:text-4xl">
-            Shop By Category
+            {heading}
           </h2>
-          <p className="text-xl text-muted-foreground">
-            Explore our gallery to learn more about our amazing products and
-            their features.
-          </p>
+          <p className="text-xl text-muted-foreground">{subheading}</p>
         </div>
         <Carousel
           className="w-full px-6"

@@ -1,0 +1,84 @@
+---
+title: Architecture
+description: Package structure and technical details of the migration system.
+---
+
+## Package Structure
+
+```
+packages/cms-migrations/
+├── src/
+│   ├── index.ts                    # CLI entry point (commander)
+│   ├── types.ts                    # Migration interface + metaobject types
+│   ├── runner.ts                   # Migration runner (sequential, idempotent)
+│   ├── shopify-client.ts           # ShopifyClient class with CRUD methods
+│   ├── migrations/
+│   │   └── 0001_create_cms_page.ts # Initial schema migration
+│   ├── queries/
+│   │   └── migrations.admin.ts     # GraphQL operations
+│   └── utils/
+│       ├── logger.ts               # Logging utilities
+│       └── rate-limiter.ts         # Throttle + retry with exponential backoff
+├── .graphqlrc-admin.ts             # GraphQL codegen config
+├── package.json
+└── tsconfig.json
+```
+
+## State Tracking
+
+Migration state is stored in a `cms_migration_state` metaobject in Shopify:
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `applied_migrations` | `json` | Array of applied migration IDs |
+| `last_run_at` | `single_line_text_field` | Timestamp of last run |
+
+The runner bootstraps this definition and instance automatically on first run.
+
+## Runner Flow
+
+```
+1. Ensure cms_migration_state definition exists (create if not)
+2. Ensure cms_migration_state instance exists (create if not)
+3. Read applied migrations from the instance
+4. Sort all registered migrations by ID
+5. Filter to pending (not in applied list)
+6. For each pending migration:
+   a. Execute up()
+   b. Record migration ID in applied list
+   c. Update cms_migration_state instance
+7. Report summary
+```
+
+## ShopifyClient Methods
+
+The `ShopifyClient` class provides typed methods for all metaobject operations:
+
+| Method | Description |
+|--------|-------------|
+| `getMetaobjectDefinition(type)` | Get definition by type (returns null if not found) |
+| `createMetaobjectDefinition(input)` | Create a new definition |
+| `updateMetaobjectDefinition(id, input)` | Update definition (add/modify fields) |
+| `deleteMetaobjectDefinition(type)` | Delete a definition |
+| `listAllMetaobjects(type)` | List all instances with pagination |
+| `getMetaobjectByHandle(type, handle)` | Get single instance by handle |
+| `createMetaobject(input)` | Create a new instance |
+| `updateMetaobject(id, input)` | Update instance fields |
+
+## Rate Limiting
+
+The client reuses the same rate limiting strategy as the sample-data package:
+
+- Tracks available cost points from API response extensions
+- Waits when points drop below threshold (800/1000)
+- Retries failed requests with exponential backoff (up to 3 retries)
+
+## Dependencies
+
+| Package | Purpose |
+|---------|---------|
+| `commander` | CLI argument parsing |
+| `tsx` | TypeScript execution (dev) |
+| `tsup` | TypeScript bundling |
+| `@shopify/api-codegen-preset` | GraphQL type generation (dev) |
+| `@graphql-codegen/cli` | GraphQL codegen runner (dev) |

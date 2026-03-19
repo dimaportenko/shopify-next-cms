@@ -1,0 +1,82 @@
+---
+title: Metaobject Schema
+description: CMS page data model stored in Shopify Metaobjects.
+---
+
+CMS pages are stored as Shopify Metaobjects with type `cms_page`. The metaobject definition is created by the [CMS Migrations](/docs/cms-migrations) package.
+
+## Fields
+
+| Key | Type | Purpose |
+|-----|------|---------|
+| `title` | `single_line_text_field` | Page title displayed in dashboard and metadata |
+| `slug` | `single_line_text_field` | URL path segment (also used as the metaobject handle) |
+| `puck_data` | `json` | Full Puck editor JSON — component tree, props, layout |
+| `status` | `single_line_text_field` | `"draft"` or `"published"` |
+| `updated_at` | `single_line_text_field` | ISO 8601 timestamp of last update |
+
+## Access
+
+The definition is created with `access: { storefront: READ }`, allowing:
+
+- **Storefront API** — Can read published pages for SSR (public traffic)
+- **Admin API** — Full read/write access from server-side routes and Server Actions
+
+## Puck Data Structure
+
+The `puck_data` field stores Puck's `Data` type as JSON:
+
+```json
+{
+  "content": [
+    {
+      "type": "Hero",
+      "props": {
+        "id": "hero-1",
+        "title": "Welcome",
+        "subtitle": "Discover our products",
+        "ctaText": "Shop Now",
+        "ctaLink": "/",
+        "alignment": "center"
+      }
+    },
+    {
+      "type": "Spacer",
+      "props": {
+        "id": "spacer-1",
+        "size": "md"
+      }
+    }
+  ],
+  "root": {}
+}
+```
+
+## Size Limits
+
+Shopify's `json` metafield type supports up to 65,535 characters. This is sufficient for typical page compositions but may need monitoring for very complex pages with many components.
+
+## App-Level Types
+
+The app defines two TypeScript interfaces for working with page data:
+
+```ts
+interface CmsPage {
+  id: string;
+  title: string;
+  slug: string;
+  puckData: Data;                    // Puck editor data
+  status: "draft" | "published";
+  updatedAt: string;
+}
+
+interface CmsPageSummary {
+  id: string;
+  title: string;
+  slug: string;
+  status: "draft" | "published";
+  updatedAt: string;
+}
+```
+
+`CmsPageSummary` omits `puckData` for lightweight list operations (dashboard).

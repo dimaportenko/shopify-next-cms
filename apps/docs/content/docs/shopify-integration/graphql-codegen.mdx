@@ -1,0 +1,96 @@
+---
+title: GraphQL Codegen
+description: Auto-generated TypeScript types for Shopify GraphQL queries.
+---
+
+The project uses [`@shopify/api-codegen-preset`](https://github.com/Shopify/shopify-app-js/tree/main/packages/api-clients/api-codegen-preset) to generate TypeScript types from Shopify's GraphQL schemas.
+
+## Configuration
+
+Two codegen configs in `apps/shopify-next-cms/`:
+
+### Storefront API (`.graphqlrc.ts`)
+
+```ts
+import { ApiType, shopifyApiProject } from "@shopify/api-codegen-preset";
+
+const config = {
+  schema: ["https://shopify.dev/storefront-graphql-direct-proxy"],
+  projects: {
+    default: shopifyApiProject({
+      apiType: ApiType.Storefront,
+      apiVersion: "2026-04",
+      documents: ["./src/**/*.storefront.{ts,tsx}"],
+      outputDir: "./types",
+    }),
+  },
+};
+
+export default config;
+```
+
+### Admin API (`.graphqlrc-admin.ts`)
+
+Same structure but with `ApiType.Admin` and `*.admin.{ts,tsx}` document pattern.
+
+## File Naming Convention
+
+GraphQL operations must be in files matching the document pattern:
+
+| API | File suffix | Example |
+|-----|------------|---------|
+| Admin | `*.admin.ts` | `cms-pages.admin.ts` |
+| Storefront | `*.storefront.ts` | `products.storefront.ts` |
+
+## Query Format
+
+Queries use the `#graphql` tag so codegen can discover them:
+
+```ts
+export const LIST_CMS_PAGES = `#graphql
+  query ListCmsPages {
+    metaobjects(type: "cms_page", first: 100) {
+      nodes {
+        id
+        handle
+        fields { key value }
+      }
+    }
+  }
+`;
+```
+
+## Generated Types
+
+Codegen produces types in the `types/` directory:
+
+| File | Contents |
+|------|----------|
+| `admin.generated.d.ts` | Query/mutation types (e.g., `ListCmsPagesQuery`, `CreateCmsPageMutationVariables`) |
+| `admin.types.d.ts` | Full Shopify Admin API type definitions |
+| `admin-2026-04.schema.json` | Introspection schema |
+| `storefront.generated.d.ts` | Storefront query types |
+| `storefront.types.d.ts` | Full Storefront API type definitions |
+
+## Path Alias
+
+Import generated types using the `@generated-types` alias (configured in `tsconfig.json`):
+
+```ts
+import type { ListCmsPagesQuery } from "@generated-types/admin.generated";
+```
+
+## Running Codegen
+
+```bash
+# Generate both Storefront and Admin types
+pnpm --filter shopify-next-cms codegen
+
+# Generate only Storefront types
+pnpm --filter shopify-next-cms codegen:storefront
+
+# Generate only Admin types
+pnpm --filter shopify-next-cms codegen:admin
+```
+
+Run codegen after modifying any `*.admin.ts` or `*.storefront.ts` file that contains `#graphql` tagged queries.

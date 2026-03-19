@@ -1,4 +1,16 @@
 {
   "root": true,
-  "pages": ["index", "---Theme Customizer---", "...theme-customizer", "---Sample Data---", "...sample-data"]
+  "pages": [
+    "index",
+    "---Puck Editor---",
+    "...puck-editor",
+    "---Shopify Integration---",
+    "...shopify-integration",
+    "---CMS Migrations---",
+    "...cms-migrations",
+    "---Theme Customizer---",
+    "...theme-customizer",
+    "---Sample Data---",
+    "...sample-data"
+  ]
 }

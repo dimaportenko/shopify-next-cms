@@ -1,0 +1,140 @@
+---
+title: Writing Migrations
+description: How to create new migrations for schema changes.
+---
+
+## Migration Interface
+
+Each migration exports a `Migration` object:
+
+```ts
+interface Migration {
+  id: string;           // Unique ID (e.g., "0002_add_seo_fields")
+  description: string;  // Human-readable description
+  up: (client: ShopifyClient) => Promise<void>;   // Apply
+  down?: (client: ShopifyClient) => Promise<void>; // Rollback (optional)
+}
+```
+
+## Creating a Migration
+
+1. Create a new file in `packages/cms-migrations/src/migrations/`:
+
+```ts
+// 0002_add_seo_fields.ts
+import type { Migration } from "../types.js";
+import { info } from "../utils/logger.js";
+
+export const migration: Migration = {
+  id: "0002_add_seo_fields",
+  description: "Add SEO description field to cms_page",
+
+  up: async (client) => {
+    const def = await client.getMetaobjectDefinition("cms_page");
+    if (!def) throw new Error("cms_page definition not found");
+
+    const hasField = def.fieldDefinitions.some(
+      (f) => f.key === "seo_description"
+    );
+    if (hasField) {
+      info("seo_description field already exists, skipping");
+      return;
+    }
+
+    await client.updateMetaobjectDefinition(def.id, {
+      fieldDefinitions: [
+        {
+          create: {
+            key: "seo_description",
+            name: "SEO Description",
+            type: "single_line_text_field",
+          },
+        },
+      ],
+    });
+  },
+};
+```
+
+2. Register it in `src/index.ts`:
+
+```ts
+import { migration as m0002 } from "./migrations/0002_add_seo_fields.js";
+
+const allMigrations: Migration[] = [m0001, m0002];
+```
+
+## Schema Change Strategies
+
+### Add a Field
+
+Check if the field exists, then add it via `updateMetaobjectDefinition`:
+
+```ts
+const def = await client.getMetaobjectDefinition("cms_page");
+const hasField = def.fieldDefinitions.some((f) => f.key === "new_field");
+if (!hasField) {
+  await client.updateMetaobjectDefinition(def.id, {
+    fieldDefinitions: [
+      { create: { key: "new_field", name: "New Field", type: "json" } },
+    ],
+  });
+}
+```
+
+### Rename a Field
+
+Shopify doesn't support renaming fields. Use a three-step approach across separate migrations:
+
+1. **Migration A** — Add the new field and copy data from old to new
+2. **Deploy** — Update app code to use the new field name
+3. **Migration B** — Remove the old field
+
+```ts
+// Step 1: Add new field + copy data
+up: async (client) => {
+  // Add new field...
+  // Copy data for all instances:
+  const pages = await client.listAllMetaobjects("cms_page");
+  for (const page of pages) {
+    const oldValue = page.fields.find((f) => f.key === "old_field")?.value;
+    const newValue = page.fields.find((f) => f.key === "new_field")?.value;
+    if (oldValue && !newValue) {
+      await client.updateMetaobject(page.id, {
+        fields: [{ key: "new_field", value: oldValue }],
+      });
+    }
+  }
+}
+```
+
+### Backfill Defaults
+
+Set default values for existing instances:
+
+```ts
+up: async (client) => {
+  const pages = await client.listAllMetaobjects("cms_page");
+  for (const page of pages) {
+    const status = page.fields.find((f) => f.key === "status")?.value;
+    if (!status) {
+      await client.updateMetaobject(page.id, {
+        fields: [{ key: "status", value: "draft" }],
+      });
+    }
+  }
+}
+```
+
+## Naming Convention
+
+Use zero-padded sequential IDs with a descriptive suffix:
+
+```
+0001_create_cms_page
+0002_add_seo_fields
+0003_backfill_status_defaults
+0004_rename_puck_data_to_content
+```
+
+Migrations are sorted lexicographically by ID and run in order.

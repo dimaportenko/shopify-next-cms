@@ -1,0 +1,66 @@
+---
+title: Usage
+description: CLI commands for running and managing migrations.
+---
+
+## Commands
+
+### Run Migrations
+
+Apply all pending migrations:
+
+```bash
+pnpm cms-migrations run
+```
+
+Preview without applying:
+
+```bash
+pnpm cms-migrations run --dry-run
+```
+
+With verbose logging:
+
+```bash
+pnpm cms-migrations -v run
+```
+
+### Check Status
+
+Show which migrations have been applied:
+
+```bash
+pnpm cms-migrations status
+```
+
+Output example:
+
+```
+[cms-migrations] Migration status (1 applied, 1 total):
+[cms-migrations]   ✓ 0001_create_cms_page — Create cms_page metaobject definition
+[cms-migrations] ✓ All migrations are up-to-date
+```
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SHOPIFY_STORE_URL` | Yes | Store domain (e.g., `my-store.myshopify.com`) |
+| `SHOPIFY_ADMIN_ACCESS_TOKEN` | Yes | Admin API access token with metaobject permissions |
+
+## Required Shopify Scopes
+
+The Admin API token needs these scopes:
+
+- `read_metaobject_definitions`
+- `write_metaobject_definitions`
+- `read_metaobjects`
+- `write_metaobjects`
+
+## Idempotency
+
+Migrations are safe to run multiple times:
+
+- The runner checks which migrations have already been applied
+- Each migration's `up()` checks preconditions before acting (e.g., definition exists?)
+- Running `pnpm cms-migrations run` on an up-to-date store reports "All migrations are up-to-date"

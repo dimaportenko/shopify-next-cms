@@ -1,0 +1,97 @@
+---
+title: API Clients
+description: Shopify Admin and Storefront API client architecture.
+---
+
+## Client Signature
+
+Both clients follow the same generic pattern with typed return and variable generics:
+
+```ts
+async function adminQuery<
+  T,
+  V extends Record<string, unknown> = Record<string, unknown>,
+>(query: string, variables?: V): Promise<T>
+```
+
+- `T` — The generated query/mutation return type
+- `V` — The generated variables type
+
+## Usage
+
+```ts
+import type {
+  ListCmsPagesQuery,
+  ListCmsPagesQueryVariables,
+} from "@generated-types/admin.generated";
+
+const data = await adminQuery<ListCmsPagesQuery, ListCmsPagesQueryVariables>(
+  LIST_CMS_PAGES,
+);
+// data.metaobjects.nodes is fully typed
+```
+
+## Error Types
+
+Both clients throw structured errors defined in `src/lib/shopify/types.ts`:
+
+### ShopifyApiError
+
+Thrown when the API returns GraphQL errors:
+
+```ts
+class ShopifyApiError extends Error {
+  readonly errors: ShopifyGraphQLError[];
+  readonly extensions?: ShopifyResponseExtensions;
+}
+```
+
+Each `ShopifyGraphQLError` contains:
+- `message` — Human-readable error message
+- `locations` — Line/column in the query
+- `path` — Field path where the error occurred
+- `extensions` — Error code, problems array, original error
+
+### ShopifyNetworkError
+
+Thrown on HTTP-level failures (non-200 responses):
+
+```ts
+class ShopifyNetworkError extends Error {
+  readonly statusCode: number;
+}
+```
+
+### ShopifyResponse
+
+The full API response structure including rate limit info:
+
+```ts
+interface ShopifyResponse<T> {
+  data: T | null;
+  errors?: ShopifyGraphQLError[];
+  extensions?: {
+    cost?: {
+      requestedQueryCost: number;
+      actualQueryCost: number;
+      throttleStatus: {
+        maximumAvailable: number;
+        currentlyAvailable: number;
+        restoreRate: number;
+      };
+    };
+  };
+}
+```
+
+## Configuration
+
+Both clients read from environment variables:
+
+| Variable | Client | Purpose |
+|----------|--------|---------|
+| `SHOPIFY_STORE_URL` | Both | Store domain |
+| `SHOPIFY_ADMIN_ACCESS_TOKEN` | Admin | Admin API token |
+| `SHOPIFY_STOREFRONT_ACCESS_TOKEN` | Storefront | Storefront API token |
+
+API version is set to `2026-04` in both clients.
