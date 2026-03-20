@@ -17,7 +17,9 @@ export default function EditorPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`/api/cms/pages/${slug}`)
+    const controller = new AbortController();
+
+    fetch(`/api/cms/pages/${slug}`, { signal: controller.signal })
       .then((r) => {
         if (!r.ok) throw new Error("Page not found");
         return r.json();
@@ -27,9 +29,12 @@ export default function EditorPage() {
         setLoading(false);
       })
       .catch((err) => {
+        if (err.name === "AbortError") return;
         setError(err.message);
         setLoading(false);
       });
+
+    return () => controller.abort();
   }, [slug]);
 
   if (loading) {

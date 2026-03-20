@@ -1,7 +1,10 @@
+import { cache } from "react";
 import { Render } from "@puckeditor/core";
 import { notFound } from "next/navigation";
 import { getCmsPageBySlug } from "@/lib/shopify/queries/cms-pages";
 import { puckConfig } from "@/app/cms/_lib/config";
+
+const getCmsPage = cache(getCmsPageBySlug);
 
 export default async function CmsPage({
   params,
@@ -9,7 +12,7 @@ export default async function CmsPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const page = await getCmsPageBySlug(slug);
+  const page = await getCmsPage(slug);
 
   if (!page || page.status !== "published") {
     notFound();
@@ -24,6 +27,6 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const page = await getCmsPageBySlug(slug);
+  const page = await getCmsPage(slug);
   return { title: page?.title ?? "Page Not Found" };
 }

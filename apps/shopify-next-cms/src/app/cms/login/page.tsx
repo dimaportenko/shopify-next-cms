@@ -6,14 +6,12 @@ import { useRouter } from "next/navigation";
 export default function CmsLoginPage() {
   const router = useRouter();
   const [secret, setSecret] = useState("");
-  const [error, setError] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    document.cookie = `cms-token=${encodeURIComponent(secret.trim())}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+    document.cookie = `cms-token=${encodeURIComponent(secret.trim())}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax; Secure`;
 
-    setError(false);
     router.push("/cms");
   }
 
@@ -42,12 +40,6 @@ export default function CmsLoginPage() {
               className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
-
-          {error && (
-            <p className="text-sm text-destructive">
-              Invalid secret. Please try again.
-            </p>
-          )}
 
           <button
             type="submit"

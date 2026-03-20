@@ -1,11 +1,13 @@
 import type { ComponentConfig } from "@puckeditor/core";
+import type { Alignment } from "./shared";
+import { ALIGNMENT_OPTIONS } from "./shared";
 
 export interface HeroProps {
   title: string;
   subtitle: string;
   ctaText: string;
   ctaLink: string;
-  alignment: "left" | "center" | "right";
+  alignment: Alignment;
 }
 
 function HeroRender({
@@ -56,11 +58,10 @@ export const heroConfig: ComponentConfig<HeroProps> = {
     ctaLink: { type: "text" },
     alignment: {
       type: "select",
-      options: [
-        { label: "Left", value: "left" },
-        { label: "Center", value: "center" },
-        { label: "Right", value: "right" },
-      ],
+      options: ALIGNMENT_OPTIONS as unknown as {
+        label: string;
+        value: string;
+      }[],
     },
   },
   defaultProps: {

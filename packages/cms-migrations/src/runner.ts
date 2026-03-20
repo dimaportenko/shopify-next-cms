@@ -1,11 +1,18 @@
 import { ShopifyClient } from "./shopify-client.js";
-import type { Migration } from "./types.js";
+import type { Migration, MetaobjectNode } from "./types.js";
 import { info, success, warn, error as logError } from "./utils/logger.js";
 
 const MIGRATION_STATE_TYPE = "cms_migration_state";
 const MIGRATION_STATE_HANDLE = "default";
 
-async function ensureMigrationState(client: ShopifyClient): Promise<void> {
+interface MigrationState {
+  instanceId: string;
+  applied: string[];
+}
+
+async function ensureMigrationState(
+  client: ShopifyClient,
+): Promise<MigrationState> {
   const def = await client.getMetaobjectDefinition(MIGRATION_STATE_TYPE);
 
   if (!def) {
@@ -28,14 +35,14 @@ async function ensureMigrationState(client: ShopifyClient): Promise<void> {
     });
   }
 
-  const instance = await client.getMetaobjectByHandle(
+  let instance = await client.getMetaobjectByHandle(
     MIGRATION_STATE_TYPE,
     MIGRATION_STATE_HANDLE,
   );
 
   if (!instance) {
     info("Creating migration state instance...");
-    await client.createMetaobject({
+    instance = await client.createMetaobject({
       type: MIGRATION_STATE_TYPE,
       handle: MIGRATION_STATE_HANDLE,
       fields: [
@@ -44,16 +51,14 @@ async function ensureMigrationState(client: ShopifyClient): Promise<void> {
       ],
     });
   }
+
+  return {
+    instanceId: instance.id,
+    applied: parseAppliedMigrations(instance),
+  };
 }
 
-async function getAppliedMigrations(client: ShopifyClient): Promise<string[]> {
-  const instance = await client.getMetaobjectByHandle(
-    MIGRATION_STATE_TYPE,
-    MIGRATION_STATE_HANDLE,
-  );
-
-  if (!instance) return [];
-
+function parseAppliedMigrations(instance: MetaobjectNode): string[] {
   const field = instance.fields.find((f) => f.key === "applied_migrations");
   if (!field?.value) return [];
 
@@ -66,23 +71,12 @@ async function getAppliedMigrations(client: ShopifyClient): Promise<string[]> {
 
 async function recordMigration(
   client: ShopifyClient,
-  migrationId: string,
+  instanceId: string,
   applied: string[],
 ): Promise<void> {
-  const instance = await client.getMetaobjectByHandle(
-    MIGRATION_STATE_TYPE,
-    MIGRATION_STATE_HANDLE,
-  );
-
-  if (!instance) {
-    throw new Error("Migration state instance not found");
-  }
-
-  const updated = [...applied, migrationId];
-
-  await client.updateMetaobject(instance.id, {
+  await client.updateMetaobject(instanceId, {
     fields: [
-      { key: "applied_migrations", value: JSON.stringify(updated) },
+      { key: "applied_migrations", value: JSON.stringify(applied) },
       { key: "last_run_at", value: new Date().toISOString() },
     ],
   });
@@ -93,9 +87,8 @@ export async function runMigrations(
   migrations: Migration[],
   options: { dryRun?: boolean } = {},
 ): Promise<void> {
-  await ensureMigrationState(client);
-
-  const applied = await getAppliedMigrations(client);
+  const state = await ensureMigrationState(client);
+  const { instanceId, applied } = state;
   const sorted = [...migrations].sort((a, b) => a.id.localeCompare(b.id));
   const pending = sorted.filter((m) => !applied.includes(m.id));
 
@@ -116,8 +109,8 @@ export async function runMigrations(
 
     try {
       await migration.up(client);
-      await recordMigration(client, migration.id, applied);
       applied.push(migration.id);
+      await recordMigration(client, instanceId, applied);
       success(`Completed: ${migration.id}`);
     } catch (err) {
       logError(
@@ -138,9 +131,8 @@ export async function getMigrationStatus(
   client: ShopifyClient,
   migrations: Migration[],
 ): Promise<void> {
-  await ensureMigrationState(client);
-
-  const applied = await getAppliedMigrations(client);
+  const state = await ensureMigrationState(client);
+  const { applied } = state;
   const sorted = [...migrations].sort((a, b) => a.id.localeCompare(b.id));
 
   info(`Migration status (${applied.length} applied, ${sorted.length} total):`);

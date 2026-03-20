@@ -1,8 +1,10 @@
 import type { ComponentConfig } from "@puckeditor/core";
+import type { Alignment } from "./shared";
+import { ALIGNMENT_OPTIONS } from "./shared";
 
 export interface TextBlockProps {
   content: string;
-  alignment: "left" | "center" | "right";
+  alignment: Alignment;
 }
 
 function TextBlockRender({ content, alignment }: TextBlockProps) {
@@ -29,11 +31,10 @@ export const textBlockConfig: ComponentConfig<TextBlockProps> = {
     content: { type: "textarea" },
     alignment: {
       type: "select",
-      options: [
-        { label: "Left", value: "left" },
-        { label: "Center", value: "center" },
-        { label: "Right", value: "right" },
-      ],
+      options: ALIGNMENT_OPTIONS as unknown as {
+        label: string;
+        value: string;
+      }[],
     },
   },
   defaultProps: {
