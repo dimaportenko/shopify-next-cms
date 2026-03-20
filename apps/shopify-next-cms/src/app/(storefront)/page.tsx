@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ThemeCustomizer } from "@/components/theme-customizer";
 import { ProductCategory } from "@/components/product-category";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -20,7 +21,9 @@ export default function Home() {
               priority
             />
             <Separator orientation="vertical" className="h-6" />
-            <Badge variant="secondary">Shopify CMS</Badge>
+            <Link href="/cms">
+              <Badge variant="secondary">Shopify CMS</Badge>
+            </Link>
           </div>
           <div className="flex items-center gap-2">
             <ThemeCustomizer />

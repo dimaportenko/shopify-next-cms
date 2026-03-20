@@ -18,7 +18,7 @@ CMS pages are stored as Shopify Metaobjects with type `cms_page`. The metaobject
 
 ## Access
 
-The definition is created with `access: { storefront: READ }`, allowing:
+The definition is created with `access: { storefront: PUBLIC_READ }`, allowing:
 
 - **Storefront API** — Can read published pages for SSR (public traffic)
 - **Admin API** — Full read/write access from server-side routes and Server Actions

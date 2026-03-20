@@ -115,6 +115,11 @@ function adjustAllColors(colors: ThemeColors, adjustments: HslAdjustments): Them
   return result
 }
 
+function hasStoredState(): boolean {
+  if (typeof window === "undefined") return false
+  return localStorage.getItem(STORAGE_KEY) !== null
+}
+
 function loadState(): ThemeState {
   if (typeof window === "undefined") return getDefaultState()
   try {
@@ -181,17 +186,37 @@ function applyToDocument(state: ThemeState, resolvedTheme: string | undefined) {
   }
 }
 
+function removeCustomStyles() {
+  const root = document.documentElement
+  for (const key of COLOR_KEYS) {
+    root.style.removeProperty(`--${key}`)
+  }
+  root.style.removeProperty("--radius")
+  root.style.removeProperty("--spacing")
+  root.style.removeProperty("--letter-spacing")
+  root.style.removeProperty("--custom-font-sans")
+  root.style.removeProperty("--custom-font-serif")
+  root.style.removeProperty("--custom-font-mono")
+  for (const key of SHADOW_KEYS) {
+    root.style.removeProperty(`--${key}`)
+  }
+}
+
 export function useThemeCustomizer() {
   const { resolvedTheme } = useTheme()
   const initialState = useMemo(() => loadState(), [])
   const [state, setState] = useState<ThemeState>(initialState)
+  const [isCustomized, setIsCustomized] = useState(() => hasStoredState())
 
   useEffect(() => {
-    applyToDocument(state, resolvedTheme)
-    saveState(state)
-  }, [state, resolvedTheme])
+    if (isCustomized) {
+      applyToDocument(state, resolvedTheme)
+      saveState(state)
+    }
+  }, [state, resolvedTheme, isCustomized])
 
   const applyPreset = useCallback((preset: ThemePreset) => {
+    setIsCustomized(true)
     setState((prev) => ({
       ...prev,
       preset: preset.name,
@@ -201,15 +226,18 @@ export function useThemeCustomizer() {
   }, [])
 
   const setRadius = useCallback((radius: number) => {
+    setIsCustomized(true)
     setState((prev) => ({ ...prev, radius }))
   }, [])
 
   const setSpacing = useCallback((spacing: number) => {
+    setIsCustomized(true)
     setState((prev) => ({ ...prev, spacing }))
   }, [])
 
   const setColor = useCallback(
     (key: keyof ThemeColors, value: string, mode: "light" | "dark") => {
+      setIsCustomized(true)
       setState((prev) => ({
         ...prev,
         preset: "custom",
@@ -221,6 +249,7 @@ export function useThemeCustomizer() {
 
   const setTypography = useCallback(
     (key: keyof ThemeTypography, value: string) => {
+      setIsCustomized(true)
       setState((prev) => ({
         ...prev,
         typography: { ...prev.typography, [key]: value },
@@ -231,6 +260,7 @@ export function useThemeCustomizer() {
 
   const setShadow = useCallback(
     (key: keyof ThemeShadow, value: string) => {
+      setIsCustomized(true)
       setState((prev) => ({
         ...prev,
         shadow: { ...prev.shadow, [key]: value },
@@ -241,6 +271,7 @@ export function useThemeCustomizer() {
 
   const applyHslAdjustments = useCallback(
     (adjustments: HslAdjustments) => {
+      setIsCustomized(true)
       setState((prev) => {
         // Save checkpoint on first adjustment
         const checkpoint = prev.colorCheckpoint ?? {
@@ -274,7 +305,14 @@ export function useThemeCustomizer() {
   }, [])
 
   const reset = useCallback(() => {
+    setIsCustomized(false)
     setState(getDefaultState())
+    removeCustomStyles()
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+    } catch {
+      // ignore
+    }
   }, [])
 
   const generateCSS = useCallback(() => {
