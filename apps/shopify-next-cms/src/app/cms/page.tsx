@@ -52,7 +52,7 @@ export default async function CmsDashboard() {
               </div>
               <div className="flex items-center gap-2">
                 <Link
-                  href={`/cms/${page.slug}/edit`}
+                  href={`/cms/${page.pageType}/${page.slug}/edit`}
                   className="inline-flex h-9 items-center rounded-md border px-4 text-sm font-medium transition-colors hover:bg-accent"
                 >
                   Edit

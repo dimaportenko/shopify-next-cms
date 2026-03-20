@@ -11,13 +11,14 @@ The CMS dashboard at `/cms` is a React Server Component that directly fetches al
 
 The create page form accepts a page type (General, Product, Collection, Home), title, and automatically generates a URL slug. On submit, it calls the `createPageAction` Server Action which creates a new metaobject in Shopify with empty Puck data and the selected page type, then redirects to the editor.
 
-## Editor (`/cms/[slug]/edit`)
+## Editor (`/cms/[pageType]/[slug]/edit`)
 
 The editor page is a client component (`"use client"`) that:
 
-1. Fetches the page data via `GET /api/cms/pages/[slug]`
-2. Renders the full-screen `<Puck>` editor with the page's saved data
-3. On publish, calls the `publishPageAction` Server Action which saves to Shopify and calls `revalidatePath` to invalidate the cached public page
+1. Reads `pageType` and `slug` from route params, validates `pageType` with `isValidPageType()`
+2. Fetches the page data via `GET /api/cms/pages/[slug]?pageType=[pageType]`
+3. Renders the full-screen `<Puck>` editor with the page's saved data
+4. On publish, calls `publishPageAction(slug, pageType, data)` which saves to Shopify and calls `revalidatePath` to invalidate the cached public page
 
 ## Authentication
 
@@ -48,8 +49,8 @@ All mutations use Server Actions defined in `src/app/cms/_lib/actions.ts`:
 | Action | Description |
 |--------|-------------|
 | `createPageAction(title, slug, pageType)` | Creates a new CMS page metaobject with the given type |
-| `publishPageAction(slug, data)` | Saves Puck data, syncs page type from root props, sets status to "published" |
-| `savePageDraftAction(slug, data)` | Saves Puck data without publishing |
+| `publishPageAction(slug, pageType, data)` | Saves Puck data, syncs page type from root props, sets status to "published" |
+| `savePageDraftAction(slug, pageType, data)` | Saves Puck data without publishing |
 | `deletePageAction(id)` | Deletes a CMS page metaobject |
 
 Each action calls `revalidatePath` to invalidate Next.js caches after mutations.

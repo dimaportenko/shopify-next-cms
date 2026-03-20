@@ -33,7 +33,7 @@ export default function NewPage() {
 
     try {
       await createPageAction(title.trim(), slug.trim(), pageType);
-      router.push(`/cms/${slug.trim()}/edit`);
+      router.push(`/cms/${pageType}/${slug.trim()}/edit`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create page");
       setSubmitting(false);

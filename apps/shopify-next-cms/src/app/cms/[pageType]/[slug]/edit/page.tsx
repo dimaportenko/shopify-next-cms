@@ -4,22 +4,30 @@ import { Puck } from "@puckeditor/core";
 import type { Data } from "@puckeditor/core";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { puckConfig } from "../../_lib/config";
-import { publishPageAction } from "../../_lib/actions";
+import type { PageType } from "@/app/cms/_lib/page-types";
+import { isValidPageType } from "@/app/cms/_lib/page-types";
+import { puckConfig } from "../../../_lib/config";
+import { publishPageAction } from "../../../_lib/actions";
 
 const EMPTY_DATA: Data = { content: [], root: {} };
 
 export default function EditorPage() {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug, pageType } = useParams<{ slug: string; pageType: string }>();
   const router = useRouter();
   const [initialData, setInitialData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const validPageType: PageType = isValidPageType(pageType)
+    ? pageType
+    : "general";
+
   useEffect(() => {
     const controller = new AbortController();
 
-    fetch(`/api/cms/pages/${slug}`, { signal: controller.signal })
+    fetch(`/api/cms/pages/${slug}?pageType=${validPageType}`, {
+      signal: controller.signal,
+    })
       .then((r) => {
         if (!r.ok) throw new Error("Page not found");
         return r.json();
@@ -35,7 +43,7 @@ export default function EditorPage() {
       });
 
     return () => controller.abort();
-  }, [slug]);
+  }, [slug, validPageType]);
 
   if (loading) {
     return (
@@ -65,7 +73,7 @@ export default function EditorPage() {
       config={puckConfig}
       data={initialData!}
       onPublish={async (data) => {
-        await publishPageAction(slug, data);
+        await publishPageAction(slug, validPageType, data);
         router.push("/cms");
       }}
     />

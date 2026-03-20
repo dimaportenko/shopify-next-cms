@@ -8,7 +8,7 @@ The CMS uses [Puck](https://puckeditor.com) as a visual page editor. Puck is an 
 ## Architecture
 
 ```
-Editor (/cms/[slug]/edit)  →  Server Actions  →  Shopify Metaobjects (Admin API)
+Editor (/cms/[pageType]/[slug]/edit)  →  Server Actions  →  Shopify Metaobjects (Admin API)
                                                           ↓
 Public Pages (/[slug])     ←  <Render> (RSC)  ←  Storefront API (read)
 ```
@@ -21,8 +21,8 @@ Public Pages (/[slug])     ←  <Render> (RSC)  ←  Storefront API (read)
 
 ## Data Flow
 
-1. **Create** — User creates a new page from the CMS dashboard (`/cms/new`)
-2. **Edit** — Puck editor loads page data via API route, provides visual editing
+1. **Create** — User selects a page type and title from the CMS dashboard (`/cms/new`)
+2. **Edit** — Puck editor at `/cms/{pageType}/{slug}/edit` loads page data via API route, provides visual editing
 3. **Publish** — `onPublish` triggers a Server Action that saves to Shopify and revalidates the path
 4. **View** — Public page at `/{slug}` renders via React Server Component using `<Render>`
 
@@ -38,14 +38,15 @@ src/app/
     _components/             # Private: Puck block components
     _lib/
       config.tsx             # Puck component registry
+      page-types.ts          # Page type constants + validation
       actions.ts             # Server Actions ('use server')
     layout.tsx               # CMS layout (imports puck.css)
     page.tsx                 # Dashboard — lists all pages
     login/page.tsx           # Secret-based login
-    new/page.tsx             # Create page form
-    [slug]/edit/page.tsx     # Puck editor
+    new/page.tsx             # Create page form (with type selector)
+    [pageType]/[slug]/edit/page.tsx  # Puck editor
   api/
-    cms/pages/[slug]/route.ts  # GET only — editor data loading
+    cms/pages/[slug]/route.ts  # GET — editor data loading (?pageType= query param)
 ```
 
 ## Key Files
@@ -56,6 +57,6 @@ src/app/
 | `src/app/cms/_lib/page-types.ts` | Page type constants (`general`, `product`, `collection`, `home`) |
 | `src/app/cms/_lib/actions.ts` | Server Actions for CRUD operations |
 | `src/app/cms/_components/` | Puck block components (Hero, TextBlock, etc.) |
-| `src/app/cms/[slug]/edit/page.tsx` | Puck editor page (`"use client"`) |
+| `src/app/cms/[pageType]/[slug]/edit/page.tsx` | Puck editor page (`"use client"`) |
 | `src/app/(storefront)/[slug]/page.tsx` | Public page renderer (RSC) |
 | `src/proxy.ts` | Next.js 16 proxy for CMS auth |

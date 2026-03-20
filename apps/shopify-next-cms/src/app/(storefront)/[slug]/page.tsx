@@ -12,7 +12,7 @@ export default async function CmsPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const page = await getCmsPage(slug);
+  const page = await getCmsPage({ slug });
 
   if (!page || page.status !== "published") {
     notFound();
@@ -27,6 +27,6 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const page = await getCmsPage(slug);
+  const page = await getCmsPage({ slug });
   return { title: page?.title ?? "Page Not Found" };
 }

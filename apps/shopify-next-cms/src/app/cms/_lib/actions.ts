@@ -21,19 +21,23 @@ export async function createPageAction(
   return page;
 }
 
-export async function publishPageAction(slug: string, data: Data) {
-  const page = await getCmsPageBySlug(slug);
+export async function publishPageAction(
+  slug: string,
+  pageType: PageType,
+  data: Data,
+) {
+  const page = await getCmsPageBySlug({ slug, pageType });
   if (!page) throw new Error(`Page not found: ${slug}`);
 
   const rootProps = data.root?.props as Record<string, string> | undefined;
-  const pageType =
+  const updatedPageType =
     rootProps?.type && isValidPageType(rootProps.type)
       ? rootProps.type
       : undefined;
 
   const updated = await updateCmsPage(page.id, {
     puckData: data,
-    pageType,
+    pageType: updatedPageType,
     status: "published",
   });
 
@@ -42,8 +46,12 @@ export async function publishPageAction(slug: string, data: Data) {
   return updated;
 }
 
-export async function savePageDraftAction(slug: string, data: Data) {
-  const page = await getCmsPageBySlug(slug);
+export async function savePageDraftAction(
+  slug: string,
+  pageType: PageType,
+  data: Data,
+) {
+  const page = await getCmsPageBySlug({ slug, pageType });
   if (!page) throw new Error(`Page not found: ${slug}`);
 
   const updated = await updateCmsPage(page.id, {

@@ -23,6 +23,10 @@ import {
 
 const CMS_PAGE_TYPE = "cms_page";
 
+function makeHandle(slug: string, pageType: PageType): string {
+  return `${pageType}--${slug}`;
+}
+
 // --- Helpers ---
 
 type MetaobjectNode = NonNullable<GetCmsPageQuery["metaobjectByHandle"]>;
@@ -74,11 +78,17 @@ export async function listCmsPages(): Promise<CmsPageSummary[]> {
   return data.metaobjects.nodes.map(parseMetaobjectToSummary);
 }
 
-export async function getCmsPageBySlug(slug: string): Promise<CmsPage | null> {
+export async function getCmsPageBySlug({
+  slug,
+  pageType = "general",
+}: {
+  slug: string;
+  pageType?: PageType;
+}): Promise<CmsPage | null> {
   const data = await adminQuery<GetCmsPageQuery, GetCmsPageQueryVariables>(
     GET_CMS_PAGE_BY_SLUG,
     {
-      handle: { type: CMS_PAGE_TYPE, handle: slug },
+      handle: { type: CMS_PAGE_TYPE, handle: makeHandle(slug, pageType) },
     },
   );
 
@@ -97,7 +107,7 @@ export async function createCmsPage(
   >(CREATE_CMS_PAGE, {
     metaobject: {
       type: CMS_PAGE_TYPE,
-      handle: slug,
+      handle: makeHandle(slug, pageType),
       fields: [
         { key: "title", value: title },
         { key: "slug", value: slug },

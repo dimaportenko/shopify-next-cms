@@ -5,8 +5,16 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { ThemeCustomizer } from "@/components/theme-customizer";
 import { ProductCategory } from "@/components/product-category";
 import Link from "next/link";
+import { cache } from "react";
+import { getCmsPageBySlug } from "@/lib/shopify/queries/cms-pages";
+import { Render } from "@puckeditor/core";
+import { puckConfig } from "../cms/_lib/config";
 
-export default function Home() {
+const getCmsPage = cache(getCmsPageBySlug);
+
+export default async function Home() {
+  const page = await getCmsPage({ slug: "home", pageType: "home" });
+
   return (
     <div className="min-h-screen bg-background font-sans">
       <main className="mx-auto flex w-full max-w-3xl flex-col items-center justify-between gap-10 px-16 py-32 sm:items-start">
@@ -31,6 +39,10 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      {page && page.status === "published" && (
+        <Render config={puckConfig} data={page.puckData} />
+      )}
 
       <ProductCategory />
     </div>
