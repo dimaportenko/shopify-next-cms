@@ -1,6 +1,6 @@
 import type { Data } from "@puckeditor/core";
 import { adminQuery } from "../admin-client";
-import type { CmsPage, CmsPageSummary } from "../types";
+import type { CmsPage, CmsPageSummary, PageType } from "../types";
 import type {
   ListCmsPagesQuery,
   ListCmsPagesQueryVariables,
@@ -46,6 +46,7 @@ function parseMetaobjectToPage(node: MetaobjectNode): CmsPage {
     id: node.id,
     title: getField(fields, "title"),
     slug: getField(fields, "slug") || node.handle,
+    pageType: (getField(fields, "page_type") as PageType) || "general",
     puckData,
     status: (getField(fields, "status") as "draft" | "published") || "draft",
     updatedAt: getField(fields, "updated_at"),
@@ -58,6 +59,7 @@ function parseMetaobjectToSummary(node: MetaobjectNode): CmsPageSummary {
     id: node.id,
     title: getField(fields, "title"),
     slug: getField(fields, "slug") || node.handle,
+    pageType: (getField(fields, "page_type") as PageType) || "general",
     status: (getField(fields, "status") as "draft" | "published") || "draft",
     updatedAt: getField(fields, "updated_at"),
   };
@@ -87,6 +89,7 @@ export async function getCmsPageBySlug(slug: string): Promise<CmsPage | null> {
 export async function createCmsPage(
   title: string,
   slug: string,
+  pageType: PageType = "general",
 ): Promise<CmsPage> {
   const data = await adminQuery<
     CreateCmsPageMutation,
@@ -98,7 +101,14 @@ export async function createCmsPage(
       fields: [
         { key: "title", value: title },
         { key: "slug", value: slug },
-        { key: "puck_data", value: JSON.stringify({ content: [], root: {} }) },
+        { key: "page_type", value: pageType },
+        {
+          key: "puck_data",
+          value: JSON.stringify({
+            content: [],
+            root: { props: { type: pageType } },
+          }),
+        },
         { key: "status", value: "draft" },
         { key: "updated_at", value: new Date().toISOString() },
       ],
@@ -127,6 +137,7 @@ export async function updateCmsPage(
   updates: {
     puckData?: Data;
     title?: string;
+    pageType?: PageType;
     status?: "draft" | "published";
   },
 ): Promise<CmsPage> {
@@ -139,6 +150,9 @@ export async function updateCmsPage(
   }
   if (updates.title !== undefined) {
     fields.push({ key: "title", value: updates.title });
+  }
+  if (updates.pageType !== undefined) {
+    fields.push({ key: "page_type", value: updates.pageType });
   }
   if (updates.status !== undefined) {
     fields.push({ key: "status", value: updates.status });

@@ -5,6 +5,24 @@ import {
   withRetry,
 } from "./utils/rate-limiter.js";
 import type { MetaobjectDefinition, MetaobjectNode } from "./types.js";
+import type {
+  GetMetaobjectDefinitionQuery,
+  GetMetaobjectDefinitionQueryVariables,
+  CreateMetaobjectDefinitionMutation,
+  CreateMetaobjectDefinitionMutationVariables,
+  UpdateMetaobjectDefinitionMutation,
+  UpdateMetaobjectDefinitionMutationVariables,
+  DeleteMetaobjectDefinitionMutation,
+  DeleteMetaobjectDefinitionMutationVariables,
+  ListMetaobjectsQuery,
+  ListMetaobjectsQueryVariables,
+  GetMetaobjectByHandleQuery,
+  GetMetaobjectByHandleQueryVariables,
+  CreateMetaobjectMutation,
+  CreateMetaobjectMutationVariables,
+  UpdateMetaobjectMutation,
+  UpdateMetaobjectMutationVariables,
+} from "./types/admin.generated.js";
 import {
   GET_METAOBJECT_DEFINITION,
   CREATE_METAOBJECT_DEFINITION,
@@ -53,11 +71,10 @@ export function getConfig(): ShopifyConfig {
   };
 }
 
-async function graphql<T>(
-  config: ShopifyConfig,
-  query: string,
-  variables?: Record<string, unknown>,
-): Promise<T> {
+async function graphql<
+  T,
+  V extends Record<string, unknown> = Record<string, unknown>,
+>(config: ShopifyConfig, query: string, variables?: V): Promise<T> {
   await throttle();
 
   const url = `https://${config.storeUrl}/admin/api/2026-04/graphql.json`;
@@ -107,18 +124,10 @@ export class ShopifyClient {
   async getMetaobjectDefinition(
     type: string,
   ): Promise<MetaobjectDefinition | null> {
-    const data = await graphql<{
-      metaobjectDefinitionByType: {
-        id: string;
-        type: string;
-        name: string;
-        fieldDefinitions: Array<{
-          key: string;
-          name: string;
-          type: { name: string };
-        }>;
-      } | null;
-    }>(this.config, GET_METAOBJECT_DEFINITION, { type });
+    const data = await graphql<
+      GetMetaobjectDefinitionQuery,
+      GetMetaobjectDefinitionQueryVariables
+    >(this.config, GET_METAOBJECT_DEFINITION, { type });
 
     const def = data.metaobjectDefinitionByType;
     if (!def) return null;
@@ -135,24 +144,19 @@ export class ShopifyClient {
     };
   }
 
-  async createMetaobjectDefinition(input: {
-    type: string;
-    name: string;
-    fieldDefinitions: Array<{
-      key: string;
-      name: string;
-      type: string;
-    }>;
-    access?: { storefront: string };
-  }): Promise<string> {
-    const data = await graphql<{
-      metaobjectDefinitionCreate: {
-        metaobjectDefinition: { id: string } | null;
-        userErrors: Array<{ field: string[]; message: string }>;
-      };
-    }>(this.config, CREATE_METAOBJECT_DEFINITION, { definition: input });
+  async createMetaobjectDefinition(
+    input: CreateMetaobjectDefinitionMutationVariables["definition"],
+  ): Promise<string> {
+    const data = await graphql<
+      CreateMetaobjectDefinitionMutation,
+      CreateMetaobjectDefinitionMutationVariables
+    >(this.config, CREATE_METAOBJECT_DEFINITION, { definition: input });
 
     const result = data.metaobjectDefinitionCreate;
+    if (!result) {
+      throw new Error("Failed to create definition: no response");
+    }
+
     if (result.userErrors.length > 0) {
       throw new Error(
         `Failed to create definition: ${result.userErrors.map((e) => e.message).join(", ")}`,
@@ -164,18 +168,21 @@ export class ShopifyClient {
 
   async updateMetaobjectDefinition(
     id: string,
-    input: Record<string, unknown>,
+    input: UpdateMetaobjectDefinitionMutationVariables["definition"],
   ): Promise<void> {
-    const data = await graphql<{
-      metaobjectDefinitionUpdate: {
-        userErrors: Array<{ field: string[]; message: string }>;
-      };
-    }>(this.config, UPDATE_METAOBJECT_DEFINITION, {
+    const data = await graphql<
+      UpdateMetaobjectDefinitionMutation,
+      UpdateMetaobjectDefinitionMutationVariables
+    >(this.config, UPDATE_METAOBJECT_DEFINITION, {
       id,
       definition: input,
     });
 
     const result = data.metaobjectDefinitionUpdate;
+    if (!result) {
+      throw new Error("Failed to update definition: no response");
+    }
+
     if (result.userErrors.length > 0) {
       throw new Error(
         `Failed to update definition: ${result.userErrors.map((e) => e.message).join(", ")}`,
@@ -187,13 +194,16 @@ export class ShopifyClient {
     const def = await this.getMetaobjectDefinition(type);
     if (!def) return;
 
-    const data = await graphql<{
-      metaobjectDefinitionDelete: {
-        userErrors: Array<{ field: string[]; message: string }>;
-      };
-    }>(this.config, DELETE_METAOBJECT_DEFINITION, { id: def.id });
+    const data = await graphql<
+      DeleteMetaobjectDefinitionMutation,
+      DeleteMetaobjectDefinitionMutationVariables
+    >(this.config, DELETE_METAOBJECT_DEFINITION, { id: def.id });
 
     const result = data.metaobjectDefinitionDelete;
+    if (!result) {
+      throw new Error("Failed to delete definition: no response");
+    }
+
     if (result.userErrors.length > 0) {
       throw new Error(
         `Failed to delete definition: ${result.userErrors.map((e) => e.message).join(", ")}`,
@@ -202,31 +212,23 @@ export class ShopifyClient {
   }
 
   async listAllMetaobjects(type: string): Promise<MetaobjectNode[]> {
-    interface ListResult {
-      metaobjects: {
-        nodes: MetaobjectNode[];
-        pageInfo: { hasNextPage: boolean; endCursor: string | null };
-      };
-    }
-
     const all: MetaobjectNode[] = [];
     let after: string | null = null;
 
     while (true) {
-      const data: ListResult = await graphql<ListResult>(
-        this.config,
-        LIST_METAOBJECTS,
-        {
-          type,
-          first: 100,
-          after,
-        },
-      );
+      const data: ListMetaobjectsQuery = await graphql<
+        ListMetaobjectsQuery,
+        ListMetaobjectsQueryVariables
+      >(this.config, LIST_METAOBJECTS, {
+        type,
+        first: 100,
+        after,
+      });
 
       all.push(...data.metaobjects.nodes);
 
       if (!data.metaobjects.pageInfo.hasNextPage) break;
-      after = data.metaobjects.pageInfo.endCursor;
+      after = data.metaobjects.pageInfo.endCursor ?? null;
     }
 
     return all;
@@ -236,28 +238,29 @@ export class ShopifyClient {
     type: string,
     handle: string,
   ): Promise<MetaobjectNode | null> {
-    const data = await graphql<{
-      metaobjectByHandle: MetaobjectNode | null;
-    }>(this.config, GET_METAOBJECT_BY_HANDLE, {
+    const data = await graphql<
+      GetMetaobjectByHandleQuery,
+      GetMetaobjectByHandleQueryVariables
+    >(this.config, GET_METAOBJECT_BY_HANDLE, {
       handle: { type, handle },
     });
 
-    return data.metaobjectByHandle;
+    return data.metaobjectByHandle ?? null;
   }
 
-  async createMetaobject(input: {
-    type: string;
-    handle: string;
-    fields: Array<{ key: string; value: string }>;
-  }): Promise<MetaobjectNode> {
-    const data = await graphql<{
-      metaobjectCreate: {
-        metaobject: MetaobjectNode | null;
-        userErrors: Array<{ field: string[]; message: string }>;
-      };
-    }>(this.config, CREATE_METAOBJECT, { metaobject: input });
+  async createMetaobject(
+    input: CreateMetaobjectMutationVariables["metaobject"],
+  ): Promise<MetaobjectNode> {
+    const data = await graphql<
+      CreateMetaobjectMutation,
+      CreateMetaobjectMutationVariables
+    >(this.config, CREATE_METAOBJECT, { metaobject: input });
 
     const result = data.metaobjectCreate;
+    if (!result) {
+      throw new Error("Failed to create metaobject: no response");
+    }
+
     if (result.userErrors.length > 0) {
       throw new Error(
         `Failed to create metaobject: ${result.userErrors.map((e) => e.message).join(", ")}`,
@@ -269,16 +272,18 @@ export class ShopifyClient {
 
   async updateMetaobject(
     id: string,
-    input: { fields: Array<{ key: string; value: string }> },
+    input: UpdateMetaobjectMutationVariables["metaobject"],
   ): Promise<MetaobjectNode> {
-    const data = await graphql<{
-      metaobjectUpdate: {
-        metaobject: MetaobjectNode | null;
-        userErrors: Array<{ field: string[]; message: string }>;
-      };
-    }>(this.config, UPDATE_METAOBJECT, { id, metaobject: input });
+    const data = await graphql<
+      UpdateMetaobjectMutation,
+      UpdateMetaobjectMutationVariables
+    >(this.config, UPDATE_METAOBJECT, { id, metaobject: input });
 
     const result = data.metaobjectUpdate;
+    if (!result) {
+      throw new Error("Failed to update metaobject: no response");
+    }
+
     if (result.userErrors.length > 0) {
       throw new Error(
         `Failed to update metaobject: ${result.userErrors.map((e) => e.message).join(", ")}`,

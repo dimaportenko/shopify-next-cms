@@ -2,15 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import type { Data } from "@puckeditor/core";
+import type { PageType } from "@/lib/shopify/types";
 import {
   createCmsPage,
   updateCmsPage,
   deleteCmsPage,
   getCmsPageBySlug,
 } from "@/lib/shopify/queries/cms-pages";
+import { isValidPageType } from "./page-types";
 
-export async function createPageAction(title: string, slug: string) {
-  const page = await createCmsPage(title, slug);
+export async function createPageAction(
+  title: string,
+  slug: string,
+  pageType: PageType = "general",
+) {
+  const page = await createCmsPage(title, slug, pageType);
   revalidatePath("/cms");
   return page;
 }
@@ -19,8 +25,15 @@ export async function publishPageAction(slug: string, data: Data) {
   const page = await getCmsPageBySlug(slug);
   if (!page) throw new Error(`Page not found: ${slug}`);
 
+  const rootProps = data.root?.props as Record<string, string> | undefined;
+  const pageType =
+    rootProps?.type && isValidPageType(rootProps.type)
+      ? rootProps.type
+      : undefined;
+
   const updated = await updateCmsPage(page.id, {
     puckData: data,
+    pageType,
     status: "published",
   });
 

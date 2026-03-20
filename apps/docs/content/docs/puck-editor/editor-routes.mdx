@@ -5,11 +5,11 @@ description: CMS dashboard, page creation, and editor authentication.
 
 ## Dashboard (`/cms`)
 
-The CMS dashboard at `/cms` is a React Server Component that directly fetches all CMS pages from Shopify. It displays each page with its title, slug, status (draft/published), and action buttons for editing, viewing, and deleting.
+The CMS dashboard at `/cms` is a React Server Component that directly fetches all CMS pages from Shopify. It displays each page with its title, page type badge, slug, status (draft/published), and action buttons for editing, viewing, and deleting.
 
 ## Creating Pages (`/cms/new`)
 
-The create page form accepts a title and automatically generates a URL slug. On submit, it calls the `createPageAction` Server Action which creates a new metaobject in Shopify with empty Puck data, then redirects to the editor.
+The create page form accepts a page type (General, Product, Collection, Home), title, and automatically generates a URL slug. On submit, it calls the `createPageAction` Server Action which creates a new metaobject in Shopify with empty Puck data and the selected page type, then redirects to the editor.
 
 ## Editor (`/cms/[slug]/edit`)
 
@@ -47,8 +47,8 @@ All mutations use Server Actions defined in `src/app/cms/_lib/actions.ts`:
 
 | Action | Description |
 |--------|-------------|
-| `createPageAction(title, slug)` | Creates a new CMS page metaobject |
-| `publishPageAction(slug, data)` | Saves Puck data and sets status to "published" |
+| `createPageAction(title, slug, pageType)` | Creates a new CMS page metaobject with the given type |
+| `publishPageAction(slug, data)` | Saves Puck data, syncs page type from root props, sets status to "published" |
 | `savePageDraftAction(slug, data)` | Saves Puck data without publishing |
 | `deletePageAction(id)` | Deletes a CMS page metaobject |
 

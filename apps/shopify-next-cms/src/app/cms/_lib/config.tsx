@@ -4,6 +4,7 @@ import { textBlockConfig } from "../_components/text-block";
 import { productCategoryBlockConfig } from "../_components/product-category-block";
 import { imageBannerConfig } from "../_components/image-banner";
 import { spacerConfig } from "../_components/spacer";
+import { PAGE_TYPES } from "./page-types";
 
 import type { HeroProps } from "../_components/hero";
 import type { TextBlockProps } from "../_components/text-block";
@@ -20,6 +21,15 @@ type Props = {
 };
 
 export const puckConfig: Config<Props> = {
+  root: {
+    fields: {
+      title: { type: "text" },
+      type: {
+        type: "select",
+        options: PAGE_TYPES as unknown as { label: string; value: string }[],
+      },
+    },
+  },
   categories: {
     content: {
       components: ["Hero", "TextBlock", "ImageBanner"],

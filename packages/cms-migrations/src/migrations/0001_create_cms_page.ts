@@ -1,4 +1,5 @@
 import type { Migration } from "../types.js";
+import type { MetaobjectStorefrontAccess } from "../types/admin.types.js";
 import { info } from "../utils/logger.js";
 
 export const migration: Migration = {
@@ -26,7 +27,10 @@ export const migration: Migration = {
           type: "single_line_text_field",
         },
       ],
-      access: { storefront: "READ" },
+      access: {
+        storefront:
+          "PUBLIC_READ" as unknown as MetaobjectStorefrontAccess,
+      },
     });
   },
 

@@ -3,11 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPageAction } from "../_lib/actions";
+import { PAGE_TYPES } from "../_lib/page-types";
+import type { PageType } from "../_lib/page-types";
 
 export default function NewPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
+  const [pageType, setPageType] = useState<PageType>("general");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +32,7 @@ export default function NewPage() {
     setError(null);
 
     try {
-      await createPageAction(title.trim(), slug.trim());
+      await createPageAction(title.trim(), slug.trim(), pageType);
       router.push(`/cms/${slug.trim()}/edit`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create page");
@@ -42,6 +45,24 @@ export default function NewPage() {
       <h1 className="mb-8 text-3xl font-bold">Create New Page</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-2">
+          <label htmlFor="pageType" className="text-sm font-medium">
+            Page Type
+          </label>
+          <select
+            id="pageType"
+            value={pageType}
+            onChange={(e) => setPageType(e.target.value as PageType)}
+            className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {PAGE_TYPES.map((pt) => (
+              <option key={pt.value} value={pt.value}>
+                {pt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="space-y-2">
           <label htmlFor="title" className="text-sm font-medium">
             Page Title

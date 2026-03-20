@@ -11,6 +11,7 @@ CMS pages are stored as Shopify Metaobjects with type `cms_page`. The metaobject
 |-----|------|---------|
 | `title` | `single_line_text_field` | Page title displayed in dashboard and metadata |
 | `slug` | `single_line_text_field` | URL path segment (also used as the metaobject handle) |
+| `page_type` | `single_line_text_field` | `"general"`, `"product"`, `"collection"`, or `"home"` |
 | `puck_data` | `json` | Full Puck editor JSON — component tree, props, layout |
 | `status` | `single_line_text_field` | `"draft"` or `"published"` |
 | `updated_at` | `single_line_text_field` | ISO 8601 timestamp of last update |
@@ -48,9 +49,15 @@ The `puck_data` field stores Puck's `Data` type as JSON:
       }
     }
   ],
-  "root": {}
+  "root": {
+    "props": {
+      "type": "general"
+    }
+  }
 }
 ```
+
+The `root.props.type` value is kept in sync with the `page_type` metaobject field. When a page is published, the Server Action reads the type from root props and updates the metaobject field accordingly.
 
 ## Size Limits
 
@@ -61,10 +68,13 @@ Shopify's `json` metafield type supports up to 65,535 characters. This is suffic
 The app defines two TypeScript interfaces for working with page data:
 
 ```ts
+type PageType = "general" | "product" | "collection" | "home";
+
 interface CmsPage {
   id: string;
   title: string;
   slug: string;
+  pageType: PageType;
   puckData: Data;                    // Puck editor data
   status: "draft" | "published";
   updatedAt: string;
@@ -74,6 +84,7 @@ interface CmsPageSummary {
   id: string;
   title: string;
   slug: string;
+  pageType: PageType;
   status: "draft" | "published";
   updatedAt: string;
 }

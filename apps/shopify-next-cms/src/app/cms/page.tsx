@@ -31,7 +31,12 @@ export default async function CmsDashboard() {
               className="flex items-center justify-between p-4"
             >
               <div>
-                <h2 className="font-medium">{page.title}</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-medium">{page.title}</h2>
+                  <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                    {page.pageType}
+                  </span>
+                </div>
                 <p className="text-sm text-muted-foreground">
                   /{page.slug} &middot;{" "}
                   <span

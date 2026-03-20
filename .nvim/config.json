@@ -5,6 +5,7 @@
     "docs:dev": "pnpm dev:docs",
     "app:dev": "pnpm dev:web",
     "dev": "pnpm dev",
+    "migration:cms": "pnpm cms-migrations run",
     "typecheck": "pnpm typecheck",
     "typecheck:web": "pnpm typecheck --filter=shopify-next-cms",
     "typecheck:docs": "pnpm typecheck --filter=docs",

@@ -74,10 +74,14 @@ export class ShopifyNetworkError extends Error {
 
 // --- CMS Domain Types ---
 
+import type { PageType } from "@/app/cms/_lib/page-types";
+export type { PageType };
+
 export interface CmsPage {
   id: string;
   title: string;
   slug: string;
+  pageType: PageType;
   puckData: Data;
   status: "draft" | "published";
   updatedAt: string;
@@ -87,6 +91,7 @@ export interface CmsPageSummary {
   id: string;
   title: string;
   slug: string;
+  pageType: PageType;
   status: "draft" | "published";
   updatedAt: string;
 }

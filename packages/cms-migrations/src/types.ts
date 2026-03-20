@@ -9,7 +9,7 @@ export interface Migration {
 
 export interface MetaobjectField {
   key: string;
-  value: string;
+  value?: string | null;
 }
 
 export interface MetaobjectNode {

@@ -8,8 +8,9 @@ import type { Migration } from "./types.js";
 
 // --- Register all migrations ---
 import { migration as m0001 } from "./migrations/0001_create_cms_page.js";
+import { migration as m0002 } from "./migrations/0002_add_page_type.js";
 
-const allMigrations: Migration[] = [m0001];
+const allMigrations: Migration[] = [m0001, m0002];
 
 // --- CLI ---
 
