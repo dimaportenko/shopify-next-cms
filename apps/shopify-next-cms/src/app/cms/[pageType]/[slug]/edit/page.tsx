@@ -9,6 +9,17 @@ import { isValidPageType } from "@/app/cms/_lib/page-types";
 import { puckConfig } from "@cms/_lib/config";
 import { publishPageAction } from "@cms/_lib/actions";
 import { EditorHeader } from "@cms/_components/editor/editor-header";
+import {
+  EditorDrawer,
+  EditorFieldLabel,
+  EditorFieldsPanel,
+} from "@cms/_components/editor/editor-inspector";
+import {
+  EditorNumberField,
+  EditorSelectField,
+  EditorTextField,
+  EditorTextareaField,
+} from "@cms/_components/editor/editor-field-types";
 import { PublishButton } from "@cms/_components/editor/publish-button";
 
 const EMPTY_DATA: Data = { content: [], root: {} };
@@ -63,6 +74,53 @@ export default function EditorPage() {
         <EditorHeader actions={actions} pageTitle={pageTitle} />
       ),
       headerActions: () => <PublishButton onPublish={handlePublish} />,
+      drawer: ({ children }: { children: React.ReactNode }) => (
+        <EditorDrawer>{children}</EditorDrawer>
+      ),
+      fieldTypes: {
+        text: EditorTextField,
+        number: EditorNumberField,
+        textarea: EditorTextareaField,
+        select: EditorSelectField,
+      },
+      fields: ({
+        children,
+        isLoading,
+        itemSelector,
+      }: {
+        children: React.ReactNode;
+        isLoading: boolean;
+        itemSelector?: { index: number; zone?: string } | null;
+      }) => (
+        <EditorFieldsPanel isLoading={isLoading} itemSelector={itemSelector}>
+          {children}
+        </EditorFieldsPanel>
+      ),
+      fieldLabel: ({
+        children,
+        icon,
+        label,
+        el,
+        readOnly,
+        className,
+      }: {
+        children?: React.ReactNode;
+        icon?: React.ReactNode;
+        label: string;
+        el?: "label" | "div";
+        readOnly?: boolean;
+        className?: string;
+      }) => (
+        <EditorFieldLabel
+          className={className}
+          el={el}
+          icon={icon}
+          label={label}
+          readOnly={readOnly}
+        >
+          {children}
+        </EditorFieldLabel>
+      ),
     }),
     [pageTitle, handlePublish],
   );

@@ -28,3 +28,83 @@
   color: oklch(0.145 0 30);
   background-color: oklch(1 0 30);
 }
+
+.cms-editor-root [class*="_Sidebar--right_"] {
+  background: var(--background);
+  border-left: 1px solid var(--border);
+}
+
+.cms-editor-root [class*="_Sidebar--right_"] [class*="_SidebarSection-title_"] {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3.5rem;
+  padding: 1rem 1.25rem;
+  background: color-mix(in oklch, var(--background) 88%, white 12%);
+  border-bottom: 1px solid color-mix(in oklch, var(--border) 82%, white 18%);
+  color: var(--foreground);
+}
+
+.cms-editor-root
+  [class*="_Sidebar--right_"]
+  [class*="_SidebarSection-title_"]
+  > div {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.cms-editor-root
+  [class*="_Sidebar--right_"]
+  [class*="_SidebarSection-title_"]
+  button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  transition: color 150ms ease;
+}
+
+.cms-editor-root
+  [class*="_Sidebar--right_"]
+  [class*="_SidebarSection-title_"]
+  button:hover {
+  color: var(--foreground);
+}
+
+.cms-editor-root
+  [class*="_Sidebar--right_"]
+  [class*="_SidebarSection-title_"]
+  h2,
+.cms-editor-root
+  [class*="_Sidebar--right_"]
+  [class*="_SidebarSection-title_"]
+  span:not(:has(button)) {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.5rem;
+}
+
+.cms-editor-root
+  [class*="_Sidebar--right_"]
+  [class*="_SidebarSection-content_"] {
+  border-top: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--muted) 45%, white 55%) 0%,
+    var(--background) 9rem
+  );
+}
+
+.cms-editor-root
+  [class*="_Sidebar--right_"]
+  [class*="_SidebarSection-title_"]
+  svg {
+  color: var(--muted-foreground);
+}
