@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { listCmsPages } from "@/lib/shopify/queries/cms-pages";
-import { DeletePageButton } from "./_components/delete-page-button";
+import { DeletePageButton } from "@cms/_components/editor/delete-page-button";
 
 export default async function CmsDashboard() {
   const pages = await listCmsPages();
