@@ -2,12 +2,14 @@
 
 import { Puck } from "@puckeditor/core";
 import type { Data } from "@puckeditor/core";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import type { PageType } from "@/app/cms/_lib/page-types";
 import { isValidPageType } from "@/app/cms/_lib/page-types";
 import { puckConfig } from "../../../_lib/config";
 import { publishPageAction } from "../../../_lib/actions";
+import { EditorHeader } from "../../../_components/editor-header";
+import { PublishButton } from "../../../_components/publish-button";
 
 const EMPTY_DATA: Data = { content: [], root: {} };
 
@@ -15,6 +17,7 @@ export default function EditorPage() {
   const { slug, pageType } = useParams<{ slug: string; pageType: string }>();
   const router = useRouter();
   const [initialData, setInitialData] = useState<Data | null>(null);
+  const [pageTitle, setPageTitle] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +37,7 @@ export default function EditorPage() {
       })
       .then((page) => {
         setInitialData(page.puckData || EMPTY_DATA);
+        setPageTitle(page.title || slug);
         setLoading(false);
       })
       .catch((err) => {
@@ -44,6 +48,24 @@ export default function EditorPage() {
 
     return () => controller.abort();
   }, [slug, validPageType]);
+
+  const handlePublish = useCallback(
+    async (data: Data) => {
+      await publishPageAction(slug, validPageType, data);
+      router.push("/cms");
+    },
+    [slug, validPageType, router],
+  );
+
+  const overrides = useMemo(
+    () => ({
+      header: ({ actions }: { actions: React.ReactNode }) => (
+        <EditorHeader actions={actions} pageTitle={pageTitle} />
+      ),
+      headerActions: () => <PublishButton onPublish={handlePublish} />,
+    }),
+    [pageTitle, handlePublish],
+  );
 
   if (loading) {
     return (
@@ -73,10 +95,8 @@ export default function EditorPage() {
       config={puckConfig}
       data={initialData!}
       iframe={{ enabled: true }}
-      onPublish={async (data) => {
-        await publishPageAction(slug, validPageType, data);
-        router.push("/cms");
-      }}
+      overrides={overrides}
+      onPublish={handlePublish}
     />
   );
 }
