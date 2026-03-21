@@ -1,8 +1,8 @@
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { ThemeCustomizer } from "@/components/theme-customizer";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { ThemeCustomizer } from "@/components/theme/theme-customizer";
 import { ProductCategory } from "@/components/product-category";
 import Link from "next/link";
 import { cache } from "react";

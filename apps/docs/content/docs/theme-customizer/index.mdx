@@ -24,7 +24,9 @@ The theme customizer is a side-panel UI that lets you tweak your shadcn/ui theme
 
 ## Architecture
 
-- `components/theme-customizer.tsx` — main Sheet UI with Colors, Typography, Other tabs
+- `components/theme/theme-customizer.tsx` — main Sheet UI with Colors, Typography, Other tabs
+- `components/theme/theme-provider.tsx` — wraps app with `next-themes` provider
+- `components/theme/theme-toggle.tsx` — light/dark mode toggle button
 - `hooks/use-theme-customizer.ts` — state management, CSS variable application, localStorage persistence
 - `hooks/use-google-fonts.ts` — fetches font list and manages dynamic loading
 - `lib/google-fonts.ts` — client-side font loading via `<link>` injection
