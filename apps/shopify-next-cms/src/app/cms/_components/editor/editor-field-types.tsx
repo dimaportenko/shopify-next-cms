@@ -57,7 +57,21 @@ export function EditorNumberField({
       value={value ?? ""}
       onChange={(event) => {
         const nextValue = event.currentTarget.value;
-        onChange(nextValue === "" ? undefined : Number(nextValue));
+
+        if (nextValue === "") {
+          onChange(undefined);
+          return;
+        }
+
+        if (!event.currentTarget.validity.valid) {
+          return;
+        }
+
+        const parsedValue = Number(nextValue);
+
+        if (Number.isFinite(parsedValue)) {
+          onChange(parsedValue);
+        }
       }}
     />
   );
@@ -89,10 +103,10 @@ export function EditorSelectField({
   readOnly,
   value,
 }: PuckFieldProps<SelectField, SelectField["options"][number]["value"]>) {
-  const selectedIndex = Math.max(
-    0,
-    field.options.findIndex((option) => Object.is(option.value, value)),
+  const selectedIndex = field.options.findIndex((option) =>
+    Object.is(option.value, value),
   );
+  const selectedValue = selectedIndex === -1 ? "" : String(selectedIndex);
 
   return (
     <div className="relative">
@@ -103,12 +117,19 @@ export function EditorSelectField({
         )}
         disabled={readOnly}
         name={name}
-        value={String(selectedIndex)}
+        value={selectedValue}
         onChange={(event) => {
+          if (event.currentTarget.value === "") {
+            return;
+          }
+
           const option = field.options[Number(event.currentTarget.value)];
           if (option) onChange(option.value);
         }}
       >
+        <option disabled value="">
+          Select an option
+        </option>
         {field.options.map((option, index) => (
           <option key={`${name}-${index}`} value={String(index)}>
             {option.label}
