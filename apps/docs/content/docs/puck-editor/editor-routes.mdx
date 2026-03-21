@@ -17,8 +17,32 @@ The editor page is a client component (`"use client"`) that:
 
 1. Reads `pageType` and `slug` from route params, validates `pageType` with `isValidPageType()`
 2. Fetches the page data via `GET /api/cms/pages/[slug]?pageType=[pageType]`
-3. Renders the full-screen `<Puck>` editor with the page's saved data
+3. Renders the full-screen `<Puck>` editor with the page's saved data and CMS-specific UI overrides
 4. On publish, calls `publishPageAction(slug, pageType, data)` which saves to Shopify and calls `revalidatePath` to invalidate the cached public page
+
+## Editor UI Overrides
+
+The editor route customizes Puck in two layers:
+
+1. **Puck overrides** in `src/app/cms/[pageType]/[slug]/edit/page.tsx`
+2. **Scoped CSS theming** in `src/app/cms/cms.css` for editor surfaces without stable override hooks
+
+Current override components live in `src/app/cms/_components/editor/` and cover:
+
+- custom editor header and publish actions
+- custom drawer wrapper and drawer block items
+- custom fields panel and field labels
+- custom field renderers for `text`, `number`, `textarea`, and `select`
+
+The CSS layer is still responsible for theming Puck-managed shells and states such as:
+
+- left rail nav (`Blocks` / `Outline`)
+- drawer section cards and headers
+- outline tree hover and selected states
+- viewport controls
+- preview overlay, selection, and drop zone highlights
+
+This split is intentional: prefer stable Puck extension points where available, and use CSS only for the remaining unsupported editor chrome.
 
 ## Authentication
 

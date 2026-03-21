@@ -14,6 +14,7 @@ Public Pages (/[slug])     ←  <Render> (RSC)  ←  Storefront API (read)
 ```
 
 - **Editor** — Client component using `<Puck>` with drag-and-drop UI
+- **Editor chrome** — Puck UI is restyled to match the CMS theme using override components first, then scoped CSS for unsupported surfaces
 - **Render** — Server component using `<Render>` for SSR performance
 - **Storage** — Page content stored as JSON in a Shopify Metaobject field
 - **Mutations** — Server Actions for create/update/delete (no REST API routes needed)
@@ -36,11 +37,13 @@ src/app/
     [slug]/page.tsx          # Dynamic CMS pages via <Render>
   cms/
     _components/             # Private: Puck block components
+      editor/                # Custom Puck editor UI overrides
     _lib/
       config.tsx             # Puck component registry
       page-types.ts          # Page type constants + validation
       actions.ts             # Server Actions ('use server')
-    layout.tsx               # CMS layout (imports puck.css)
+    cms.css                  # Scoped editor chrome theme overrides
+    layout.tsx               # CMS layout (imports puck.css + cms.css)
     page.tsx                 # Dashboard — lists all pages
     login/page.tsx           # Secret-based login
     new/page.tsx             # Create page form (with type selector)
@@ -57,6 +60,24 @@ src/app/
 | `src/app/cms/_lib/page-types.ts` | Page type constants (`general`, `product`, `collection`, `home`) |
 | `src/app/cms/_lib/actions.ts` | Server Actions for CRUD operations |
 | `src/app/cms/_components/` | Puck block components (Hero, TextBlock, etc.) |
+| `src/app/cms/_components/editor/` | Custom editor header, drawer, inspector, field types, and drawer item UI |
+| `src/app/cms/cms.css` | Scoped CMS styling for Puck surfaces that do not have stable override APIs |
 | `src/app/cms/[pageType]/[slug]/edit/page.tsx` | Puck editor page (`"use client"`) |
 | `src/app/(storefront)/[slug]/page.tsx` | Public page renderer (RSC) |
 | `src/proxy.ts` | Next.js 16 proxy for CMS auth |
+
+## Editor Customization Strategy
+
+The CMS editor does not use Puck's default chrome as-is. The editor page applies custom overrides for the header, header actions, drawer wrapper, drawer items, fields panel, field labels, and several field types so the UI matches the rest of the CMS.
+
+When Puck exposes a stable override API, the project uses that override instead of targeting generated class names. For editor surfaces that are not yet overrideable, the project uses scoped selectors in `src/app/cms/cms.css`.
+
+Currently the CSS fallback layer is used for:
+
+- left rail navigation (`Blocks` / `Outline`)
+- drawer section shells and group headers
+- outline list selection and hover states
+- viewport toolbar chrome
+- preview overlay and drop zone selection / hover states
+
+This keeps the editor visually consistent while limiting dependence on Puck internals to the smallest practical surface area.
