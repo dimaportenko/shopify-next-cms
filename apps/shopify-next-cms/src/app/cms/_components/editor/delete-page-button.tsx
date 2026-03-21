@@ -20,7 +20,7 @@ export function DeletePageButton({
         await deletePageAction(pageId);
         router.refresh();
       }}
-      className="inline-flex h-9 items-center rounded-md border border-destructive px-4 text-sm font-medium text-destructive transition-colors hover:bg-destructive hover:text-destructive-foreground"
+      className="hover:text-destructive-foreground inline-flex h-9 items-center rounded-md border border-destructive px-4 text-sm font-medium text-destructive transition-colors hover:bg-destructive"
     >
       Delete
     </button>

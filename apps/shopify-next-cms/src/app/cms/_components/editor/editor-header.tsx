@@ -88,7 +88,7 @@ export function EditorHeader({ actions, pageTitle }: EditorHeaderProps) {
           </Tooltip>
         </div>
 
-        <span className="max-w-[200px] truncate text-sm font-medium text-foreground">
+        <span className="max-w-50 truncate text-sm font-medium text-foreground">
           {pageTitle ?? "Untitled"}
         </span>
 

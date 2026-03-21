@@ -185,7 +185,7 @@ function ColorSwatch({
         value={oklchToHexApprox(value)}
         onChange={(e) => onChange(e.target.value)}
       />
-      <span className="text-xs text-muted-foreground w-24 shrink-0">
+      <span className="w-24 shrink-0 text-xs text-muted-foreground">
         {label}
       </span>
       <Input
@@ -221,14 +221,14 @@ function SliderWithInput({
         <div className="flex items-center gap-1">
           <Input
             type="number"
-            className="h-7 w-16 font-mono text-xs text-right"
+            className="h-7 w-16 text-right font-mono text-xs"
             value={value}
             min={min}
             max={max}
             step={step}
             onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
           />
-          <span className="text-xs text-muted-foreground w-6">{unit}</span>
+          <span className="w-6 text-xs text-muted-foreground">{unit}</span>
         </div>
       </div>
       <Slider
@@ -669,7 +669,7 @@ function OtherTab({
               <button
                 key={preset.label}
                 onClick={() => onHslAdjustmentsChange(preset.adjustments)}
-                className="rounded-md border border-border px-2 py-1 text-xs hover:bg-muted/50 transition-colors"
+                className="rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted/50"
               >
                 {preset.label}
               </button>
@@ -776,7 +776,7 @@ function OtherTab({
               value={oklchToHexApprox(shadow["shadow-color"])}
               onChange={(e) => onShadowChange("shadow-color", e.target.value)}
             />
-            <span className="text-xs text-muted-foreground w-16 shrink-0">
+            <span className="w-16 shrink-0 text-xs text-muted-foreground">
               Color
             </span>
             <Input
