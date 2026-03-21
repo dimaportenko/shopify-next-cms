@@ -47,11 +47,7 @@ export function EditorHeader({ actions, pageTitle }: EditorHeaderProps) {
           <Tooltip>
             <TooltipTrigger
               render={
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => router.push("/cms")}
-                />
+                <Button variant="ghost" onClick={() => router.push("/cms")} />
               }
             >
               <ArrowLeft className="size-4" />
@@ -66,7 +62,6 @@ export function EditorHeader({ actions, pageTitle }: EditorHeaderProps) {
               render={
                 <Button
                   variant="ghost"
-                  size="icon-sm"
                   disabled={!history.hasPast}
                   onClick={() => history.back()}
                 />
@@ -82,7 +77,6 @@ export function EditorHeader({ actions, pageTitle }: EditorHeaderProps) {
               render={
                 <Button
                   variant="ghost"
-                  size="icon-sm"
                   disabled={!history.hasFuture}
                   onClick={() => history.forward()}
                 />
@@ -103,7 +97,6 @@ export function EditorHeader({ actions, pageTitle }: EditorHeaderProps) {
             <TooltipTrigger
               render={
                 <Toggle
-                  size="sm"
                   pressed={previewMode === "interactive"}
                   onPressedChange={() =>
                     toggleUi({
@@ -131,7 +124,6 @@ export function EditorHeader({ actions, pageTitle }: EditorHeaderProps) {
             <TooltipTrigger
               render={
                 <Toggle
-                  size="sm"
                   pressed={leftSideBarVisible}
                   onPressedChange={() =>
                     toggleUi({
@@ -150,7 +142,6 @@ export function EditorHeader({ actions, pageTitle }: EditorHeaderProps) {
             <TooltipTrigger
               render={
                 <Toggle
-                  size="sm"
                   pressed={rightSideBarVisible}
                   onPressedChange={() =>
                     toggleUi({

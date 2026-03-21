@@ -24,7 +24,7 @@ export function PublishButton({ onPublish }: PublishButtonProps) {
   };
 
   return (
-    <Button size="sm" disabled={publishing} onClick={handleClick}>
+    <Button disabled={publishing} onClick={handleClick}>
       {publishing && <Loader2 className="size-4 animate-spin" />}
       {publishing ? "Publishing..." : "Publish"}
     </Button>
