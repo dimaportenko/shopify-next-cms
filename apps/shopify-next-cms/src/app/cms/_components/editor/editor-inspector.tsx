@@ -99,7 +99,7 @@ export function EditorFieldsPanel({
 
 export function EditorDrawer({ children }: EditorDrawerProps) {
   return (
-    <div className="h-full bg-background [&>div:first-child]:hidden [&>div:nth-child(2)]:h-full [&>div:nth-child(2)]:border-t-0">
+    <div className="cms-editor-drawer h-full bg-background [&>div:first-child]:hidden [&>div:nth-child(2)]:h-full [&>div:nth-child(2)]:border-t-0">
       {children}
     </div>
   );

@@ -20,6 +20,7 @@ import {
   EditorTextField,
   EditorTextareaField,
 } from "@cms/_components/editor/editor-field-types";
+import { EditorDrawerItem } from "@cms/_components/editor/editor-drawer-item";
 import { PublishButton } from "@cms/_components/editor/publish-button";
 
 const EMPTY_DATA: Data = { content: [], root: {} };
@@ -76,6 +77,9 @@ export default function EditorPage() {
       headerActions: () => <PublishButton onPublish={handlePublish} />,
       drawer: ({ children }: { children: React.ReactNode }) => (
         <EditorDrawer>{children}</EditorDrawer>
+      ),
+      drawerItem: ({ name }: { name: string }) => (
+        <EditorDrawerItem name={name} />
       ),
       fieldTypes: {
         text: EditorTextField,
