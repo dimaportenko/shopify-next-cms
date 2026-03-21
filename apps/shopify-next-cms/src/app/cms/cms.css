@@ -1,0 +1,30 @@
+/*
+ * Force the CMS editor chrome (sidebar, toolbar, fields panel)
+ * to always use light theme variables regardless of storefront theme.
+ * The preview iframe is isolated and will use storefront styles as-is.
+ */
+.cms-editor-root {
+  --background: oklch(1 0 30);
+  --foreground: oklch(0.145 0 30);
+  --card: oklch(1 0 30);
+  --card-foreground: oklch(0.145 0 30);
+  --popover: oklch(1 0 30);
+  --popover-foreground: oklch(0.145 0 30);
+  --primary: oklch(0.705 0.191 77.604);
+  --primary-foreground: oklch(0.985 0 30);
+  --secondary: oklch(0.965 0.022 77);
+  --secondary-foreground: oklch(0.405 0.1 77);
+  --muted: oklch(0.965 0.022 77);
+  --muted-foreground: oklch(0.556 0.01 77);
+  --accent: oklch(0.932 0.04 77);
+  --accent-foreground: oklch(0.405 0.1 77);
+  --destructive: oklch(0.577 0.245 57.325);
+  --destructive-foreground: oklch(1 0 30);
+  --border: oklch(0.915 0.028 77);
+  --input: oklch(0.915 0.028 77);
+  --ring: oklch(0.705 0.191 77.604);
+
+  color-scheme: light;
+  color: oklch(0.145 0 30);
+  background-color: oklch(1 0 30);
+}

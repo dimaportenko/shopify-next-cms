@@ -72,6 +72,7 @@ export default function EditorPage() {
     <Puck
       config={puckConfig}
       data={initialData!}
+      iframe={{ enabled: true }}
       onPublish={async (data) => {
         await publishPageAction(slug, validPageType, data);
         router.push("/cms");
