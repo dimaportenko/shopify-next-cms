@@ -1,0 +1,79 @@
+<p align="center">
+  <img src="docs/assets/logo.png" alt="Shopify Next CMS" width="180" height="180" />
+</p>
+
+<h1 align="center">Shopify Next CMS</h1>
+
+<p align="center">
+  <strong>🚧 Very early stage, stay tuned! 🚀</strong>
+</p>
+
+---
+
+A content management system built with Next.js 16 and integrated with Shopify. It combines a visual page editor ([Puck](https://puckeditor.com)), Shopify Storefront/Admin APIs, and Shopify Metaobjects for content persistence — all in a single monorepo.
+
+## Project Structure
+
+This is a monorepo powered by [pnpm](https://pnpm.io) and [Turborepo](https://turbo.build):
+
+```
+apps/
+  shopify-next-cms/   # Main Next.js application
+  docs/               # Documentation
+packages/
+  sample-data/        # CLI tool to import sample product data
+  cms-migrations/     # Shopify metaobject schema migrations
+```
+
+## Key Features
+
+- **Visual Page Editor** — Drag-and-drop page building with [Puck](https://puckeditor.com)
+- **Shopify Persistence** — CMS content stored in Shopify Metaobjects via Admin API
+- **Server-Side Rendering** — Published pages rendered as React Server Components
+- **Type-Safe Queries** — GraphQL codegen with `@shopify/api-codegen-preset`
+- **Schema Migrations** — Versioned metaobject definition management
+- **Theme Customization** — Live color, typography, and shadow editing
+- **Sample Data** — One-command import of realistic product catalog
+
+## Quick Start
+
+```bash
+# 1. Install dependencies
+pnpm install
+
+# 2. Set up environment variables
+cp apps/shopify-next-cms/.env.example apps/shopify-next-cms/.env.local
+# Edit .env.local with your Shopify credentials
+
+# 3. Run metaobject migrations
+pnpm cms-migrations run
+
+# 4. Generate GraphQL types
+pnpm --filter shopify-next-cms codegen
+
+# 5. Start development
+pnpm dev
+```
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `SHOPIFY_STORE_URL` | Your Shopify store domain (e.g., `my-store.myshopify.com`) |
+| `SHOPIFY_ADMIN_ACCESS_TOKEN` | Admin API access token (`shpat_...`) |
+| `SHOPIFY_STOREFRONT_ACCESS_TOKEN` | Storefront API access token |
+| `CMS_SECRET` | Secret for CMS editor authentication |
+| `GOOGLE_FONTS_API_KEY` | Google Fonts API key (for theme customizer) |
+
+## Development Commands
+
+```bash
+pnpm dev              # Run all apps in dev mode
+pnpm dev:web          # Run only the main app
+pnpm dev:docs         # Run only the docs
+pnpm build            # Build all apps
+pnpm lint             # Lint all apps
+pnpm typecheck        # TypeScript checking
+pnpm cms-migrations   # Run CMS schema migrations
+pnpm sample-data      # Import sample product data
+```
