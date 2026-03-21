@@ -6,10 +6,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import type { PageType } from "@/app/cms/_lib/page-types";
 import { isValidPageType } from "@/app/cms/_lib/page-types";
-import { puckConfig } from "../../../_lib/config";
-import { publishPageAction } from "../../../_lib/actions";
-import { EditorHeader } from "../../../_components/editor-header";
-import { PublishButton } from "../../../_components/publish-button";
+import { puckConfig } from "@cms/_lib/config";
+import { publishPageAction } from "@cms/_lib/actions";
+import { EditorHeader } from "@cms/_components/editor-header";
+import { PublishButton } from "@cms/_components/publish-button";
 
 const EMPTY_DATA: Data = { content: [], root: {} };
 

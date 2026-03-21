@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createPageAction } from "../_lib/actions";
-import { PAGE_TYPES } from "../_lib/page-types";
-import type { PageType } from "../_lib/page-types";
+import { createPageAction } from "@cms/_lib/actions";
+import { PAGE_TYPES } from "@cms/_lib/page-types";
+import type { PageType } from "@cms/_lib/page-types";
 
 export default function NewPage() {
   const router = useRouter();

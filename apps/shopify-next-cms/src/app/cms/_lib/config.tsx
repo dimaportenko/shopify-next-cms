@@ -1,16 +1,16 @@
 import type { Config } from "@puckeditor/core";
-import { heroConfig } from "../_components/hero";
-import { textBlockConfig } from "../_components/text-block";
-import { productCategoryBlockConfig } from "../_components/product-category-block";
-import { imageBannerConfig } from "../_components/image-banner";
-import { spacerConfig } from "../_components/spacer";
-import { PAGE_TYPES } from "./page-types";
+import { heroConfig } from "@cms/_components/hero";
+import { textBlockConfig } from "@cms/_components/text-block";
+import { productCategoryBlockConfig } from "@cms/_components/product-category-block";
+import { imageBannerConfig } from "@cms/_components/image-banner";
+import { spacerConfig } from "@cms/_components/spacer";
+import { PAGE_TYPES } from "@cms/_lib/page-types";
 
-import type { HeroProps } from "../_components/hero";
-import type { TextBlockProps } from "../_components/text-block";
-import type { ProductCategoryBlockProps } from "../_components/product-category-block";
-import type { ImageBannerProps } from "../_components/image-banner";
-import type { SpacerProps } from "../_components/spacer";
+import type { HeroProps } from "@cms/_components/hero";
+import type { TextBlockProps } from "@cms/_components/text-block";
+import type { ProductCategoryBlockProps } from "@cms/_components/product-category-block";
+import type { ImageBannerProps } from "@cms/_components/image-banner";
+import type { SpacerProps } from "@cms/_components/spacer";
 
 type Props = {
   Hero: HeroProps;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { deletePageAction } from "../_lib/actions";
+import { deletePageAction } from "@cms/_lib/actions";
 
 export function DeletePageButton({
   pageId,

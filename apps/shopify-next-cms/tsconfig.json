@@ -20,6 +20,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
+      "@cms/*": ["./src/app/cms/*"],
       "@generated-types/*": ["./types/*"]
     }
   },
