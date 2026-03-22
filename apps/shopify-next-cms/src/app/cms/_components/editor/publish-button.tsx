@@ -1,7 +1,7 @@
 "use client";
 
-import { usePuck } from "@puckeditor/core";
 import type { Data } from "@puckeditor/core";
+import { usePuck } from "@cms/_lib/use-puck";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -11,13 +11,13 @@ interface PublishButtonProps {
 }
 
 export function PublishButton({ onPublish }: PublishButtonProps) {
-  const { appState } = usePuck();
+  const data = usePuck((state) => state.appState.data);
   const [publishing, setPublishing] = useState(false);
 
   const handleClick = async () => {
     setPublishing(true);
     try {
-      await onPublish(appState.data);
+      await onPublish(data);
     } finally {
       setPublishing(false);
     }

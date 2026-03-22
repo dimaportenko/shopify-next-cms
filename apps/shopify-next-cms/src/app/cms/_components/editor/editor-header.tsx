@@ -1,7 +1,7 @@
 "use client";
 
-import { usePuck } from "@puckeditor/core";
 import { useRouter } from "next/navigation";
+import { usePuck } from "@cms/_lib/use-puck";
 import {
   ArrowLeft,
   Undo2,
@@ -21,6 +21,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { type ReactNode, useCallback } from "react";
+import { useShallow } from "zustand/react/shallow";
 
 interface EditorHeaderProps {
   actions: ReactNode;
@@ -28,10 +29,28 @@ interface EditorHeaderProps {
 }
 
 export function EditorHeader({ actions, pageTitle }: EditorHeaderProps) {
-  const { appState, dispatch, history } = usePuck();
+  const {
+    dispatch,
+    previewMode,
+    leftSideBarVisible,
+    rightSideBarVisible,
+    undo,
+    redo,
+    hasPast,
+    hasFuture,
+  } = usePuck(
+    useShallow((state) => ({
+      dispatch: state.dispatch,
+      previewMode: state.appState.ui.previewMode,
+      leftSideBarVisible: state.appState.ui.leftSideBarVisible,
+      rightSideBarVisible: state.appState.ui.rightSideBarVisible,
+      undo: state.history.back,
+      redo: state.history.forward,
+      hasPast: state.history.hasPast,
+      hasFuture: state.history.hasFuture,
+    })),
+  );
   const router = useRouter();
-
-  const { leftSideBarVisible, rightSideBarVisible, previewMode } = appState.ui;
 
   const toggleUi = useCallback(
     (ui: Record<string, unknown>) => {
@@ -62,8 +81,8 @@ export function EditorHeader({ actions, pageTitle }: EditorHeaderProps) {
               render={
                 <Button
                   variant="ghost"
-                  disabled={!history.hasPast}
-                  onClick={() => history.back()}
+                  disabled={!hasPast}
+                  onClick={() => undo()}
                 />
               }
             >
@@ -77,8 +96,8 @@ export function EditorHeader({ actions, pageTitle }: EditorHeaderProps) {
               render={
                 <Button
                   variant="ghost"
-                  disabled={!history.hasFuture}
-                  onClick={() => history.forward()}
+                  disabled={!hasFuture}
+                  onClick={() => redo()}
                 />
               }
             >
