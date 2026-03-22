@@ -11,6 +11,10 @@ import {
   Eye,
   Pencil,
 } from "lucide-react";
+import {
+  CmsEditorThemeToggle,
+  CmsPreviewThemeToggle,
+} from "@cms/_components/editor/cms-theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Toggle } from "@/components/ui/toggle";
@@ -136,6 +140,11 @@ export function EditorHeader({ actions, pageTitle }: EditorHeaderProps) {
               {previewMode === "interactive" ? "Preview mode" : "Edit mode"}
             </TooltipContent>
           </Tooltip>
+
+          <Separator orientation="vertical" className="mx-1 h-5" />
+
+          <CmsEditorThemeToggle />
+          <CmsPreviewThemeToggle />
 
           <Separator orientation="vertical" className="mx-1 h-5" />
 

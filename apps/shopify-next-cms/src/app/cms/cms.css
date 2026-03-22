@@ -24,9 +24,38 @@
   --input: oklch(0.915 0.028 77);
   --ring: oklch(0.705 0.191 77.604);
 
+  --cms-mix-base: white;
+
   color-scheme: light;
   color: oklch(0.145 0 30);
   background-color: oklch(1 0 30);
+}
+
+.cms-editor-root.cms-dark {
+  --background: oklch(0.155 0.015 77);
+  --foreground: oklch(0.985 0 30);
+  --card: oklch(0.205 0.025 77);
+  --card-foreground: oklch(0.985 0 30);
+  --popover: oklch(0.205 0.025 77);
+  --popover-foreground: oklch(0.985 0 30);
+  --primary: oklch(0.705 0.191 77.604);
+  --primary-foreground: oklch(0.985 0 30);
+  --secondary: oklch(0.269 0.035 77);
+  --secondary-foreground: oklch(0.985 0 30);
+  --muted: oklch(0.269 0.035 77);
+  --muted-foreground: oklch(0.708 0.025 77);
+  --accent: oklch(0.269 0.035 77);
+  --accent-foreground: oklch(0.985 0 30);
+  --destructive: oklch(0.704 0.191 52.216);
+  --destructive-foreground: oklch(0.985 0 30);
+  --border: oklch(0.275 0 30);
+  --input: oklch(0.325 0 30);
+  --ring: oklch(0.705 0.191 77.604);
+  --cms-mix-base: oklch(0.1 0 30);
+
+  color-scheme: dark;
+  color: oklch(0.985 0 30);
+  background-color: oklch(0.155 0.015 77);
 }
 
 .cms-editor-root [class*="_Sidebar--right_"] {
@@ -37,7 +66,7 @@
 .cms-editor-root [class*="_Sidebar--left_"] {
   background: linear-gradient(
     180deg,
-    color-mix(in oklch, var(--muted) 42%, white 58%) 0%,
+    color-mix(in oklch, var(--muted) 42%, var(--cms-mix-base) 58%) 0%,
     var(--background) 8rem
   );
   border-right: 1px solid var(--border);
@@ -51,10 +80,11 @@
   padding: 0.625rem 0.375rem;
   background: linear-gradient(
     180deg,
-    color-mix(in oklch, var(--muted) 52%, white 48%) 0%,
+    color-mix(in oklch, var(--muted) 52%, var(--cms-mix-base) 48%) 0%,
     color-mix(in oklch, var(--background) 94%, var(--muted) 6%) 100%
   );
-  border-right: 1px solid color-mix(in oklch, var(--border) 86%, white 14%);
+  border-right: 1px solid
+    color-mix(in oklch, var(--border) 86%, var(--cms-mix-base) 14%);
 }
 
 .cms-editor-root [class*="_Nav-list_"] {
@@ -106,8 +136,16 @@
 }
 
 .cms-editor-root [class*="_NavItem-link_"]:hover {
-  border-color: oklch(0.93 0.018 85) !important;
-  background: oklch(0.98 0.008 85) !important;
+  border-color: color-mix(
+    in oklch,
+    var(--border) 80%,
+    var(--cms-mix-base) 20%
+  ) !important;
+  background: color-mix(
+    in oklch,
+    var(--accent) 50%,
+    var(--cms-mix-base) 50%
+  ) !important;
   color: var(--foreground);
 }
 
@@ -156,8 +194,8 @@
   border-color: color-mix(in oklch, var(--ring) 22%, var(--border) 78%);
   background: linear-gradient(
     180deg,
-    color-mix(in oklch, var(--secondary) 58%, white 42%) 0%,
-    color-mix(in oklch, var(--muted) 62%, white 38%) 100%
+    color-mix(in oklch, var(--secondary) 58%, var(--cms-mix-base) 42%) 0%,
+    color-mix(in oklch, var(--muted) 62%, var(--cms-mix-base) 38%) 100%
   );
   color: var(--foreground);
   box-shadow:
@@ -168,8 +206,8 @@
 .cms-editor-root [class*="_NavItem--active_"] [class*="_NavItem-link_"]:hover {
   background: linear-gradient(
     180deg,
-    color-mix(in oklch, var(--secondary) 58%, white 42%) 0%,
-    color-mix(in oklch, var(--muted) 62%, white 38%) 100%
+    color-mix(in oklch, var(--secondary) 58%, var(--cms-mix-base) 42%) 0%,
+    color-mix(in oklch, var(--muted) 62%, var(--cms-mix-base) 38%) 100%
   );
 }
 
@@ -195,13 +233,15 @@
 .cms-editor-root [class*="_Nav-mobileActions_"] {
   width: 100%;
   padding-top: 0.375rem;
-  border-top: 1px solid color-mix(in oklch, var(--border) 84%, white 16%);
+  border-top: 1px solid
+    color-mix(in oklch, var(--border) 84%, var(--cms-mix-base) 16%);
 }
 
 .cms-editor-root [class*="_Nav-mobileActions_"] [class*="_IconButton_"] {
   width: 100%;
   height: 2.5rem;
-  border: 1px solid color-mix(in oklch, var(--border) 84%, white 16%);
+  border: 1px solid
+    color-mix(in oklch, var(--border) 84%, var(--cms-mix-base) 16%);
   border-radius: min(var(--radius-md), 10px);
   background: color-mix(in oklch, var(--background) 92%, var(--muted) 8%);
   color: var(--muted-foreground);
@@ -211,7 +251,7 @@
   padding: 1rem;
   background: linear-gradient(
     180deg,
-    color-mix(in oklch, var(--muted) 36%, white 64%) 0%,
+    color-mix(in oklch, var(--muted) 36%, var(--cms-mix-base) 64%) 0%,
     var(--background) 12rem
   );
 }
@@ -222,7 +262,8 @@
 }
 
 .cms-editor-root [class*="_Layer-inner_"] {
-  border: 1px solid color-mix(in oklch, var(--border) 88%, white 12%);
+  border: 1px solid
+    color-mix(in oklch, var(--border) 88%, var(--cms-mix-base) 12%);
   border-radius: min(var(--radius-lg), 10px);
   background: color-mix(in oklch, var(--background) 96%, var(--muted) 4%);
   transition:
@@ -258,8 +299,8 @@
     border-color: color-mix(in oklch, var(--ring) 24%, var(--border) 76%);
     background: linear-gradient(
       180deg,
-      color-mix(in oklch, var(--secondary) 26%, white 74%) 0%,
-      color-mix(in oklch, var(--muted) 20%, white 80%) 100%
+      color-mix(in oklch, var(--secondary) 26%, var(--cms-mix-base) 74%) 0%,
+      color-mix(in oklch, var(--muted) 20%, var(--cms-mix-base) 80%) 100%
     );
     color: var(--foreground);
     box-shadow: 0 8px 20px color-mix(in oklch, black 6%, transparent);
@@ -274,8 +315,8 @@
   border-color: color-mix(in oklch, var(--ring) 28%, var(--border) 72%);
   background: linear-gradient(
     180deg,
-    color-mix(in oklch, var(--secondary) 34%, white 66%) 0%,
-    color-mix(in oklch, var(--muted) 24%, white 76%) 100%
+    color-mix(in oklch, var(--secondary) 34%, var(--cms-mix-base) 66%) 0%,
+    color-mix(in oklch, var(--muted) 24%, var(--cms-mix-base) 76%) 100%
   );
   color: var(--foreground);
   box-shadow:
@@ -288,8 +329,8 @@
   > [class*="_Layer-inner_"]:hover {
   background: linear-gradient(
     180deg,
-    color-mix(in oklch, var(--secondary) 34%, white 66%) 0%,
-    color-mix(in oklch, var(--muted) 30%, white 70%) 100%
+    color-mix(in oklch, var(--secondary) 34%, var(--cms-mix-base) 66%) 0%,
+    color-mix(in oklch, var(--muted) 30%, var(--cms-mix-base) 70%) 100%
   );
 }
 
@@ -305,7 +346,8 @@
   gap: 0.75rem;
   height: auto;
   padding: 0.875rem;
-  border: 1px solid color-mix(in oklch, var(--border) 84%, white 16%);
+  border: 1px solid
+    color-mix(in oklch, var(--border) 84%, var(--cms-mix-base) 16%);
   border-radius: var(--radius-xl);
   background: color-mix(in oklch, var(--background) 92%, var(--muted) 8%);
   box-shadow: 0 1px 2px color-mix(in oklch, black 8%, transparent);
@@ -368,7 +410,8 @@
 }
 
 .cms-editor-root .cms-drawer-item-card {
-  border: 1px solid color-mix(in oklch, var(--border) 82%, white 18%);
+  border: 1px solid
+    color-mix(in oklch, var(--border) 82%, var(--cms-mix-base) 18%);
   border-radius: min(var(--radius-xl), 12px);
   background: var(--background);
   transition:
@@ -387,7 +430,7 @@
   [class*="_DrawerItem_"]:focus-within
   .cms-drawer-item-card {
   border-color: color-mix(in oklch, var(--ring) 28%, var(--border) 72%);
-  background: color-mix(in oklch, var(--accent) 45%, white 55%);
+  background: color-mix(in oklch, var(--accent) 45%, var(--cms-mix-base) 55%);
   box-shadow: 0 8px 20px color-mix(in oklch, black 8%, transparent);
   transform: translateY(-1px);
 }
@@ -427,8 +470,13 @@
   gap: 0.5rem;
   min-height: 3.5rem;
   padding: 1rem 1.25rem;
-  background: color-mix(in oklch, var(--background) 88%, white 12%);
-  border-bottom: 1px solid color-mix(in oklch, var(--border) 82%, white 18%);
+  background: color-mix(
+    in oklch,
+    var(--background) 88%,
+    var(--cms-mix-base) 12%
+  );
+  border-bottom: 1px solid
+    color-mix(in oklch, var(--border) 82%, var(--cms-mix-base) 18%);
   color: var(--foreground);
 }
 
@@ -484,7 +532,7 @@
   border-top: 0;
   background: linear-gradient(
     180deg,
-    color-mix(in oklch, var(--muted) 45%, white 55%) 0%,
+    color-mix(in oklch, var(--muted) 45%, var(--cms-mix-base) 55%) 0%,
     var(--background) 9rem
   );
 }
@@ -502,7 +550,8 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid color-mix(in oklch, var(--border) 84%, white 16%);
+  border-bottom: 1px solid
+    color-mix(in oklch, var(--border) 84%, var(--cms-mix-base) 16%);
   background: color-mix(in oklch, var(--background) 94%, var(--muted) 6%);
 }
 
@@ -520,7 +569,7 @@
 .cms-editor-root [class*="_ViewportControls-divider_"] {
   width: 1px;
   height: 1.5rem;
-  background: color-mix(in oklch, var(--border) 88%, white 12%);
+  background: color-mix(in oklch, var(--border) 88%, var(--cms-mix-base) 12%);
 }
 
 .cms-editor-root [class*="_ViewportControls_"] [class*="_IconButton_"] {
@@ -538,8 +587,8 @@
 }
 
 .cms-editor-root [class*="_ViewportControls_"] [class*="_IconButton_"]:hover {
-  border-color: color-mix(in oklch, var(--border) 82%, white 18%);
-  background: color-mix(in oklch, var(--accent) 52%, white 48%);
+  border-color: color-mix(in oklch, var(--border) 82%, var(--cms-mix-base) 18%);
+  background: color-mix(in oklch, var(--accent) 52%, var(--cms-mix-base) 48%);
   color: var(--foreground);
 }
 
@@ -550,8 +599,12 @@
 .cms-editor-root
   [class*="_ViewportControls_"]
   [class*="_IconButton_"][disabled] {
-  border-color: color-mix(in oklch, var(--border) 78%, white 22%);
-  background: color-mix(in oklch, var(--secondary) 74%, white 26%);
+  border-color: color-mix(in oklch, var(--border) 78%, var(--cms-mix-base) 22%);
+  background: color-mix(
+    in oklch,
+    var(--secondary) 74%,
+    var(--cms-mix-base) 26%
+  );
 }
 
 .cms-editor-root
@@ -592,7 +645,8 @@
 .cms-editor-root [class*="_ViewportControls-zoomSelect_"] {
   height: 2rem;
   padding: 0 1.75rem 0 0.625rem;
-  border: 1px solid color-mix(in oklch, var(--border) 82%, white 18%);
+  border: 1px solid
+    color-mix(in oklch, var(--border) 82%, var(--cms-mix-base) 18%);
   border-radius: min(var(--radius-md), 10px);
   background: var(--background);
   color: var(--foreground);
@@ -603,7 +657,8 @@
 }
 
 [class*="_DraggableComponent-overlay_"] {
-  outline: 2px solid color-mix(in oklch, var(--border) 78%, white 22%);
+  outline: 2px solid
+    color-mix(in oklch, var(--border) 78%, var(--cms-mix-base) 22%);
   outline-offset: -2px;
 }
 
@@ -611,7 +666,11 @@
   > [class*="_DraggableComponent-overlayWrapper_"]
   > [class*="_DraggableComponent-overlay_"] {
   background: color-mix(in oklch, var(--secondary) 26%, transparent);
-  outline-color: color-mix(in oklch, var(--border) 80%, white 20%);
+  outline-color: color-mix(
+    in oklch,
+    var(--border) 80%,
+    var(--cms-mix-base) 20%
+  );
 }
 
 [class*="_DraggableComponent--isSelected_"]
@@ -625,7 +684,8 @@
 [class*="_DropZone--hoveringOverArea_"]:not([class*="_DropZone--isRootZone_"]),
 [class*="_DropZone_"]:empty {
   background: color-mix(in oklch, var(--secondary) 22%, transparent) !important;
-  outline: 2px dashed color-mix(in oklch, var(--border) 82%, white 18%) !important;
+  outline: 2px dashed
+    color-mix(in oklch, var(--border) 82%, var(--cms-mix-base) 18%) !important;
 }
 
 [class*="_DropZone--isDestination_"] {
@@ -637,7 +697,8 @@
 }
 
 [data-puck-overlay-portal]:hover {
-  outline: 2px dashed color-mix(in oklch, var(--border) 82%, white 18%);
+  outline: 2px dashed
+    color-mix(in oklch, var(--border) 82%, var(--cms-mix-base) 18%);
   outline-offset: 2px;
 }
 

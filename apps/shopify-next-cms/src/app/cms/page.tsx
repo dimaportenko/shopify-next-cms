@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listCmsPages } from "@/lib/shopify/queries/cms-pages";
 import { DeletePageButton } from "@cms/_components/editor/delete-page-button";
+import { CmsDashboardThemeToggle } from "@cms/_components/editor/cms-dashboard-theme-toggle";
 
 export default async function CmsDashboard() {
   const pages = await listCmsPages();
@@ -9,12 +10,15 @@ export default async function CmsDashboard() {
     <div className="mx-auto max-w-4xl px-4 py-12">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold">CMS Pages</h1>
-        <Link
-          href="/cms/new"
-          className="inline-flex h-10 items-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
-        >
-          New Page
-        </Link>
+        <div className="flex items-center gap-3">
+          <CmsDashboardThemeToggle />
+          <Link
+            href="/cms/new"
+            className="inline-flex h-10 items-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+          >
+            New Page
+          </Link>
+        </div>
       </div>
 
       {pages.length === 0 ? (
