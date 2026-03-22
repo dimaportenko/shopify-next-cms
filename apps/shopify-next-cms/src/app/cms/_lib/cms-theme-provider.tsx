@@ -34,18 +34,39 @@ function getStoredTheme(key: string, fallback: Theme): Theme {
   return fallback;
 }
 
+function subscribeToStorage(callback: () => void) {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
+
+function useStoredTheme(key: string, fallback: Theme): Theme {
+  return useSyncExternalStore(
+    subscribeToStorage,
+    () => getStoredTheme(key, fallback),
+    () => fallback,
+  );
+}
+
 export function CmsThemeProvider({ children }: { children: ReactNode }) {
-  const [editorTheme, setEditorThemeState] = useState<Theme>(() =>
-    getStoredTheme(EDITOR_THEME_KEY, "light"),
-  );
-  const [previewTheme, setPreviewThemeState] = useState<Theme>(() =>
-    getStoredTheme(PREVIEW_THEME_KEY, "light"),
-  );
+  const storedEditorTheme = useStoredTheme(EDITOR_THEME_KEY, "light");
+  const storedPreviewTheme = useStoredTheme(PREVIEW_THEME_KEY, "light");
+  const [editorTheme, setEditorThemeState] = useState<Theme>(storedEditorTheme);
+  const [previewTheme, setPreviewThemeState] =
+    useState<Theme>(storedPreviewTheme);
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
     () => false,
   );
+
+  // Sync from external store after hydration
+  useEffect(() => {
+    setEditorThemeState(storedEditorTheme);
+  }, [storedEditorTheme]);
+
+  useEffect(() => {
+    setPreviewThemeState(storedPreviewTheme);
+  }, [storedPreviewTheme]);
 
   const setEditorTheme = useCallback((theme: Theme) => {
     setEditorThemeState(theme);

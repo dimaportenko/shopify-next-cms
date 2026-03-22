@@ -53,7 +53,7 @@ export default function NewPage() {
             id="pageType"
             value={pageType}
             onChange={(e) => setPageType(e.target.value as PageType)}
-            className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >
             {PAGE_TYPES.map((pt) => (
               <option key={pt.value} value={pt.value}>
@@ -74,7 +74,7 @@ export default function NewPage() {
             onChange={(e) => handleTitleChange(e.target.value)}
             placeholder="My New Page"
             required
-            className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           />
         </div>
 
@@ -91,7 +91,7 @@ export default function NewPage() {
               onChange={(e) => setSlug(e.target.value)}
               placeholder="my-new-page"
               required
-              className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             />
           </div>
         </div>
@@ -109,7 +109,7 @@ export default function NewPage() {
           <button
             type="button"
             onClick={() => router.push("/cms")}
-            className="inline-flex h-10 items-center rounded-md border px-6 text-sm font-medium transition-colors hover:bg-accent"
+            className="inline-flex h-10 items-center rounded-md border border-border bg-background px-6 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
           >
             Cancel
           </button>

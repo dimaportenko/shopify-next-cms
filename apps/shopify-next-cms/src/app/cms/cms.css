@@ -53,9 +53,37 @@
   --ring: oklch(0.705 0.191 77.604);
   --cms-mix-base: oklch(0.1 0 30);
 
+  /* Override Puck internal grey palette for dark mode */
+  --puck-color-grey-01: #e5e5e5;
+  --puck-color-grey-02: #d4d4d4;
+  --puck-color-grey-03: #a3a3a3;
+  --puck-color-grey-04: #a3a3a3;
+  --puck-color-grey-05: #737373;
+  --puck-color-grey-08: #404040;
+  --puck-color-grey-09: #2e2e2e;
+  --puck-color-grey-10: #262626;
+  --puck-color-grey-11: #1c1c1c;
+  --puck-color-grey-12: #171717;
+
   color-scheme: dark;
   color: oklch(0.985 0 30);
   background-color: oklch(0.155 0.015 77);
+}
+
+/* Puck canvas background for dark mode */
+.cms-editor-root.cms-dark [class*="_PuckCanvas_"] {
+  background-color: oklch(0.12 0.01 77);
+}
+
+/* Puck component overlay label in dark mode */
+.cms-editor-root.cms-dark [class*="_DraggableComponent-label_"] {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+/* Loading state text in dark mode */
+.cms-editor-root.cms-dark [class*="_PuckCanvas-loader_"] {
+  color: var(--muted-foreground);
 }
 
 .cms-editor-root [class*="_Sidebar--right_"] {
@@ -70,6 +98,14 @@
     var(--background) 8rem
   );
   border-right: 1px solid var(--border);
+}
+
+.cms-editor-root [class*="_PuckLayout-inner_"] {
+  background: var(--background);
+}
+
+.cms-editor-root [class*="_PuckLayout-nav_"] {
+  background: transparent;
 }
 
 .cms-editor-root [class*="_Nav_"] {

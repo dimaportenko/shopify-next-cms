@@ -9,7 +9,7 @@ function CmsLayoutInner({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className={`cms-editor-root${editorTheme === "dark" ? " cms-dark" : ""}`}
+      className={`cms-editor-root min-h-screen${editorTheme === "dark" ? " cms-dark" : ""}`}
     >
       {children}
     </div>

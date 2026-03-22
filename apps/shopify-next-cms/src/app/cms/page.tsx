@@ -22,13 +22,13 @@ export default async function CmsDashboard() {
       </div>
 
       {pages.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-12 text-center">
+        <div className="rounded-lg border border-dashed border-border bg-card p-12 text-center">
           <p className="text-muted-foreground">
             No pages yet. Create one to get started.
           </p>
         </div>
       ) : (
-        <div className="divide-y rounded-lg border">
+        <div className="divide-y divide-border rounded-lg border border-border bg-card text-card-foreground">
           {pages.map((page) => (
             <div
               key={page.id}
@@ -57,14 +57,14 @@ export default async function CmsDashboard() {
               <div className="flex items-center gap-2">
                 <Link
                   href={`/cms/${page.pageType}/${page.slug}/edit`}
-                  className="inline-flex h-9 items-center rounded-md border px-4 text-sm font-medium transition-colors hover:bg-accent"
+                  className="inline-flex h-9 items-center rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                 >
                   Edit
                 </Link>
                 {page.status === "published" && (
                   <Link
                     href={`/${page.slug}`}
-                    className="inline-flex h-9 items-center rounded-md border px-4 text-sm font-medium transition-colors hover:bg-accent"
+                    className="inline-flex h-9 items-center rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                     target="_blank"
                   >
                     View
