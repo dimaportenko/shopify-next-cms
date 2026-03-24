@@ -2,10 +2,12 @@
 
 import { Puck } from "@puckeditor/core";
 import type { Data } from "@puckeditor/core";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import type { PageType } from "@/app/cms/_lib/page-types";
 import { isValidPageType } from "@/app/cms/_lib/page-types";
+import { fetchCmsPageBySlug } from "@/lib/api/cms-pages";
 import { puckConfig } from "@cms/_lib/config";
 import { publishPageAction } from "@cms/_lib/actions";
 import { EditorHeader } from "@cms/_components/editor/editor-header";
@@ -28,52 +30,42 @@ const EMPTY_DATA: Data = { content: [], root: {} };
 export default function EditorPage() {
   const { slug, pageType } = useParams<{ slug: string; pageType: string }>();
   const router = useRouter();
-  const [initialData, setInitialData] = useState<Data | null>(null);
-  const [pageTitle, setPageTitle] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const validPageType: PageType = isValidPageType(pageType)
     ? pageType
     : "general";
 
-  useEffect(() => {
-    const controller = new AbortController();
+  const {
+    data: page,
+    isPending,
+    error,
+  } = useQuery({
+    queryKey: ["cms-page", validPageType, slug],
+    queryFn: () => fetchCmsPageBySlug({ slug, pageType: validPageType }),
+  });
 
-    fetch(`/api/cms/pages/${slug}?pageType=${validPageType}`, {
-      signal: controller.signal,
-    })
-      .then((r) => {
-        if (!r.ok) throw new Error("Page not found");
-        return r.json();
-      })
-      .then((page) => {
-        const puckData: Data = page.puckData || EMPTY_DATA;
+  const initialData = useMemo(() => {
+    if (!page) {
+      return null;
+    }
 
-        // Ensure root.props.title is populated from the page title
-        const rootProps = (puckData.root?.props ?? {}) as Record<
-          string,
-          unknown
-        >;
-        if (!rootProps.title && page.title) {
-          puckData.root = {
-            ...puckData.root,
-            props: { ...rootProps, title: page.title },
-          };
-        }
+    const puckData: Data = page.puckData || EMPTY_DATA;
+    const rootProps = (puckData.root?.props ?? {}) as Record<string, unknown>;
 
-        setInitialData(puckData);
-        setPageTitle(page.title || slug);
-        setLoading(false);
-      })
-      .catch((err) => {
-        if (err.name === "AbortError") return;
-        setError(err.message);
-        setLoading(false);
-      });
+    if (!rootProps.title && page.title) {
+      return {
+        ...puckData,
+        root: {
+          ...puckData.root,
+          props: { ...rootProps, title: page.title },
+        },
+      } satisfies Data;
+    }
 
-    return () => controller.abort();
-  }, [slug, validPageType]);
+    return puckData;
+  }, [page]);
+
+  const pageTitle = page?.title || slug;
 
   const handlePublish = useCallback(
     async (data: Data) => {
@@ -143,7 +135,7 @@ export default function EditorPage() {
     [pageTitle, handlePublish],
   );
 
-  if (loading) {
+  if (isPending) {
     return (
       <div className="flex h-screen items-center justify-center">
         <p className="text-muted-foreground">Loading editor...</p>
@@ -151,10 +143,12 @@ export default function EditorPage() {
     );
   }
 
-  if (error) {
+  if (error || !initialData) {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4">
-        <p className="text-destructive">{error}</p>
+        <p className="text-destructive">
+          {error instanceof Error ? error.message : "Failed to load page"}
+        </p>
         <button
           type="button"
           onClick={() => router.push("/cms")}
@@ -169,7 +163,7 @@ export default function EditorPage() {
   return (
     <Puck
       config={puckConfig}
-      data={initialData!}
+      data={initialData}
       iframe={{ enabled: true }}
       overrides={overrides}
       onPublish={handlePublish}
