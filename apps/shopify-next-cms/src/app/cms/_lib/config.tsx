@@ -23,9 +23,10 @@ type Props = {
 export const puckConfig: Config<Props> = {
   root: {
     fields: {
-      title: { type: "text" },
+      title: { type: "text", label: "Title" },
       type: {
         type: "select",
+        label: "Page Type",
         options: PAGE_TYPES as unknown as { label: string; value: string }[],
       },
     },

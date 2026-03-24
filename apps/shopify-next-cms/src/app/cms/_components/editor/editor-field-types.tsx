@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentType, ReactNode } from "react";
 import type {
   FieldProps,
   NumberField,
@@ -14,8 +15,20 @@ import { cn } from "@/lib/utils";
 const controlClassName =
   "!rounded-lg !border-input !bg-background !text-foreground h-8 w-full min-w-0 border px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
 
+interface LabelProps {
+  children?: ReactNode;
+  icon?: ReactNode;
+  label: string;
+  el?: "label" | "div";
+  readOnly?: boolean;
+  className?: string;
+}
+
 type PuckFieldProps<F, ValueType> = FieldProps<F, ValueType> & {
   name: string;
+  label?: string;
+  labelIcon?: ReactNode;
+  Label?: ComponentType<LabelProps>;
 };
 
 export function EditorTextField({
@@ -24,8 +37,11 @@ export function EditorTextField({
   onChange,
   readOnly,
   value,
+  label,
+  labelIcon,
+  Label,
 }: PuckFieldProps<TextField, string>) {
-  return (
+  const input = (
     <Input
       className={controlClassName}
       disabled={readOnly}
@@ -35,6 +51,16 @@ export function EditorTextField({
       onChange={(event) => onChange(event.currentTarget.value)}
     />
   );
+
+  if (Label && label) {
+    return (
+      <Label label={label} icon={labelIcon} readOnly={readOnly}>
+        {input}
+      </Label>
+    );
+  }
+
+  return input;
 }
 
 export function EditorNumberField({
@@ -43,8 +69,11 @@ export function EditorNumberField({
   onChange,
   readOnly,
   value,
+  label,
+  labelIcon,
+  Label,
 }: PuckFieldProps<NumberField, number | undefined>) {
-  return (
+  const input = (
     <Input
       className={controlClassName}
       disabled={readOnly}
@@ -75,6 +104,16 @@ export function EditorNumberField({
       }}
     />
   );
+
+  if (Label && label) {
+    return (
+      <Label label={label} icon={labelIcon} readOnly={readOnly}>
+        {input}
+      </Label>
+    );
+  }
+
+  return input;
 }
 
 export function EditorTextareaField({
@@ -83,8 +122,11 @@ export function EditorTextareaField({
   onChange,
   readOnly,
   value,
+  label,
+  labelIcon,
+  Label,
 }: PuckFieldProps<TextareaField, string>) {
-  return (
+  const input = (
     <textarea
       className={cn(controlClassName, "min-h-24 resize-y py-2")}
       disabled={readOnly}
@@ -94,6 +136,16 @@ export function EditorTextareaField({
       onChange={(event) => onChange(event.currentTarget.value)}
     />
   );
+
+  if (Label && label) {
+    return (
+      <Label label={label} icon={labelIcon} readOnly={readOnly}>
+        {input}
+      </Label>
+    );
+  }
+
+  return input;
 }
 
 export function EditorSelectField({
@@ -102,13 +154,16 @@ export function EditorSelectField({
   onChange,
   readOnly,
   value,
+  label,
+  labelIcon,
+  Label,
 }: PuckFieldProps<SelectField, SelectField["options"][number]["value"]>) {
   const selectedIndex = field.options.findIndex((option) =>
     Object.is(option.value, value),
   );
   const selectedValue = selectedIndex === -1 ? "" : String(selectedIndex);
 
-  return (
+  const select = (
     <div className="relative">
       <select
         className={cn(
@@ -140,4 +195,14 @@ export function EditorSelectField({
       <ChevronDown className="pointer-events-none absolute top-1/2 right-2 size-4 -translate-y-1/2 text-muted-foreground" />
     </div>
   );
+
+  if (Label && label) {
+    return (
+      <Label label={label} icon={labelIcon} readOnly={readOnly}>
+        {select}
+      </Label>
+    );
+  }
+
+  return select;
 }
