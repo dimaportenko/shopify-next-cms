@@ -6,6 +6,11 @@
       "sourceType": "github",
       "computedHash": "ca96444b70257eb3f4f4c76dfdd4a32312c835fe3c8755d2e3d75ac78d384bfd"
     },
+    "effective-typescript": {
+      "source": "dimaportenko/effective-typescript-skill",
+      "sourceType": "github",
+      "computedHash": "6ab2f77b2094ead68cb3397f9d1cff0c986053c1b51a694a571a8d5b1110b35d"
+    },
     "frontend-design": {
       "source": "anthropics/skills",
       "sourceType": "github",
