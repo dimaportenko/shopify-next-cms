@@ -48,7 +48,21 @@ export default function EditorPage() {
         return r.json();
       })
       .then((page) => {
-        setInitialData(page.puckData || EMPTY_DATA);
+        const puckData: Data = page.puckData || EMPTY_DATA;
+
+        // Ensure root.props.title is populated from the page title
+        const rootProps = (puckData.root?.props ?? {}) as Record<
+          string,
+          unknown
+        >;
+        if (!rootProps.title && page.title) {
+          puckData.root = {
+            ...puckData.root,
+            props: { ...rootProps, title: page.title },
+          };
+        }
+
+        setInitialData(puckData);
         setPageTitle(page.title || slug);
         setLoading(false);
       })

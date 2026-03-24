@@ -34,9 +34,11 @@ export async function publishPageAction(
     rootProps?.type && isValidPageType(rootProps.type)
       ? rootProps.type
       : undefined;
+  const updatedTitle = rootProps?.title?.trim() || undefined;
 
   const updated = await updateCmsPage(page.id, {
     puckData: data,
+    title: updatedTitle,
     pageType: updatedPageType,
     status: "published",
   });
@@ -54,8 +56,12 @@ export async function savePageDraftAction(
   const page = await getCmsPageBySlug({ slug, pageType });
   if (!page) throw new Error(`Page not found: ${slug}`);
 
+  const draftRootProps = data.root?.props as Record<string, string> | undefined;
+  const draftTitle = draftRootProps?.title?.trim() || undefined;
+
   const updated = await updateCmsPage(page.id, {
     puckData: data,
+    title: draftTitle,
   });
 
   revalidatePath("/cms");
