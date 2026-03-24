@@ -15,6 +15,7 @@ Public Pages (/[slug])     ←  <Render> (RSC)  ←  Storefront API (read)
 
 - **Editor** — Client component using `<Puck>` with drag-and-drop UI
 - **Editor chrome** — Puck UI is restyled to match the CMS theme using override components first, then scoped CSS for unsupported surfaces
+- **CMS theming** — The admin UI supports a dedicated editor theme and a separate preview theme for the Puck iframe
 - **Render** — Server component using `<Render>` for SSR performance
 - **Storage** — Page content stored as JSON in a Shopify Metaobject field
 - **Mutations** — Server Actions for create/update/delete (no REST API routes needed)
@@ -23,8 +24,8 @@ Public Pages (/[slug])     ←  <Render> (RSC)  ←  Storefront API (read)
 ## Data Flow
 
 1. **Create** — User selects a page type and title from the CMS dashboard (`/cms/new`)
-2. **Edit** — Puck editor at `/cms/{pageType}/{slug}/edit` loads page data via API route, provides visual editing
-3. **Publish** — `onPublish` triggers a Server Action that saves to Shopify and revalidates the path
+2. **Edit** — Puck editor at `/cms/{pageType}/{slug}/edit` loads page data via API route and caches the client fetch with TanStack Query
+3. **Publish** — `onPublish` triggers a Server Action that saves to Shopify, syncs root-level title/type metadata, and revalidates the path
 4. **View** — Public page at `/{slug}` renders via React Server Component using `<Render>`
 
 ## Route Structure
@@ -54,21 +55,28 @@ src/app/
 
 ## Key Files
 
-| File | Purpose |
-|------|---------|
-| `src/app/cms/_lib/config.tsx` | Puck configuration — registers all components + root fields (title, type) |
-| `src/app/cms/_lib/page-types.ts` | Page type constants (`general`, `product`, `collection`, `home`) |
-| `src/app/cms/_lib/actions.ts` | Server Actions for CRUD operations |
-| `src/app/cms/_components/` | Puck block components (Hero, TextBlock, etc.) |
-| `src/app/cms/_components/editor/` | Custom editor header, drawer, inspector, field types, and drawer item UI |
-| `src/app/cms/cms.css` | Scoped CMS styling for Puck surfaces that do not have stable override APIs |
-| `src/app/cms/[pageType]/[slug]/edit/page.tsx` | Puck editor page (`"use client"`) |
-| `src/app/(storefront)/[slug]/page.tsx` | Public page renderer (RSC) |
-| `src/proxy.ts` | Next.js 16 proxy for CMS auth |
+| File                                          | Purpose                                                                                  |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `src/app/cms/_lib/config.tsx`                 | Puck configuration — registers all components + root fields (title, type)                |
+| `src/app/cms/_lib/page-types.ts`              | Page type constants (`general`, `product`, `collection`, `home`)                         |
+| `src/app/cms/_lib/actions.ts`                 | Server Actions for CRUD operations                                                       |
+| `src/app/cms/_lib/cms-theme-provider.tsx`     | Stores editor and preview theme preferences and syncs preview theme into the Puck iframe |
+| `src/app/cms/_components/`                    | Puck block components (Hero, TextBlock, etc.)                                            |
+| `src/app/cms/_components/editor/`             | Custom editor header, drawer, inspector, field types, and drawer item UI                 |
+| `src/app/cms/cms.css`                         | Scoped CMS styling for Puck surfaces that do not have stable override APIs               |
+| `src/app/cms/[pageType]/[slug]/edit/page.tsx` | Puck editor page (`"use client"`)                                                        |
+| `src/components/providers/query-provider.tsx` | App-level TanStack Query provider for client-side server-state fetching                  |
+| `src/app/(storefront)/[slug]/page.tsx`        | Public page renderer (RSC)                                                               |
+| `src/proxy.ts`                                | Next.js 16 proxy for CMS auth                                                            |
 
 ## Editor Customization Strategy
 
 The CMS editor does not use Puck's default chrome as-is. The editor page applies custom overrides for the header, header actions, drawer wrapper, drawer items, fields panel, field labels, and several field types so the UI matches the rest of the CMS.
+
+The custom header also exposes separate theme toggles for:
+
+- **Editor theme** — changes the CMS chrome around the editor
+- **Preview theme** — changes the Puck iframe preview independently from the editor chrome
 
 When Puck exposes a stable override API, the project uses that override instead of targeting generated class names. For editor surfaces that are not yet overrideable, the project uses scoped selectors in `src/app/cms/cms.css`.
 
