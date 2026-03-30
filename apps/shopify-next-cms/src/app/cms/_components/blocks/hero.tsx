@@ -52,16 +52,17 @@ function HeroRender({
 
 export const heroConfig: ComponentConfig<HeroProps> = {
   fields: {
-    title: { type: "text" },
-    subtitle: { type: "textarea" },
-    ctaText: { type: "text" },
-    ctaLink: { type: "text" },
+    title: { type: "text", label: "Title" },
+    subtitle: { type: "textarea", label: "Subtitle" },
+    ctaText: { type: "text", label: "CTA Text" },
+    ctaLink: { type: "text", label: "CTA Link" },
     alignment: {
       type: "select",
       options: ALIGNMENT_OPTIONS as unknown as {
         label: string;
         value: string;
       }[],
+      label: "Alignment",
     },
   },
   defaultProps: {

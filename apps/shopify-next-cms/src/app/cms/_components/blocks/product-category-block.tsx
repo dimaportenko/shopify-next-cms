@@ -20,9 +20,9 @@ function ProductCategoryBlockRender({
 export const productCategoryBlockConfig: ComponentConfig<ProductCategoryBlockProps> =
   {
     fields: {
-      heading: { type: "text" },
-      subheading: { type: "textarea" },
-      label: { type: "text" },
+      heading: { type: "text", label: "heading" },
+      subheading: { type: "textarea", label: "subheading" },
+      label: { type: "text", label: "label" },
     },
     defaultProps: {
       heading: "Shop By Category",
