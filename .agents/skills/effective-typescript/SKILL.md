@@ -22,12 +22,34 @@ Write TypeScript that leverages the type system to catch bugs at compile time, n
 ### 1. Type Safety Fundamentals
 
 - Enable `strict` mode in `tsconfig.json`. At minimum, enable `noImplicitAny` and `strictNullChecks`.
-- Limit `any` usage — it disables type checking, breaks contracts, and hides bugs.
+- Limit `any` usage — it silently propagates through the type system, so one `any` in a return type infects every caller.
 - Prefer `unknown` over `any` for values of uncertain type — it forces narrowing before use.
 - When `any` is needed, scope it as narrowly as possible. Never return `any` from a function.
 - Use precise `any` variants (`any[]`, `Record<string, any>`, `() => any`) instead of bare `any`.
 - Hide unsafe type assertions inside well-typed wrapper functions with correct signatures.
 - Track type coverage with tools like `type-coverage` to prevent safety regressions.
+
+**Example — taming `any`:**
+```typescript
+// BAD: any leaks into every caller
+function parseConfig(raw: string): any {
+  return JSON.parse(raw);
+}
+const port = parseConfig(text).port; // port is any — no checking anywhere downstream
+
+// GOOD: unknown forces narrowing at the usage site
+function parseConfig(raw: string): unknown {
+  return JSON.parse(raw);
+}
+const config = parseConfig(text);
+if (typeof config === "object" && config !== null && "port" in config) {
+  const port = (config as { port: number }).port; // narrowed, assertion justified
+}
+
+// BETTER: use a validation library like Zod for runtime + type safety
+const ConfigSchema = z.object({ port: z.number() });
+const config = ConfigSchema.parse(JSON.parse(text)); // typed & validated
+```
 
 ### 2. Type Design
 
@@ -44,6 +66,30 @@ Write TypeScript that leverages the type system to catch bugs at compile time, n
 - Name types after your problem domain, not their shape. Avoid vague names like `Info` or `Data`.
 - Generate types from schemas or official sources — never hand-write types from sample data.
 
+**Example — discriminated unions over union properties:**
+```typescript
+// BAD: nothing prevents { status: "loading", error: new Error() }
+interface RequestState {
+  status: "loading" | "success" | "error";
+  data?: string;
+  error?: Error;
+}
+
+// GOOD: each variant carries exactly the fields that make sense
+type RequestState =
+  | { status: "loading" }
+  | { status: "success"; data: string }
+  | { status: "error"; error: Error };
+
+function handle(state: RequestState) {
+  switch (state.status) {
+    case "loading": return <Spinner />;
+    case "success": return <Content data={state.data} />;  // data is string, guaranteed
+    case "error":   return <Alert error={state.error} />;  // error is Error, guaranteed
+  }
+}
+```
+
 ### 3. Type Inference & Narrowing
 
 - Omit type annotations on local variables when TypeScript infers correctly. Annotate function signatures, not bodies.
@@ -56,6 +102,41 @@ Write TypeScript that leverages the type system to catch bugs at compile time, n
 - Prefer functional constructs (`map`, `filter`, `reduce`) and libraries to help types flow through pipelines.
 - Use `async`/`await` over raw callbacks — it improves both type flow and readability.
 
+**Example — let inference work, annotate where it matters:**
+```typescript
+// BAD: redundant annotations on locals that TS already infers
+const name: string = "Alice";
+const items: number[] = [1, 2, 3];
+const doubled: number[] = items.map((x: number): number => x * 2);
+
+// GOOD: annotate signatures, let locals be inferred
+function getUser(id: string): Promise<User> {  // return type annotated — public API
+  const name = "Alice";                         // inferred as string
+  const items = [1, 2, 3];                      // inferred as number[]
+  const doubled = items.map(x => x * 2);        // inferred as number[]
+  // ...
+}
+```
+
+**Example — `as const` + `satisfies` for config objects:**
+```typescript
+// BAD: annotation widens everything — loses literal values and keys
+const routes: Record<string, { path: string }> = {
+  home: { path: "/" },
+  about: { path: "/about" },
+};
+routes.typo;      // no error — string index allows anything
+routes.home.path; // type is string, not "/"
+
+// GOOD: as const locks down values, satisfies validates the shape
+const routes = {
+  home: { path: "/" },
+  about: { path: "/about" },
+} as const satisfies Record<string, { path: string }>;
+routes.typo;      // ERROR: Property 'typo' does not exist
+routes.home.path; // type is "/" — literal preserved
+```
+
 ### 4. Generics & Type-Level Programming
 
 - Think of generic types as functions between types. Constrain parameters with `extends`.
@@ -65,6 +146,19 @@ Write TypeScript that leverages the type system to catch bugs at compile time, n
 - Write tail-recursive generic types for efficiency and to avoid depth limits.
 - Consider code generation as an alternative to overly complex type-level programming.
 - Test your generic types — use `vitest`, `expect-type`, or the Type Challenges pattern.
+
+**Example — unnecessary type parameter:**
+```typescript
+// BAD: T appears only once — it doesn't relate anything
+function parse<T>(input: string): T {
+  return JSON.parse(input); // actually returns any, T is a lie
+}
+
+// GOOD: T links input to output
+function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
+  return obj[key]; // T appears twice — constrains both param and return
+}
+```
 
 ### 5. Structural Typing & Type Boundaries
 
@@ -102,6 +196,26 @@ Write TypeScript that leverages the type system to catch bugs at compile time, n
 - Type checking and unit testing are complementary — test behavior, let the compiler check types.
 - Watch compiler performance: remove dead code, avoid huge unions, prefer `interface extends` over intersections, annotate complex return types.
 - Migrate to TypeScript module-by-module from the bottom of the dependency graph. Finish by enabling `noImplicitAny`.
+
+**Example — exhaustiveness checking with `never`:**
+```typescript
+type Shape =
+  | { kind: "circle"; radius: number }
+  | { kind: "rect"; width: number; height: number };
+
+function area(shape: Shape): number {
+  switch (shape.kind) {
+    case "circle": return Math.PI * shape.radius ** 2;
+    case "rect":   return shape.width * shape.height;
+    default: {
+      const _exhaustive: never = shape; // ERROR if a new variant is added but not handled
+      return _exhaustive;
+    }
+  }
+}
+// When someone adds { kind: "triangle"; ... } to Shape, this function
+// immediately fails to compile — no silent fallthrough at runtime.
+```
 
 ## When Reviewing TypeScript Code
 
