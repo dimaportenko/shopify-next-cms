@@ -17,6 +17,16 @@ description: >
 
 Write TypeScript that leverages the type system to catch bugs at compile time, not runtime. Design types that precisely model your domain so that invalid states are unrepresentable. Let TypeScript infer where it can, annotate where it matters, and keep `any` usage narrow and well-hidden.
 
+## Top 5 Rules — Highest Bug-Prevention Impact
+
+1. **Enable `strict` mode** — catches entire categories of bugs (null derefs, implicit any) with zero runtime cost.
+2. **Model valid states only** — use discriminated unions so invalid state combinations are unrepresentable. This eliminates the most common source of "impossible" runtime bugs.
+3. **Use `unknown` over `any`** — a single `any` return silently infects every caller. `unknown` contains the unsafety to the narrowing site.
+4. **Push null to the boundaries** — don't let nullability scatter through your data model. Compound objects should be fully null or fully populated.
+5. **Generate types from schemas** — hand-writing types from sample data always gets nullability and optionality wrong. Use Zod, Prisma, GraphQL codegen, or OpenAPI generators as the source of truth.
+
+When in doubt about which rule applies, check this list first.
+
 ## Quick Rules by Category
 
 ### 1. Type Safety Fundamentals
