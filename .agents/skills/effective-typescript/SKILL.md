@@ -1,14 +1,10 @@
 ---
 name: effective-typescript
 description: >
-  Effective TypeScript coding rules and best practices. Use for ANY TypeScript task:
-  writing TS code, reviewing TS code, typing functions, designing interfaces, defining types,
-  creating generics, handling nulls, using any/unknown, type narrowing, type assertions,
-  type guards, discriminated unions, mapped types, conditional types, template literal types,
-  readonly, index signatures, type vs interface, structural typing, type inference,
-  TypeScript migration, tsconfig setup, @types packages, module augmentation, type testing,
-  type-level programming, branded types, exhaustiveness checking, TypeScript performance,
-  TS code review, refactoring TypeScript, fixing type errors, designing type-safe APIs.
+  Effective TypeScript coding rules, anti-patterns, and review guidance. Use when writing,
+  reviewing, or refactoring TypeScript code — including type design (discriminated unions,
+  generics, branded types), taming any/unknown, narrowing, inference, tsconfig setup,
+  migration from JS, and fixing type errors. Triggers on any TS-related task.
 ---
 
 # Effective TypeScript — Coding Agent Skill
@@ -207,6 +203,36 @@ function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
 - Watch compiler performance: remove dead code, avoid huge unions, prefer `interface extends` over intersections, annotate complex return types.
 - Migrate to TypeScript module-by-module from the bottom of the dependency graph. Finish by enabling `noImplicitAny`.
 
+### 9. Modern TypeScript (5.0+)
+
+- Use `const` type parameters (TS 5.0) to infer literal types from generic arguments without requiring callers to write `as const`.
+- Use `using` declarations (TS 5.2) for deterministic cleanup of resources like file handles, DB connections, and locks — replaces manual `try/finally`.
+- Use `NoInfer<T>` (TS 5.4) to block inference from specific positions in generic functions, forcing the caller to specify or letting other positions drive inference.
+- Combine `as const satisfies` (TS 5.0+) for config objects — validates shape while preserving literal types (see example in section 3).
+- Use standard decorators (TS 5.0) over experimental decorators when starting new projects. Avoid mixing both in the same codebase.
+- Use `import type` / `export type` to make type-only imports explicit — helps bundlers with tree-shaking and makes the value/type boundary clear.
+
+```typescript
+// const type parameter — callers get literal types without writing as const
+function createRoute<const T extends readonly string[]>(paths: T): T {
+  return paths;
+}
+const routes = createRoute(["home", "about"]); // type is readonly ["home", "about"]
+
+// using declaration — cleanup runs automatically when scope exits
+async function readConfig(path: string) {
+  using file = await openFile(path);  // file[Symbol.dispose]() called on scope exit
+  return parseConfig(await file.read());
+}
+
+// NoInfer — prevents unwanted inference from a default value
+function getOrDefault<T>(values: T[], fallback: NoInfer<T>): T {
+  return values.length > 0 ? values[0] : fallback;
+}
+getOrDefault([1, 2], "oops"); // ERROR — string is not assignable to number
+// Without NoInfer, T would widen to number | string and silently pass
+```
+
 **Example — exhaustiveness checking with `never`:**
 ```typescript
 type Shape =
@@ -229,18 +255,68 @@ function area(shape: Shape): number {
 
 ## When Reviewing TypeScript Code
 
-Check for these common issues:
+Scan for these issues in priority order. High-severity items hide bugs or break type safety silently; medium items hurt maintainability; low items are style/hygiene.
 
-1. **Bare `any` types** — Replace with `unknown`, a precise `any` variant, or a proper type.
-2. **Missing `strict` / `noImplicitAny`** — Should be enabled in all non-legacy projects.
-3. **Type assertions without comments** — Every `as X` needs justification.
-4. **Interfaces with union properties** — Refactor to tagged unions of interfaces.
-5. **Nullable types buried deep** — Push null to the perimeter of the API.
-6. **Stringly-typed parameters** — Replace `string` with literal unions or `keyof`.
-7. **Redundant type annotations** — Remove annotations TypeScript can infer on locals.
-8. **Object wrapper types** — Replace `String`/`Number`/`Boolean` with `string`/`number`/`boolean`.
-9. **Overly complex generics** — Simplify, or consider code generation.
-10. **Missing exhaustiveness checks** — Use `never` assignments in switch/if chains.
+### High Severity — fix immediately
+| Issue | What to look for | Fix |
+|-------|-----------------|-----|
+| Bare `any` types | `any` in function params, returns, or variable declarations | Replace with `unknown` + narrowing, a precise variant (`any[]`, `Record<string, any>`), or a proper type |
+| Missing `strict` mode | `tsconfig.json` without `strict: true` | Enable `strict`. At minimum enable `noImplicitAny` + `strictNullChecks` |
+| Type assertions without justification | `as Type` without a comment explaining why | Add a comment, or refactor to use narrowing instead. If the assertion is in a hot path, wrap it in a well-typed helper |
+| Interfaces with union properties | `{ status: "a" \| "b"; data?: X; error?: Y }` | Refactor to a discriminated union — each variant carries only its relevant fields |
+| Missing exhaustiveness checks | `switch` on a union type with no `default: never` | Add `const _: never = x` in default branch, or use return type annotation to force all branches |
+
+### Medium Severity — fix in the same PR
+| Issue | What to look for | Fix |
+|-------|-----------------|-----|
+| Nullable types buried deep | Null checks scattered through business logic, `x?.y?.z?.w` chains | Push null to the API boundary — make compound objects fully null or fully populated |
+| Stringly-typed parameters | `function f(status: string)` where the domain is finite | Replace with `"active" \| "inactive"` literal union, or `keyof T` for property names |
+| Hand-written API types | Types that mirror an API response but were written from sample data | Generate from schema (OpenAPI, GraphQL codegen, Zod) — hand-written types always drift |
+| Overly complex generics | Deeply nested conditional types, multiple `infer` keywords | Simplify, split into named helpers, or use code generation instead |
+
+### Low Severity — fix when convenient
+| Issue | What to look for | Fix |
+|-------|-----------------|-----|
+| Redundant type annotations | `const x: string = "hello"`, `const arr: number[] = [1, 2]` | Remove — let TypeScript infer locals. Keep annotations on function signatures and public APIs |
+| Object wrapper types | `String`, `Number`, `Boolean` in type positions | Replace with lowercase `string`, `number`, `boolean` |
+| TS-specific runtime features | `enum`, `namespace`, parameter properties | Replace with `as const` objects, ES modules, regular class properties |
+
+## Common Anti-Patterns and Why They Hurt
+
+### Returning `any` from helper functions
+Looks harmless — "I'll type it properly at the call site." But `any` propagates silently: every caller inherits `any`, their callers inherit `any`, and soon half the codebase is unchecked. One `any` return can disable type checking across dozens of files without a single error.
+
+### Using `enum` instead of `as const` objects
+TS enums generate runtime code, have surprising numeric reverse-mapping behavior, and don't tree-shake well. An `as const` object gives you the same namespace + type safety with zero surprises:
+```typescript
+// Avoid
+enum Status { Active = "active", Inactive = "inactive" }
+
+// Prefer
+const Status = { Active: "active", Inactive: "inactive" } as const;
+type Status = (typeof Status)[keyof typeof Status]; // "active" | "inactive"
+```
+
+### Optional properties everywhere
+Optional properties feel flexible, but they push complexity to every consumer — each usage site must handle the missing case. When most callers need defaults anyway, you end up with scattered `?? defaultValue` logic that's easy to get inconsistent. Prefer required properties with explicit defaults at construction time.
+
+### Type assertions to "fix" type errors
+`as Type` silences the compiler but doesn't change runtime behavior. If the assertion is wrong, you get a silent type mismatch — the worst kind of bug because the compiler told you everything was fine. Before reaching for `as`, ask: can I narrow with a type guard, restructure the code, or fix the upstream type instead?
+
+### Building objects property by property
+```typescript
+// This gives obj type {} — TS can't track incremental property addition
+const obj = {};
+obj.name = "Alice";  // ERROR: Property 'name' does not exist on type '{}'
+obj.age = 30;
+
+// Build all at once — the type is complete from the start
+const obj = { name: "Alice", age: 30 };
+```
+When properties come from different sources, use spread: `{ ...defaults, ...overrides }`.
+
+### Index signatures for known key sets
+`[key: string]: T` tells TypeScript "any string key is valid" — it won't catch typos, won't autocomplete property names, and every lookup returns `T` even for keys that don't exist. If you know the keys, use a `Record` with a literal union, a mapped type, or an interface.
 
 ## Full Reference
 
