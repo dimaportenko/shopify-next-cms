@@ -30,13 +30,22 @@ Content block with customizable alignment.
 
 ### ProductCategory
 
-Wraps the existing `ProductCategory` carousel component with editable heading text.
+Carousel of product categories with configurable items. Each category has a name, image (via Shopify media upload), and link URL.
 
 | Field | Type | Default |
 |-------|------|---------|
 | `heading` | text | "Shop By Category" |
 | `subheading` | textarea | "Explore our gallery..." |
 | `label` | text | "Category" |
+| `categories` | array | 8 default categories |
+
+Each item in the `categories` array has:
+
+| Sub-field | Type | Description |
+|-----------|------|-------------|
+| `name` | text | Category display name |
+| `image` | custom (media picker) | Image uploaded to Shopify via staged upload |
+| `href` | text | Link URL |
 
 ### ImageBanner
 

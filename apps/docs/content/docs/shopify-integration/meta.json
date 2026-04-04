@@ -1,3 +1,3 @@
 {
-  "pages": ["index", "api-clients", "graphql-codegen", "metaobject-schema"]
+  "pages": ["index", "api-clients", "graphql-codegen", "metaobject-schema", "media-uploads"]
 }

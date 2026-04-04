@@ -5,7 +5,7 @@ description: How published CMS pages are rendered on the storefront.
 
 ## Public Page Route
 
-Published CMS pages are served at `/{slug}` via the catch-all route `src/app/(storefront)/[slug]/page.tsx`. This is a React Server Component that:
+Published CMS pages are served at `/[slug]` via the catch-all route `src/app/(storefront)/[slug]/page.tsx`. This is a React Server Component that:
 
 1. Fetches the page data from Shopify using `getCmsPageBySlug(slug)`
 2. Returns `notFound()` if the page doesn't exist or isn't published
@@ -58,4 +58,4 @@ All dynamic routes use the Next.js 15+/16 async params pattern where `params` is
 
 ## Cache Revalidation
 
-When a page is published via the editor, `revalidatePath(\`/\${slug}\`)` is called in the Server Action. This invalidates the Next.js cache for that specific page, ensuring the next visitor sees the updated content.
+When a page is published via the editor, `revalidatePath` is called with the page path in the Server Action. This invalidates the Next.js cache for that specific page, ensuring the next visitor sees the updated content.

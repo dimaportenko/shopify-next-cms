@@ -1,0 +1,100 @@
+---
+title: Custom Fields
+description: Custom Puck editor fields including the Shopify media picker.
+---
+
+Puck supports custom field types beyond the built-in text, textarea, number, and select. Custom fields use `type: "custom"` with a `render` function that receives `value`, `onChange`, and `readOnly` props.
+
+## Media Picker Field
+
+The media picker allows editors to upload images to Shopify or browse the existing media library. It uses Shopify's staged upload API for secure file handling.
+
+**Location:** `src/app/cms/_components/editor/media-picker/`
+
+### Usage
+
+Use the `mediaPickerFieldConfig()` factory function in any block config:
+
+```tsx
+import { mediaPickerFieldConfig } from "@cms/_components/editor/media-picker";
+
+export const myBlockConfig: ComponentConfig<MyBlockProps> = {
+  fields: {
+    heroImage: mediaPickerFieldConfig("Hero Image"),
+  },
+  // ...
+};
+```
+
+It also works as a sub-field inside array fields:
+
+```tsx
+categories: {
+  type: "array",
+  arrayFields: {
+    name: { type: "text", label: "Name" },
+    image: mediaPickerFieldConfig("Image"),
+  },
+},
+```
+
+### Features
+
+- **Drag-and-drop upload** — drop an image onto the field to upload
+- **Upload button** — click to select a file from disk
+- **Browse Library** — modal dialog to browse and search existing Shopify media
+- **Image preview** — shows a thumbnail of the selected image
+- **Remove** — clear the selected image
+
+### Architecture
+
+The media picker consists of:
+
+| File | Purpose |
+|------|---------|
+| `media-picker-field-config.tsx` | Factory function returning Puck custom field config |
+| `media-picker-field.tsx` | Main UI component with upload zone and controls |
+| `media-library-modal.tsx` | Dialog for browsing existing Shopify media |
+| `use-media-upload.ts` | React Query mutation hook for 3-step Shopify upload |
+| `use-media-library.ts` | Infinite query hook for paginated media browsing |
+
+### Upload Flow
+
+File uploads go through Shopify's 3-step staged upload process:
+
+1. **Get staged URL** — `POST /api/cms/media/staged-upload` calls `stagedUploadsCreate`
+2. **Upload to staged URL** — browser POSTs the file directly to Shopify's storage
+3. **Register the file** — `POST /api/cms/media` calls `fileCreate` to finalize
+
+After upload, the media library query cache is automatically invalidated so the new image appears in the browse modal.
+
+See [Media Uploads](/docs/shopify-integration/media-uploads) for API route details.
+
+## Creating a Custom Field
+
+To create a new custom field, follow the factory function pattern:
+
+```tsx
+// color-picker-field-config.tsx
+import { ColorPickerField } from "./color-picker-field";
+
+export function colorPickerFieldConfig(label = "Color") {
+  return {
+    type: "custom" as const,
+    label,
+    render: ({
+      value,
+      onChange,
+      readOnly,
+    }: {
+      value: string;
+      onChange: (value: string) => void;
+      readOnly?: boolean;
+    }) => (
+      <ColorPickerField value={value} onChange={onChange} readOnly={readOnly} />
+    ),
+  };
+}
+```
+
+The factory function pattern lets you reuse the field across blocks and as sub-fields in array fields, with customizable labels and options per usage.
