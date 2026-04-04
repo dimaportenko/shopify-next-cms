@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "cdn.shopify.com",
       },
+      {
+        protocol: "https",
+        hostname: "shopify-staged-uploads.storage.googleapis.com",
+      },
     ],
   },
 };

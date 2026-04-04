@@ -10,7 +10,13 @@ import {
   CarouselNext,
 } from "@/components/ui/carousel";
 
-const categories = [
+export interface CategoryItem {
+  name: string;
+  image: string;
+  href: string;
+}
+
+export const DEFAULT_CATEGORIES: CategoryItem[] = [
   {
     name: "Ear buds",
     image:
@@ -65,13 +71,17 @@ interface ProductCategoryProps {
   heading?: string;
   subheading?: string;
   label?: string;
+  categories?: CategoryItem[];
 }
 
 export function ProductCategory({
   heading = "Shop By Category",
   subheading = "Explore our gallery to learn more about our amazing products and their features.",
   label = "Category",
+  categories,
 }: ProductCategoryProps = {}) {
+  const items = categories?.length ? categories : DEFAULT_CATEGORIES;
+
   return (
     <section className="py-8 sm:py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -90,7 +100,7 @@ export function ProductCategory({
           }}
         >
           <CarouselContent className="-ml-6">
-            {categories.map((category) => (
+            {items.map((category) => (
               <CarouselItem
                 key={category.name}
                 className="basis-full pl-6 min-[475px]:basis-1/2 md:basis-1/4 xl:basis-1/6"
