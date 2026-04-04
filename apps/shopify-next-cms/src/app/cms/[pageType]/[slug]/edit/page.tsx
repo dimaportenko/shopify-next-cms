@@ -3,7 +3,7 @@
 import { Puck } from "@puckeditor/core";
 import type { Data } from "@puckeditor/core";
 import { useCallback, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import type { PageType } from "@/app/cms/_lib/page-types";
 import { isValidPageType } from "@/app/cms/_lib/page-types";
@@ -30,6 +30,7 @@ const EMPTY_DATA: Data = { content: [], root: {} };
 export default function EditorPage() {
   const { slug, pageType } = useParams<{ slug: string; pageType: string }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const validPageType: PageType = isValidPageType(pageType)
     ? pageType
@@ -70,9 +71,12 @@ export default function EditorPage() {
   const handlePublish = useCallback(
     async (data: Data) => {
       await publishPageAction(slug, validPageType, data);
+      await queryClient.invalidateQueries({
+        queryKey: ["cms-page", validPageType, slug],
+      });
       router.push("/cms");
     },
-    [slug, validPageType, router],
+    [slug, validPageType, router, queryClient],
   );
 
   const overrides = useMemo(
