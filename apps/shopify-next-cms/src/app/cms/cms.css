@@ -573,6 +573,112 @@
   );
 }
 
+.cms-editor-root [class*="_Sidebar--right_"] [class*="_ArrayField-inner_"] {
+  border: 1px solid
+    color-mix(in oklch, var(--border) 82%, var(--cms-mix-base) 18%);
+  border-radius: min(var(--radius-xl), 18px);
+  overflow: hidden;
+  background: color-mix(in oklch, var(--background) 96%, var(--muted) 4%);
+}
+
+.cms-editor-root [class*="_Sidebar--right_"] [class*="_ArrayFieldItem_"] {
+  border-top-color: color-mix(
+    in oklch,
+    var(--border) 84%,
+    var(--cms-mix-base) 16%
+  );
+  background: transparent;
+}
+
+.cms-editor-root
+  [class*="_Sidebar--right_"]
+  [class*="_ArrayFieldItem-summary_"] {
+  background: color-mix(in oklch, var(--background) 94%, var(--muted) 6%);
+  color: var(--muted-foreground);
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.cms-editor-root
+  [class*="_Sidebar--right_"]
+  [class*="_ArrayFieldItem-summary_"]:hover {
+  background: color-mix(in oklch, var(--accent) 68%, var(--cms-mix-base) 32%);
+  color: var(--foreground);
+}
+
+.cms-editor-root
+  [class*="_Sidebar--right_"]
+  [class*="_ArrayFieldItem-summary_"]:active {
+  background: color-mix(
+    in oklch,
+    var(--secondary) 72%,
+    var(--cms-mix-base) 28%
+  );
+}
+
+.cms-editor-root
+  [class*="_Sidebar--right_"]
+  [class*="_ArrayFieldItem-summary_"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 18%, transparent);
+}
+
+.cms-editor-root
+  [class*="_Sidebar--right_"]
+  [class*="_ArrayFieldItem--isExpanded_"] {
+  outline: 1px solid color-mix(in oklch, var(--ring) 26%, var(--border) 74%) !important;
+}
+
+.cms-editor-root
+  [class*="_Sidebar--right_"]
+  [class*="_ArrayFieldItem--isExpanded_"]
+  > [class*="_ArrayFieldItem-summary_"] {
+  background: color-mix(
+    in oklch,
+    var(--secondary) 78%,
+    var(--cms-mix-base) 22%
+  );
+  color: var(--foreground);
+}
+
+.cms-editor-root [class*="_Sidebar--right_"] [class*="_ArrayFieldItem-body_"] {
+  background: color-mix(in oklch, var(--background) 98%, var(--muted) 2%);
+}
+
+.cms-editor-root
+  [class*="_Sidebar--right_"]
+  [class*="_ArrayFieldItem-fieldset_"] {
+  border-top-color: color-mix(
+    in oklch,
+    var(--border) 84%,
+    var(--cms-mix-base) 16%
+  );
+  background: transparent;
+}
+
+.cms-editor-root
+  [class*="_Sidebar--right_"]
+  [class*="_ArrayFieldItem-actions_"],
+.cms-editor-root [class*="_Sidebar--right_"] [class*="_ArrayFieldItem-rhs_"] {
+  color: var(--muted-foreground);
+}
+
+.cms-editor-root [class*="_Sidebar--right_"] [class*="_ArrayField-addButton_"] {
+  border: 1px dashed
+    color-mix(in oklch, var(--border) 82%, var(--cms-mix-base) 18%);
+  border-radius: min(var(--radius-lg), 14px);
+  background: color-mix(in oklch, var(--background) 96%, var(--muted) 4%);
+  color: var(--muted-foreground);
+}
+
+.cms-editor-root
+  [class*="_Sidebar--right_"]
+  [class*="_ArrayField-addButton_"]:hover {
+  background: color-mix(in oklch, var(--accent) 68%, var(--cms-mix-base) 32%);
+  color: var(--foreground);
+}
+
 .cms-editor-root
   [class*="_Sidebar--right_"]
   [class*="_SidebarSection-title_"]
