@@ -74,9 +74,8 @@ export default function EditorPage() {
       await queryClient.invalidateQueries({
         queryKey: ["cms-page", validPageType, slug],
       });
-      router.push("/cms");
     },
-    [slug, validPageType, router, queryClient],
+    [slug, validPageType, queryClient],
   );
 
   const overrides = useMemo(
