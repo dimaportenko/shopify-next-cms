@@ -1,6 +1,6 @@
 ---
 name: shopify-expert
-description: Builds and debugs Shopify themes (.liquid files, theme.json, sections), develops custom Shopify apps (shopify.app.toml, OAuth, webhooks), and implements Storefront API integrations for headless storefronts. Use when building or customizing Shopify themes, creating Hydrogen or custom React storefronts, developing Shopify apps, implementing checkout UI extensions or Shopify Functions, optimizing performance, or integrating third-party services. Invoke for Liquid templating, Storefront API, app development, checkout customization, Shopify Plus features, App Bridge, Polaris, or Shopify CLI workflows.
+description: Build and debug Shopify themes, apps, checkout extensions, and headless storefronts. Use for Liquid, Shopify CLI, Hydrogen/custom React storefronts, Storefront/Admin API work, app architecture, performance, and integrations. Also use for Storefront GraphQL refactors like extracting reusable fragments, composing relation-heavy queries, centralizing DTO mappers, and keeping generated types aligned with query changes.
 license: MIT
 metadata:
   author: https://github.com/Jeffallan
@@ -25,21 +25,35 @@ Senior Shopify developer with expertise in theme development, headless commerce,
 4. **Validation** — Run `shopify theme check` for Liquid linting; if errors are found, fix them and re-run before proceeding. Run `shopify app dev` to verify app locally; test checkout extensions in sandbox. If validation fails at any step, resolve all reported issues before moving to deployment
 5. **Deploy and monitor** — `shopify theme push` for themes; `shopify app deploy` for apps; watch Shopify error logs and performance metrics post-deploy
 
+## Storefront GraphQL Refactor Pattern
+
+When working on a headless Shopify storefront with generated GraphQL types:
+
+- Extract reusable entity fragments instead of duplicating product fields inline across collection, search, recommendation, or related-content queries.
+- Prefer shared mappers for repeated transport-to-domain transformations like image, money, and product DTO conversion.
+- Keep the transport layer easy to evolve: one fragment change should update multiple queries cleanly.
+- Rerun GraphQL codegen immediately after fragment or query changes so type errors surface early.
+- Favor domain naming for reusable DTOs (`ProductDto`, `CollectionDto`, `ImageDto`) unless transport-specific naming is genuinely necessary.
+- If a UI consumes product galleries, fetch `images` intentionally rather than faking multiple slides from the same `featuredImage`.
+
+This pattern is especially valuable in custom React/Next.js storefronts where a Product can appear under collections, search results, related products, CMS blocks, or recommendation surfaces.
+
 ## Reference Guide
 
 Load detailed guidance based on context:
 
-| Topic | Reference | Load When |
-|-------|-----------|-----------|
-| Liquid Templating | `references/liquid-templating.md` | Theme development, template customization |
-| Storefront API | `references/storefront-api.md` | Headless commerce, Hydrogen, custom frontends |
-| App Development | `references/app-development.md` | Building Shopify apps, OAuth, webhooks |
-| Checkout Extensions | `references/checkout-customization.md` | Checkout UI extensions, Shopify Functions |
-| Performance | `references/performance-optimization.md` | Theme speed, asset optimization, caching |
+| Topic               | Reference                                | Load When                                     |
+| ------------------- | ---------------------------------------- | --------------------------------------------- |
+| Liquid Templating   | `references/liquid-templating.md`        | Theme development, template customization     |
+| Storefront API      | `references/storefront-api.md`           | Headless commerce, Hydrogen, custom frontends |
+| App Development     | `references/app-development.md`          | Building Shopify apps, OAuth, webhooks        |
+| Checkout Extensions | `references/checkout-customization.md`   | Checkout UI extensions, Shopify Functions     |
+| Performance         | `references/performance-optimization.md` | Theme speed, asset optimization, caching      |
 
 ## Code Examples
 
 ### Liquid — Product template with metafield access
+
 ```liquid
 {% comment %} templates/product.liquid {% endcomment %}
 <h1>{{ product.title }}</h1>
@@ -58,6 +72,7 @@ Load detailed guidance based on context:
 ```
 
 ### Liquid — Collection filtering (Online Store 2.0)
+
 ```liquid
 {% comment %} sections/collection-filters.liquid {% endcomment %}
 {% for filter in collection.filters %}
@@ -79,6 +94,7 @@ Load detailed guidance based on context:
 ```
 
 ### Storefront API — GraphQL product query
+
 ```graphql
 query ProductByHandle($handle: String!) {
   product(handle: $handle) {
@@ -94,9 +110,15 @@ query ProductByHandle($handle: String!) {
         node {
           id
           title
-          price { amount currencyCode }
+          price {
+            amount
+            currencyCode
+          }
           availableForSale
-          selectedOptions { name value }
+          selectedOptions {
+            name
+            value
+          }
         }
       }
     }
@@ -109,6 +131,7 @@ query ProductByHandle($handle: String!) {
 ```
 
 ### Shopify CLI — Common commands
+
 ```bash
 # Theme development
 shopify theme dev --store=your-store.myshopify.com   # Live preview with hot reload
@@ -127,6 +150,7 @@ shopify app generate graphql                          # Generate typed GraphQL h
 ```
 
 ### App — Authenticated Admin API fetch (TypeScript)
+
 ```typescript
 import { authenticate } from "../shopify.server";
 import type { LoaderFunctionArgs } from "@remix-run/node";
@@ -148,6 +172,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 ## Constraints
 
 ### MUST DO
+
 - Use Liquid 2.0 syntax for themes
 - Implement proper metafield handling
 - Use Storefront API 2024-10 or newer
@@ -161,6 +186,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 - Run `shopify theme check` before every theme deployment
 
 ### MUST NOT DO
+
 - Hardcode API credentials in theme code
 - Exceed Storefront API rate limits (2000 points/sec)
 - Use deprecated REST Admin API endpoints
@@ -173,6 +199,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 ## Output Templates
 
 When implementing Shopify solutions, provide:
+
 1. Complete file structure with proper naming
 2. Liquid/GraphQL/TypeScript code with types
 3. Configuration files (shopify.app.toml, schema settings)
