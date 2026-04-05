@@ -14,9 +14,9 @@ Both use GraphQL with auto-generated TypeScript types.
 
 Two thin `fetch` wrappers in `src/lib/shopify/`:
 
-| Client | File | Header | Use Case |
-|--------|------|--------|----------|
-| Admin | `admin-client.ts` | `X-Shopify-Access-Token` | CMS CRUD, dashboard |
+| Client     | File                   | Header                              | Use Case              |
+| ---------- | ---------------------- | ----------------------------------- | --------------------- |
+| Admin      | `admin-client.ts`      | `X-Shopify-Access-Token`            | CMS CRUD, dashboard   |
 | Storefront | `storefront-client.ts` | `X-Shopify-Storefront-Access-Token` | Public page rendering |
 
 Both share the same error types (`ShopifyApiError`, `ShopifyNetworkError`) defined in `src/lib/shopify/types.ts`.
@@ -27,8 +27,16 @@ CMS page content is stored in Shopify Metaobjects (type: `cms_page`). Each page 
 
 See [Metaobject Schema](/docs/shopify-integration/metaobject-schema) for the full field definition.
 
+## Storefront Collections
+
+The storefront collection page now uses a shared `Header`, a reusable `ProductFragment`, and shared DTO mappers (`ProductDto`, `CollectionDto`, `toProductDto`, `toImageDto`) so product-shaped data can be reused across multiple storefront queries.
+
+Collection cards also consume Shopify gallery images from `images(first: 10)`, falling back to `featuredImage` only when needed.
+
+See [Storefront Collections](/docs/shopify-integration/storefront-collections) for the full flow.
+
 ## Type Safety
 
-All GraphQL operations are type-checked at compile time using `@shopify/api-codegen-preset`. Queries are defined in `*.admin.ts` files with `#graphql` tags, and codegen produces typed response/variable interfaces.
+All GraphQL operations are type-checked at compile time using `@shopify/api-codegen-preset`. Queries are defined in `*.admin.ts` and `*.storefront.ts` files with `#graphql` tags, and codegen produces typed response/variable interfaces.
 
 See [GraphQL Codegen](/docs/shopify-integration/graphql-codegen) for setup details.

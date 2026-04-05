@@ -1,0 +1,233 @@
+---
+title: Storefront Collections
+description: Collection page data flow, reusable product fragments, and DTO mapping.
+---
+
+The storefront collection route lives at `apps/shopify-next-cms/src/app/(storefront)/collections/[handle]/page.tsx`.
+
+It renders a collection landing page backed by Shopify Storefront API data and a reusable product mapping layer.
+
+## Route Structure
+
+Key files involved in collection rendering:
+
+| File                                                 | Responsibility                       |
+| ---------------------------------------------------- | ------------------------------------ |
+| `src/app/(storefront)/collections/[handle]/page.tsx` | Collection page UI                   |
+| `src/components/collection-product-card.tsx`         | Product card with image carousel     |
+| `src/app/(storefront)/layout.tsx`                    | Shared storefront shell              |
+| `src/components/header.tsx`                          | Shared storefront header             |
+| `src/lib/shopify/queries/collections.storefront.ts`  | Collection GraphQL query             |
+| `src/lib/shopify/queries/products.storefront.ts`     | Reusable product fragment            |
+| `src/lib/shopify/queries/collections.ts`             | Collection query-to-DTO mapping      |
+| `src/lib/shopify/queries/products.ts`                | Reusable image/money/product mappers |
+
+## Shared Header
+
+All storefront routes now share the same header through the `(storefront)` layout:
+
+```tsx
+import { Header } from "@/components/header";
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-background font-sans">
+      <Header />
+      {children}
+    </div>
+  );
+}
+```
+
+This means the homepage, CMS-rendered storefront pages, and collection pages all use the same top-level navigation and theme controls.
+
+## Reusable Product Fragment
+
+Collection queries no longer define product fields inline.
+
+Instead, product-related fields are centralized in `products.storefront.ts`:
+
+```ts
+export const PRODUCT_FRAGMENT = `#graphql
+  fragment ProductFragment on Product {
+    id
+    handle
+    title
+    description
+    vendor
+    availableForSale
+    onlineStoreUrl
+    tags
+    featuredImage {
+      url
+      altText
+      width
+      height
+    }
+    images(first: 10) {
+      nodes {
+        url
+        altText
+        width
+        height
+      }
+    }
+    priceRange {
+      minVariantPrice {
+        amount
+        currencyCode
+      }
+      maxVariantPrice {
+        amount
+        currencyCode
+      }
+    }
+    compareAtPriceRange {
+      minVariantPrice {
+        amount
+        currencyCode
+      }
+      maxVariantPrice {
+        amount
+        currencyCode
+      }
+    }
+  }
+`;
+```
+
+The collection query composes that fragment:
+
+```ts
+export const GET_COLLECTION_BY_HANDLE = `#graphql
+  ${PRODUCT_FRAGMENT}
+
+  query GetCollectionByHandle($handle: String!) {
+    collection(handle: $handle) {
+      id
+      handle
+      title
+      description
+      image {
+        url
+        altText
+        width
+        height
+      }
+      products(first: 12) {
+        nodes {
+          ...ProductFragment
+        }
+      }
+    }
+  }
+`;
+```
+
+This makes the same product selection reusable in future storefront queries that return related products.
+
+## Reusable DTOs and Mappers
+
+Product-related DTOs were also generalized so they can be reused outside collection queries.
+
+Defined in `src/lib/shopify/types.ts`:
+
+```ts
+export interface ImageDto {
+  url: string;
+  altText: string | null;
+  width: number | null;
+  height: number | null;
+}
+
+export interface MoneyDto {
+  amount: string;
+  currencyCode: string;
+}
+
+export interface ProductDto {
+  id: string;
+  handle: string;
+  title: string;
+  description: string;
+  vendor: string;
+  availableForSale: boolean;
+  onlineStoreUrl: string | null;
+  tags: string[];
+  featuredImage: ImageDto | null;
+  images: ImageDto[];
+  priceRange: {
+    minVariantPrice: MoneyDto;
+    maxVariantPrice: MoneyDto;
+  };
+  compareAtPriceRange: {
+    minVariantPrice: MoneyDto | null;
+    maxVariantPrice: MoneyDto | null;
+  };
+}
+```
+
+Mapped in `src/lib/shopify/queries/products.ts`:
+
+```ts
+export function toProductDto(product: ProductFragmentFragment): ProductDto {
+  const featuredImage = toImageDto(product.featuredImage);
+  const images = product.images.nodes
+    .map(toImageDto)
+    .filter((image): image is ImageDto => image !== null);
+
+  return {
+    id: product.id,
+    handle: product.handle,
+    title: product.title,
+    description: product.description,
+    vendor: product.vendor,
+    availableForSale: product.availableForSale,
+    onlineStoreUrl: product.onlineStoreUrl ?? null,
+    tags: product.tags,
+    featuredImage,
+    images,
+    // ...price fields
+  };
+}
+```
+
+Collection mapping stays thin and delegates product normalization to the shared mapper.
+
+## Collection Card Images
+
+`collection-product-card.tsx` now prefers `product.images` for the carousel and falls back to `featuredImage` only when no gallery images are available.
+
+```ts
+function getSlides(product: ProductDto) {
+  const images = product.images;
+
+  if (images.length > 0) {
+    return images;
+  }
+
+  return product.featuredImage ? [product.featuredImage] : [];
+}
+```
+
+This allows collection cards to reflect real Shopify product galleries instead of repeating the same featured image.
+
+## Maintenance Notes
+
+When changing product fields used by collection pages:
+
+1. Update `PRODUCT_FRAGMENT`
+2. Run `pnpm --filter shopify-next-cms codegen`
+3. Update shared DTOs/mappers in `products.ts`
+4. Validate collection UI with:
+
+```bash
+pnpm --filter shopify-next-cms typecheck
+pnpm --filter shopify-next-cms lint
+```
+
+If the UI changes, also smoke-test a collection route with Playwright, for example:
+
+```bash
+playwright-cli open http://localhost:3000/collections/gear
+```

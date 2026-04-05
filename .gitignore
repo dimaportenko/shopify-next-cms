@@ -15,3 +15,5 @@ tsconfig.tsbuildinfo
 *.schema.json
 
 .playwright-cli
+
+.DS_Store

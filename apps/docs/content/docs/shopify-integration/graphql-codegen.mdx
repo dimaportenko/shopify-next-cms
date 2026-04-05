@@ -37,40 +37,53 @@ Same structure but with `ApiType.Admin` and `*.admin.{ts,tsx}` document pattern.
 
 GraphQL operations must be in files matching the document pattern:
 
-| API | File suffix | Example |
-|-----|------------|---------|
-| Admin | `*.admin.ts` | `cms-pages.admin.ts` |
+| API        | File suffix       | Example                  |
+| ---------- | ----------------- | ------------------------ |
+| Admin      | `*.admin.ts`      | `cms-pages.admin.ts`     |
 | Storefront | `*.storefront.ts` | `products.storefront.ts` |
 
 ## Query Format
 
-Queries use the `#graphql` tag so codegen can discover them:
+Queries and fragments use the `#graphql` tag so codegen can discover them:
 
 ```ts
-export const LIST_CMS_PAGES = `#graphql
-  query ListCmsPages {
-    metaobjects(type: "cms_page", first: 100) {
-      nodes {
-        id
-        handle
-        fields { key value }
+export const PRODUCT_FRAGMENT = `#graphql
+  fragment ProductFragment on Product {
+    id
+    handle
+    title
+  }
+`;
+
+export const GET_COLLECTION_BY_HANDLE = `#graphql
+  ${PRODUCT_FRAGMENT}
+
+  query GetCollectionByHandle($handle: String!) {
+    collection(handle: $handle) {
+      id
+      products(first: 12) {
+        nodes {
+          ...ProductFragment
+        }
       }
     }
   }
 `;
 ```
 
+Fragments are useful when the same product shape is needed in multiple storefront queries.
+
 ## Generated Types
 
 Codegen produces types in the `types/` directory:
 
-| File | Contents |
-|------|----------|
-| `admin.generated.d.ts` | Query/mutation types (e.g., `ListCmsPagesQuery`, `CreateCmsPageMutationVariables`) |
-| `admin.types.d.ts` | Full Shopify Admin API type definitions |
-| `admin-2026-04.schema.json` | Introspection schema |
-| `storefront.generated.d.ts` | Storefront query types |
-| `storefront.types.d.ts` | Full Storefront API type definitions |
+| File                        | Contents                                                                           |
+| --------------------------- | ---------------------------------------------------------------------------------- |
+| `admin.generated.d.ts`      | Query/mutation types (e.g., `ListCmsPagesQuery`, `CreateCmsPageMutationVariables`) |
+| `admin.types.d.ts`          | Full Shopify Admin API type definitions                                            |
+| `admin-2026-04.schema.json` | Introspection schema                                                               |
+| `storefront.generated.d.ts` | Storefront query and fragment types                                                |
+| `storefront.types.d.ts`     | Full Storefront API type definitions                                               |
 
 ## Path Alias
 
@@ -93,4 +106,4 @@ pnpm --filter shopify-next-cms codegen:storefront
 pnpm --filter shopify-next-cms codegen:admin
 ```
 
-Run codegen after modifying any `*.admin.ts` or `*.storefront.ts` file that contains `#graphql` tagged queries.
+Run codegen after modifying any `*.admin.ts` or `*.storefront.ts` file that contains `#graphql` tagged queries or fragments.
