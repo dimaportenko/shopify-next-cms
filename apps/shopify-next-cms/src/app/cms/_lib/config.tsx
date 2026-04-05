@@ -4,6 +4,7 @@ import { textBlockConfig } from "@cms/_components/blocks/text-block";
 import { productCategoryBlockConfig } from "@cms/_components/blocks/product-category-block";
 import { imageBannerConfig } from "@cms/_components/blocks/image-banner";
 import { spacerConfig } from "@cms/_components/blocks/spacer";
+import { collectionProductsBlockConfig } from "@cms/_components/blocks/collection-products-block";
 import { PAGE_TYPES } from "@cms/_lib/page-types";
 
 import type { HeroProps } from "@cms/_components/blocks/hero";
@@ -11,6 +12,7 @@ import type { TextBlockProps } from "@cms/_components/blocks/text-block";
 import type { ProductCategoryBlockProps } from "@cms/_components/blocks/product-category-block";
 import type { ImageBannerProps } from "@cms/_components/blocks/image-banner";
 import type { SpacerProps } from "@cms/_components/blocks/spacer";
+import type { CollectionProductsBlockProps } from "@cms/_components/blocks/collection-products-block";
 
 type Props = {
   Hero: HeroProps;
@@ -18,6 +20,7 @@ type Props = {
   ProductCategory: ProductCategoryBlockProps;
   ImageBanner: ImageBannerProps;
   Spacer: SpacerProps;
+  CollectionProducts: CollectionProductsBlockProps;
 };
 
 export const puckConfig: Config<Props> = {
@@ -37,7 +40,7 @@ export const puckConfig: Config<Props> = {
       title: "Content",
     },
     commerce: {
-      components: ["ProductCategory"],
+      components: ["ProductCategory", "CollectionProducts"],
       title: "Commerce",
     },
     layout: {
@@ -51,5 +54,6 @@ export const puckConfig: Config<Props> = {
     ProductCategory: productCategoryBlockConfig,
     ImageBanner: imageBannerConfig,
     Spacer: spacerConfig,
+    CollectionProducts: collectionProductsBlockConfig,
   },
 };
