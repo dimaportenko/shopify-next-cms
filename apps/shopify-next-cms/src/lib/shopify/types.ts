@@ -96,9 +96,44 @@ export interface CmsPageSummary {
   updatedAt: string;
 }
 
-export interface StorefrontCollectionDto {
+export interface ImageDto {
+  url: string;
+  altText: string | null;
+  width: number | null;
+  height: number | null;
+}
+
+export interface MoneyDto {
+  amount: string;
+  currencyCode: string;
+}
+
+export interface ProductDto {
   id: string;
   handle: string;
   title: string;
   description: string;
+  vendor: string;
+  availableForSale: boolean;
+  onlineStoreUrl: string | null;
+  tags: string[];
+  featuredImage: ImageDto | null;
+  images: ImageDto[];
+  priceRange: {
+    minVariantPrice: MoneyDto;
+    maxVariantPrice: MoneyDto;
+  };
+  compareAtPriceRange: {
+    minVariantPrice: MoneyDto | null;
+    maxVariantPrice: MoneyDto | null;
+  };
+}
+
+export interface CollectionDto {
+  id: string;
+  handle: string;
+  title: string;
+  description: string;
+  image: ImageDto | null;
+  products: ProductDto[];
 }

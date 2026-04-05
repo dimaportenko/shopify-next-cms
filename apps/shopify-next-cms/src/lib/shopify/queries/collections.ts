@@ -3,21 +3,20 @@ import type {
   GetCollectionByHandleQueryVariables,
 } from "@generated-types/storefront.generated";
 import { storefrontQuery } from "../storefront-client";
-import type { StorefrontCollectionDto } from "../types";
+import type { CollectionDto } from "../types";
 import { GET_COLLECTION_BY_HANDLE } from "./collections.storefront";
+import { toImageDto, toProductDto } from "./products";
 
-type StorefrontCollectionNode = NonNullable<
-  GetCollectionByHandleQuery["collection"]
->;
+type CollectionNode = NonNullable<GetCollectionByHandleQuery["collection"]>;
 
-function toStorefrontCollectionDto(
-  collection: StorefrontCollectionNode,
-): StorefrontCollectionDto {
+function toCollectionDto(collection: CollectionNode): CollectionDto {
   return {
     id: collection.id,
     handle: collection.handle,
     title: collection.title,
     description: collection.description,
+    image: toImageDto(collection.image),
+    products: collection.products.nodes.map(toProductDto),
   };
 }
 
@@ -25,7 +24,7 @@ export async function getCollectionByHandle({
   handle,
 }: {
   handle: string;
-}): Promise<StorefrontCollectionDto | null> {
+}): Promise<CollectionDto | null> {
   const data = await storefrontQuery<
     GetCollectionByHandleQuery,
     GetCollectionByHandleQueryVariables
@@ -35,5 +34,5 @@ export async function getCollectionByHandle({
     return null;
   }
 
-  return toStorefrontCollectionDto(data.collection);
+  return toCollectionDto(data.collection);
 }
