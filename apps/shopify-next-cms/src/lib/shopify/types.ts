@@ -95,3 +95,10 @@ export interface CmsPageSummary {
   status: "draft" | "published";
   updatedAt: string;
 }
+
+export interface StorefrontCollectionDto {
+  id: string;
+  handle: string;
+  title: string;
+  description: string;
+}
