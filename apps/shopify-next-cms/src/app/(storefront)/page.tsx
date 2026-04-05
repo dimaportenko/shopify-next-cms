@@ -17,7 +17,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-background font-sans">
-      <main className="mx-auto flex w-full max-w-3xl flex-col items-center justify-between gap-10 px-16 py-32 sm:items-start">
+      <main className="mx-auto flex w-full max-w-3xl flex-col items-center justify-between gap-10 px-16 py-16 sm:items-start">
         <div className="flex w-full items-center justify-between">
           <div className="flex items-center gap-3">
             <Image

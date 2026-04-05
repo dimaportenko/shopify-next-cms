@@ -18,52 +18,46 @@ export interface CategoryItem {
 
 export const DEFAULT_CATEGORIES: CategoryItem[] = [
   {
-    name: "Ear buds",
+    name: "Tops",
     image:
-      "https://cdn.shadcnstudio.com/ss-assets/blocks/ecommerce/product-category/image-15.png",
-    href: "#",
+      "https://cdn.shopify.com/s/files/1/0985/3655/4867/files/Blue_Top_Category.png?v=1775327136",
+    href: "/collections/women-tops",
   },
   {
-    name: "Smart Watches",
+    name: "Hoodies",
     image:
-      "https://cdn.shadcnstudio.com/ss-assets/blocks/ecommerce/product-category/image-16.png",
-    href: "#",
+      "https://cdn.shopify.com/s/files/1/0985/3655/4867/files/Hoodie_Category.png?v=1775328264",
+    href: "/collections/women-tops-hoodies-sweatshirts",
   },
   {
-    name: "Sunglass",
+    name: "Pants",
     image:
-      "https://cdn.shadcnstudio.com/ss-assets/blocks/ecommerce/product-category/image-17.png",
-    href: "#",
+      "https://cdn.shopify.com/s/files/1/0985/3655/4867/files/Pink_pants_category.png?v=1775327382",
+    href: "/collections/women-bottoms-pants",
   },
   {
-    name: "Cap",
+    name: "Jackets",
     image:
-      "https://cdn.shadcnstudio.com/ss-assets/blocks/ecommerce/product-category/image-18.png",
-    href: "#",
+      "https://cdn.shopify.com/s/files/1/0985/3655/4867/files/Blue_Jacket_Category.png?v=1775327993",
+    href: "/collections/women-tops-jackets",
   },
   {
-    name: "Footwear",
+    name: "Shorts",
     image:
-      "https://cdn.shadcnstudio.com/ss-assets/blocks/ecommerce/product-category/image-19.png",
-    href: "#",
+      "https://cdn.shopify.com/s/files/1/0985/3655/4867/files/wsh01-green_main.png?v=1775326685",
+    href: "/collections/women-bottoms-shorts",
   },
   {
-    name: "Home Decor",
+    name: "Gear",
     image:
-      "https://cdn.shadcnstudio.com/ss-assets/blocks/ecommerce/product-category/image-20.png",
-    href: "#",
+      "https://cdn.shopify.com/s/files/1/0985/3655/4867/files/Gear_Category.png?v=1775328430",
+    href: "/collections/gear",
   },
   {
-    name: "Audio Visual",
+    name: "Bags",
     image:
-      "https://cdn.shadcnstudio.com/ss-assets/blocks/ecommerce/product-category/image-12.png",
-    href: "#",
-  },
-  {
-    name: "Smart Hubs",
-    image:
-      "https://cdn.shadcnstudio.com/ss-assets/blocks/ecommerce/product-category/image-13.png",
-    href: "#",
+      "https://cdn.shopify.com/s/files/1/0985/3655/4867/files/bags-category.png?v=1775326869",
+    href: "/collections/gear-bags",
   },
 ];
 
