@@ -28,6 +28,20 @@ export default async function CmsPage({
 }
 ```
 
+## Contextual Rendering with `metadata`
+
+Puck's `<Render>` component can receive extra runtime context through the `metadata` prop. Components can then read that data from `puck.metadata` inside their render functions.
+
+This project uses that pattern for collection templates. The collection route fetches the Shopify collection and passes it into Puck:
+
+```tsx
+<Render config={puckConfig} data={page.puckData} metadata={{ collection }} />
+```
+
+The `CollectionProducts` block then reads `puck.metadata.collection` and renders the live Shopify products for the current collection handle.
+
+This keeps Puck page data small and reusable while still allowing route-specific storefront data to be rendered inside CMS-authored layouts.
+
 ## Route Group: `(storefront)`
 
 The homepage and CMS pages live inside the `(storefront)` route group. This is a Next.js convention that:

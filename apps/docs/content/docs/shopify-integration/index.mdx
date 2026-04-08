@@ -31,6 +31,8 @@ See [Metaobject Schema](/docs/shopify-integration/metaobject-schema) for the ful
 
 The storefront collection page now uses a shared `Header`, a reusable `ProductFragment`, and shared DTO mappers (`ProductDto`, `CollectionDto`, `toProductDto`, `toImageDto`) so product-shaped data can be reused across multiple storefront queries.
 
+Collection routes can also render a published CMS template for `pageType: "collection"`. The route injects the live Shopify collection into Puck via `metadata={{ collection }}`, and the `CollectionProducts` block reads that context at render time. If no published collection CMS page is available, the route falls back to the built-in collection grid.
+
 Collection cards also consume Shopify gallery images from `images(first: 10)`, falling back to `featuredImage` only when needed.
 
 See [Storefront Collections](/docs/shopify-integration/storefront-collections) for the full flow.

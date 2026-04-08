@@ -1,26 +1,65 @@
 ---
 title: Storefront Collections
-description: Collection page data flow, reusable product fragments, and DTO mapping.
+description: Collection page data flow, reusable product fragments, DTO mapping, and CMS-backed collection templates.
 ---
 
 The storefront collection route lives at `apps/shopify-next-cms/src/app/(storefront)/collections/[handle]/page.tsx`.
 
-It renders a collection landing page backed by Shopify Storefront API data and a reusable product mapping layer.
+It fetches Shopify collection data from the Storefront API, then optionally renders a published Puck page template for collection pages. If no published collection CMS page is available, the route falls back to the built-in collection product grid.
 
 ## Route Structure
 
 Key files involved in collection rendering:
 
-| File                                                 | Responsibility                       |
-| ---------------------------------------------------- | ------------------------------------ |
-| `src/app/(storefront)/collections/[handle]/page.tsx` | Collection page UI                   |
-| `src/components/collection-product-card.tsx`         | Product card with image carousel     |
-| `src/app/(storefront)/layout.tsx`                    | Shared storefront shell              |
-| `src/components/header.tsx`                          | Shared storefront header             |
-| `src/lib/shopify/queries/collections.storefront.ts`  | Collection GraphQL query             |
-| `src/lib/shopify/queries/products.storefront.ts`     | Reusable product fragment            |
-| `src/lib/shopify/queries/collections.ts`             | Collection query-to-DTO mapping      |
-| `src/lib/shopify/queries/products.ts`                | Reusable image/money/product mappers |
+| File                                                           | Responsibility                              |
+| -------------------------------------------------------------- | ------------------------------------------- |
+| `src/app/(storefront)/collections/[handle]/page.tsx`           | Collection route: data loading + CMS render |
+| `src/components/collection-products-section.tsx`               | Fallback collection section and grid        |
+| `src/components/collection-product-card.tsx`                   | Product card with image carousel            |
+| `src/app/cms/_components/blocks/collection-products-block.tsx` | Puck block that reads collection metadata   |
+| `src/app/cms/_lib/config.tsx`                                  | Registers the `CollectionProducts` block    |
+| `src/app/(storefront)/layout.tsx`                              | Shared storefront shell                     |
+| `src/components/header.tsx`                                    | Shared storefront header                    |
+| `src/lib/shopify/queries/collections.storefront.ts`            | Collection GraphQL query                    |
+| `src/lib/shopify/queries/products.storefront.ts`               | Reusable product fragment                   |
+| `src/lib/shopify/queries/collections.ts`                       | Collection query-to-DTO mapping             |
+| `src/lib/shopify/queries/products.ts`                          | Reusable image/money/product mappers        |
+
+## CMS-Backed Collection Templates
+
+Collection routes now support a shared CMS template for `pageType: "collection"`.
+
+The route loads two resources in parallel:
+
+1. the Shopify collection by `handle`
+2. the CMS page with `slug: "default"` and `pageType: "collection"`
+
+If the CMS page exists and is published, the route renders it with Puck:
+
+```tsx
+const [collection, page] = await Promise.all([
+  getCollection({ handle }),
+  getCmsPage({ slug: "default", pageType: "collection" }).catch(() => null),
+]);
+
+return page && page.status === "published" ? (
+  <Render config={puckConfig} data={page.puckData} metadata={{ collection }} />
+) : (
+  <CollectionProductsSection collection={collection} />
+);
+```
+
+This gives you a safe rollout path:
+
+- **published collection CMS page exists** → collection route uses the CMS layout
+- **CMS page missing, draft, or fetch fails** → collection route falls back to the built-in section
+- **Shopify collection missing** → route still returns `notFound()`
+
+### Collection Context in Puck
+
+The `CollectionProducts` Puck block reads Shopify collection data from `puck.metadata.collection` instead of storing product data inside the CMS JSON.
+
+That keeps the CMS page reusable across all collection handles while still rendering handle-specific Shopify data at request time.
 
 ## Shared Header
 

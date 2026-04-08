@@ -20,7 +20,7 @@ The editor page is a client component (`"use client"`) that:
 3. Uses TanStack Query on the client to cache the page request and handle loading/error state
 4. Ensures `root.props.title` is backfilled from the saved page title when older page data does not yet include it
 5. Renders the full-screen `<Puck>` editor with the page's saved data and CMS-specific UI overrides
-6. On publish, calls `publishPageAction(slug, pageType, data)` which saves to Shopify and calls `revalidatePath` to invalidate the cached public page
+6. On publish, calls `publishPageAction(slug, pageType, data)`, invalidates the TanStack Query cache for the current page, and stays on the same editor route instead of redirecting back to the dashboard
 
 ## Editor UI Overrides
 
@@ -84,6 +84,8 @@ All mutations use Server Actions defined in `src/app/cms/_lib/actions.ts`:
 | `deletePageAction(id)`                      | Deletes a CMS page metaobject                                                                       |
 
 Each action calls `revalidatePath` to invalidate Next.js caches after mutations.
+
+For the editor route specifically, publish also invalidates the `['cms-page', pageType, slug]` query so the editor keeps showing fresh data after save without forcing the author back to `/cms`.
 
 ## CMS Theme Modes
 

@@ -11,70 +11,82 @@ Puck components are defined in `src/app/cms/_components/` and registered in `src
 
 Full-width hero section with title, subtitle, and call-to-action button.
 
-| Field | Type | Default |
-|-------|------|---------|
-| `title` | text | "Welcome to our store" |
-| `subtitle` | textarea | "Discover amazing products..." |
-| `ctaText` | text | "Shop Now" |
-| `ctaLink` | text | "/" |
-| `alignment` | select | "center" |
+| Field       | Type     | Default                        |
+| ----------- | -------- | ------------------------------ |
+| `title`     | text     | "Welcome to our store"         |
+| `subtitle`  | textarea | "Discover amazing products..." |
+| `ctaText`   | text     | "Shop Now"                     |
+| `ctaLink`   | text     | "/"                            |
+| `alignment` | select   | "center"                       |
 
 ### TextBlock
 
 Content block with customizable alignment.
 
-| Field | Type | Default |
-|-------|------|---------|
-| `content` | textarea | "Enter your text here..." |
-| `alignment` | select | "left" |
+| Field       | Type     | Default                   |
+| ----------- | -------- | ------------------------- |
+| `content`   | textarea | "Enter your text here..." |
+| `alignment` | select   | "left"                    |
 
 ### ProductCategory
 
 Carousel of product categories with configurable items. Each category has a name, image (via Shopify media upload), and link URL.
 
-| Field | Type | Default |
-|-------|------|---------|
-| `heading` | text | "Shop By Category" |
+| Field        | Type     | Default                  |
+| ------------ | -------- | ------------------------ |
+| `heading`    | text     | "Shop By Category"       |
 | `subheading` | textarea | "Explore our gallery..." |
-| `label` | text | "Category" |
-| `categories` | array | 8 default categories |
+| `label`      | text     | "Category"               |
+| `categories` | array    | 8 default categories     |
 
 Each item in the `categories` array has:
 
-| Sub-field | Type | Description |
-|-----------|------|-------------|
-| `name` | text | Category display name |
-| `image` | custom (media picker) | Image uploaded to Shopify via staged upload |
-| `href` | text | Link URL |
+| Sub-field | Type                  | Description                                 |
+| --------- | --------------------- | ------------------------------------------- |
+| `name`    | text                  | Category display name                       |
+| `image`   | custom (media picker) | Image uploaded to Shopify via staged upload |
+| `href`    | text                  | Link URL                                    |
 
 ### ImageBanner
 
 Full-width image with optional text overlay.
 
-| Field | Type | Default |
-|-------|------|---------|
-| `imageUrl` | text | "" |
-| `alt` | text | "" |
-| `overlayText` | text | "" |
-| `height` | select | "md" (sm/md/lg) |
+| Field         | Type   | Default         |
+| ------------- | ------ | --------------- |
+| `imageUrl`    | text   | ""              |
+| `alt`         | text   | ""              |
+| `overlayText` | text   | ""              |
+| `height`      | select | "md" (sm/md/lg) |
+
+### CollectionProducts
+
+Collection product grid for storefront collection templates.
+
+| Field  | Type | Default |
+| ------ | ---- | ------- |
+| _none_ | —    | —       |
+
+This block does not store product data in Puck JSON. Instead, it reads live Shopify collection data from `puck.metadata.collection`, which is injected by the storefront collection route.
+
+If the block is rendered without collection metadata, it shows a preview fallback message instead of crashing.
 
 ### Spacer
 
 Vertical spacing utility block.
 
-| Field | Type | Default |
-|-------|------|---------|
+| Field  | Type   | Default            |
+| ------ | ------ | ------------------ |
 | `size` | select | "md" (sm/md/lg/xl) |
 
 ## Component Categories
 
 Components are organized in the Puck sidebar by category:
 
-| Category | Components |
-|----------|-----------|
-| Content | Hero, TextBlock, ImageBanner |
-| Commerce | ProductCategory |
-| Layout | Spacer |
+| Category | Components                          |
+| -------- | ----------------------------------- |
+| Content  | Hero, TextBlock, ImageBanner        |
+| Commerce | ProductCategory, CollectionProducts |
+| Layout   | Spacer                              |
 
 ## Adding a New Component
 
@@ -88,7 +100,11 @@ export interface MyBlockProps {
 }
 
 function MyBlockRender({ title }: MyBlockProps) {
-  return <section><h2>{title}</h2></section>;
+  return (
+    <section>
+      <h2>{title}</h2>
+    </section>
+  );
 }
 
 export const myBlockConfig: ComponentConfig<MyBlockProps> = {

@@ -25,7 +25,7 @@ Public Pages (/[slug])     ←  <Render> (RSC)  ←  Storefront API (read)
 
 1. **Create** — User selects a page type and title from the CMS dashboard (`/cms/new`)
 2. **Edit** — Puck editor at `/cms/{pageType}/{slug}/edit` loads page data via API route and caches the client fetch with TanStack Query
-3. **Publish** — `onPublish` triggers a Server Action that saves to Shopify, syncs root-level title/type metadata, and revalidates the path
+3. **Publish** — `onPublish` triggers a Server Action that saves to Shopify, syncs root-level title/type metadata, revalidates the path, invalidates the cached editor query, and keeps the author on the current edit route
 4. **View** — Public page at `/{slug}` renders via React Server Component using `<Render>`
 
 ## Route Structure
