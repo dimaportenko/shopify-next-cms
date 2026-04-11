@@ -61,6 +61,10 @@ The `CollectionProducts` Puck block reads Shopify collection data from `puck.met
 
 That keeps the CMS page reusable across all collection handles while still rendering handle-specific Shopify data at request time.
 
+For editor previews, the collection template now stores a `previewCollectionHandle` root prop. The collection editor uses that handle to fetch a Shopify collection through `/api/cms/collections/[handle]` and passes the result into `<Puck metadata={...} />`, so collection-dependent blocks can render real collection context inside the iframe preview before publish.
+
+This preview behavior is now defined as a reusable page-preview module instead of being embedded directly in the editor route. The shared preview hook lives in `src/app/cms/_lib/page-preview/`, and the collection-specific registration lives in `src/app/cms/_lib/collection-preview.ts`. That keeps the collection implementation small and gives product pages a clear extension point for future handle-based previews.
+
 ## Shared Header
 
 All storefront routes now share the same header through the `(storefront)` layout:

@@ -7,6 +7,10 @@ import { spacerConfig } from "@cms/_components/blocks/spacer";
 import { collectionProductsBlockConfig } from "@cms/_components/blocks/collection-products-block";
 import { headerBlockConfig } from "@cms/_components/blocks/header-block";
 import { PAGE_TYPES } from "@cms/_lib/page-types";
+import {
+  pagePreviewRootFields,
+  resolvePagePreviewRootFields,
+} from "@cms/_lib/page-preview/registry";
 import { SHOW_HIDE_OPTIONS, type CmsRootProps } from "@cms/_lib/fragments";
 
 import type { HeroProps } from "@cms/_components/blocks/hero";
@@ -36,6 +40,7 @@ export const puckConfig: Config<Props, CmsRootProps> = {
         label: "Page Type",
         options: PAGE_TYPES,
       },
+      ...pagePreviewRootFields,
       hideHeader: {
         type: "radio",
         label: "Site Header",
@@ -47,6 +52,8 @@ export const puckConfig: Config<Props, CmsRootProps> = {
         options: SHOW_HIDE_OPTIONS,
       },
     },
+    resolveFields: ({ props }, { fields }) =>
+      resolvePagePreviewRootFields(fields, props?.type),
   },
   categories: {
     content: {

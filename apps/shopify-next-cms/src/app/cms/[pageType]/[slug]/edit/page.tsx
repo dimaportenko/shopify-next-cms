@@ -1,6 +1,5 @@
 "use client";
 
-import { Puck } from "@puckeditor/core";
 import type { Data } from "@puckeditor/core";
 import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,8 +7,8 @@ import { useParams, useRouter } from "next/navigation";
 import type { PageType } from "@/app/cms/_lib/page-types";
 import { isValidPageType } from "@/app/cms/_lib/page-types";
 import { fetchCmsPageBySlug } from "@/lib/api/cms-pages";
-import { puckConfig } from "@cms/_lib/config";
 import { publishPageAction } from "@cms/_lib/actions";
+import { EditorCanvas } from "@cms/_components/editor/editor-canvas";
 import { FRAGMENT_SLUGS } from "@cms/_lib/fragments";
 import { useEditorOverrides } from "@cms/_lib/use-editor-overrides";
 import type { CmsPage } from "@/lib/shopify/types";
@@ -69,13 +68,25 @@ export default function EditorPage() {
 
     const puckData: Data = page.puckData || EMPTY_DATA;
     const rootProps = (puckData.root?.props ?? {}) as Record<string, unknown>;
+    const nextRootProps = { ...rootProps };
 
-    if (!rootProps.title && page.title) {
+    if (!nextRootProps.title && page.title) {
+      nextRootProps.title = page.title;
+    }
+
+    if (!nextRootProps.type && page.pageType) {
+      nextRootProps.type = page.pageType;
+    }
+
+    if (
+      nextRootProps.title !== rootProps.title ||
+      nextRootProps.type !== rootProps.type
+    ) {
       return {
         ...puckData,
         root: {
           ...puckData.root,
-          props: { ...rootProps, title: page.title },
+          props: nextRootProps,
         },
       } satisfies Data;
     }
@@ -111,7 +122,7 @@ export default function EditorPage() {
     );
   }
 
-  if (error || !initialData) {
+  if (error || !initialData || !page) {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4">
         <p className="text-destructive">
@@ -129,10 +140,10 @@ export default function EditorPage() {
   }
 
   return (
-    <Puck
-      config={puckConfig}
-      data={initialData}
-      iframe={{ enabled: true }}
+    <EditorCanvas
+      key={page.id}
+      initialData={initialData}
+      pageType={validPageType}
       overrides={overrides}
       onPublish={handlePublish}
     />

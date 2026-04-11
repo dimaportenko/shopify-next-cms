@@ -1,4 +1,5 @@
 import type { CmsPage } from "@/lib/shopify/types";
+import type { CmsPreviewRootProps } from "@cms/_lib/page-preview/shared";
 import type { PageType } from "./page-types";
 
 export const FRAGMENT_SLUGS = {
@@ -41,7 +42,7 @@ export const SHOW_HIDE_OPTIONS = [
 
 export type SitePartVisibility = (typeof SHOW_HIDE_OPTIONS)[number]["value"];
 
-export interface CmsRootProps {
+export interface CmsRootProps extends CmsPreviewRootProps {
   title?: string;
   type?: PageType;
   hideHeader?: SitePartVisibility;

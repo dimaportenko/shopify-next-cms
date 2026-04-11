@@ -1,21 +1,20 @@
 import type { ComponentConfig } from "@puckeditor/core";
 import { CollectionProductsSection } from "@/components/collection-products-section";
-import type { CollectionDto } from "@/lib/shopify/types";
+import { getCollectionPreview } from "@cms/_lib/collection-preview";
+import type { CmsPagePreviewMetadata } from "@cms/_lib/page-preview/shared";
 
 export type CollectionProductsBlockProps = Record<string, never>;
-
-interface CollectionBlockMetadata {
-  collection?: CollectionDto | null;
-}
 
 function CollectionProductsBlockRender({
   puck,
 }: CollectionProductsBlockProps & {
-  puck?: { metadata?: CollectionBlockMetadata };
+  puck?: { metadata?: CmsPagePreviewMetadata };
 }) {
-  const collection = puck?.metadata?.collection ?? null;
+  const preview = getCollectionPreview(puck?.metadata);
 
-  return <CollectionProductsSection collection={collection} />;
+  return (
+    <CollectionProductsSection collection={preview.data} preview={preview} />
+  );
 }
 
 export const collectionProductsBlockConfig: ComponentConfig<CollectionProductsBlockProps> =

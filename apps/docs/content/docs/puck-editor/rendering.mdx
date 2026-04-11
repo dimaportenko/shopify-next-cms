@@ -58,6 +58,10 @@ This project uses that pattern for collection templates. The collection route fe
 
 The `CollectionProducts` block then reads `puck.metadata.collection` and renders the live Shopify products for the current collection handle.
 
+The collection page editor also uses this metadata pattern for previews. Authors can set a **Preview Collection Handle** page setting in `/cms/collection/default/edit`, and the editor fetches that Shopify collection and injects it into `<Puck metadata={...} />`. That makes collection-aware blocks render against a real collection while editing, instead of falling back to the empty-state warning.
+
+That editor-specific preview pipeline now lives in `src/app/cms/_lib/page-preview/`. The shared hook resolves preview metadata by page type, while page-specific files such as `src/app/cms/_lib/collection-preview.ts` define the root field, fetcher, and metadata mapping. Future page types like product templates can plug into the same pattern instead of duplicating editor logic inside the route.
+
 This keeps Puck page data small and reusable while still allowing route-specific storefront data to be rendered inside CMS-authored layouts.
 
 ## Route Group: `(storefront)`
