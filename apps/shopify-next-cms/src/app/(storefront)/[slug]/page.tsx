@@ -3,6 +3,7 @@ import { Render } from "@puckeditor/core";
 import { notFound } from "next/navigation";
 import { getCmsPageBySlug } from "@/lib/shopify/queries/cms-pages";
 import { puckConfig } from "@/app/cms/_lib/config";
+import { CmsPageShell } from "@/components/cms-page-shell";
 
 const getCmsPage = cache(getCmsPageBySlug);
 
@@ -18,7 +19,11 @@ export default async function CmsPage({
     notFound();
   }
 
-  return <Render config={puckConfig} data={page.puckData} />;
+  return (
+    <CmsPageShell page={page}>
+      <Render config={puckConfig} data={page.puckData} />
+    </CmsPageShell>
+  );
 }
 
 export async function generateMetadata({

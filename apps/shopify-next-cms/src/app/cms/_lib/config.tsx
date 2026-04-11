@@ -5,7 +5,9 @@ import { productCategoryBlockConfig } from "@cms/_components/blocks/product-cate
 import { imageBannerConfig } from "@cms/_components/blocks/image-banner";
 import { spacerConfig } from "@cms/_components/blocks/spacer";
 import { collectionProductsBlockConfig } from "@cms/_components/blocks/collection-products-block";
+import { headerBlockConfig } from "@cms/_components/blocks/header-block";
 import { PAGE_TYPES } from "@cms/_lib/page-types";
+import { SHOW_HIDE_OPTIONS, type CmsRootProps } from "@cms/_lib/fragments";
 
 import type { HeroProps } from "@cms/_components/blocks/hero";
 import type { TextBlockProps } from "@cms/_components/blocks/text-block";
@@ -13,6 +15,7 @@ import type { ProductCategoryBlockProps } from "@cms/_components/blocks/product-
 import type { ImageBannerProps } from "@cms/_components/blocks/image-banner";
 import type { SpacerProps } from "@cms/_components/blocks/spacer";
 import type { CollectionProductsBlockProps } from "@cms/_components/blocks/collection-products-block";
+import type { HeaderBlockProps } from "@cms/_components/blocks/header-block";
 
 type Props = {
   Hero: HeroProps;
@@ -21,9 +24,10 @@ type Props = {
   ImageBanner: ImageBannerProps;
   Spacer: SpacerProps;
   CollectionProducts: CollectionProductsBlockProps;
+  Header: HeaderBlockProps;
 };
 
-export const puckConfig: Config<Props> = {
+export const puckConfig: Config<Props, CmsRootProps> = {
   root: {
     fields: {
       title: { type: "text", label: "Title" },
@@ -31,6 +35,22 @@ export const puckConfig: Config<Props> = {
         type: "select",
         label: "Page Type",
         options: PAGE_TYPES as unknown as { label: string; value: string }[],
+      },
+      hideHeader: {
+        type: "radio",
+        label: "Site Header",
+        options: SHOW_HIDE_OPTIONS as unknown as {
+          label: string;
+          value: string;
+        }[],
+      },
+      hideFooter: {
+        type: "radio",
+        label: "Site Footer",
+        options: SHOW_HIDE_OPTIONS as unknown as {
+          label: string;
+          value: string;
+        }[],
       },
     },
   },
@@ -47,6 +67,10 @@ export const puckConfig: Config<Props> = {
       components: ["Spacer"],
       title: "Layout",
     },
+    fragments: {
+      components: ["Header"],
+      title: "Fragments",
+    },
   },
   components: {
     Hero: heroConfig,
@@ -55,5 +79,6 @@ export const puckConfig: Config<Props> = {
     ImageBanner: imageBannerConfig,
     Spacer: spacerConfig,
     CollectionProducts: collectionProductsBlockConfig,
+    Header: headerBlockConfig,
   },
 };

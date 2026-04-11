@@ -2,12 +2,71 @@ import Link from "next/link";
 import { listCmsPages } from "@/lib/shopify/queries/cms-pages";
 import { DeletePageButton } from "@cms/_components/editor/delete-page-button";
 import { CmsDashboardThemeToggle } from "@cms/_components/editor/cms-dashboard-theme-toggle";
+import { editFragmentAction } from "@cms/_lib/actions";
+import { FRAGMENT_DEFINITIONS } from "@cms/_lib/fragments";
 
 export default async function CmsDashboard() {
-  const pages = await listCmsPages();
+  const allPages = await listCmsPages();
+  const pages = allPages.filter((page) => page.pageType !== "fragment");
+  const fragmentPages = allPages.filter((page) => page.pageType === "fragment");
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
+      <section className="mb-10">
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold">Site Fragments</h2>
+          <p className="text-sm text-muted-foreground">
+            Shared blocks rendered on every page by default.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {FRAGMENT_DEFINITIONS.map((fragment) => {
+            const existing = fragmentPages.find(
+              (page) => page.slug === fragment.slug,
+            );
+            return (
+              <div
+                key={fragment.slug}
+                className="flex items-center justify-between gap-4 rounded-lg border border-border bg-card p-4 text-card-foreground"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium">{fragment.label}</h3>
+                    {existing ? (
+                      <span
+                        className={
+                          existing.status === "published"
+                            ? "rounded bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-600"
+                            : "rounded bg-yellow-500/10 px-2 py-0.5 text-xs font-medium text-yellow-600"
+                        }
+                      >
+                        {existing.status}
+                      </span>
+                    ) : (
+                      <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                        not created
+                      </span>
+                    )}
+                  </div>
+                  <p className="truncate text-sm text-muted-foreground">
+                    {fragment.description}
+                  </p>
+                </div>
+                <form action={editFragmentAction}>
+                  <input type="hidden" name="slug" value={fragment.slug} />
+                  <button
+                    type="submit"
+                    className="inline-flex h-9 items-center rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    Edit
+                  </button>
+                </form>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold">CMS Pages</h1>
         <div className="flex items-center gap-3">

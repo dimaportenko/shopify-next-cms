@@ -10,20 +10,9 @@ import { isValidPageType } from "@/app/cms/_lib/page-types";
 import { fetchCmsPageBySlug } from "@/lib/api/cms-pages";
 import { puckConfig } from "@cms/_lib/config";
 import { publishPageAction } from "@cms/_lib/actions";
-import { EditorHeader } from "@cms/_components/editor/editor-header";
-import {
-  EditorDrawer,
-  EditorFieldLabel,
-  EditorFieldsPanel,
-} from "@cms/_components/editor/editor-inspector";
-import {
-  EditorNumberField,
-  EditorSelectField,
-  EditorTextField,
-  EditorTextareaField,
-} from "@cms/_components/editor/editor-field-types";
-import { EditorDrawerItem } from "@cms/_components/editor/editor-drawer-item";
-import { PublishButton } from "@cms/_components/editor/publish-button";
+import { FRAGMENT_SLUGS } from "@cms/_lib/fragments";
+import { useEditorOverrides } from "@cms/_lib/use-editor-overrides";
+import type { CmsPage } from "@/lib/shopify/types";
 
 const EMPTY_DATA: Data = { content: [], root: {} };
 
@@ -43,6 +32,34 @@ export default function EditorPage() {
   } = useQuery({
     queryKey: ["cms-page", validPageType, slug],
     queryFn: () => fetchCmsPageBySlug({ slug, pageType: validPageType }),
+  });
+
+  const isEditingFragment = validPageType === "fragment";
+
+  const fragmentQueryFn = useCallback(
+    async (fragmentSlug: string): Promise<CmsPage | null> => {
+      try {
+        return await fetchCmsPageBySlug({
+          slug: fragmentSlug,
+          pageType: "fragment",
+        });
+      } catch {
+        return null;
+      }
+    },
+    [],
+  );
+
+  const { data: headerFragment } = useQuery({
+    queryKey: ["cms-page", "fragment", FRAGMENT_SLUGS.header],
+    queryFn: () => fragmentQueryFn(FRAGMENT_SLUGS.header),
+    enabled: !isEditingFragment,
+  });
+
+  const { data: footerFragment } = useQuery({
+    queryKey: ["cms-page", "fragment", FRAGMENT_SLUGS.footer],
+    queryFn: () => fragmentQueryFn(FRAGMENT_SLUGS.footer),
+    enabled: !isEditingFragment,
   });
 
   const initialData = useMemo(() => {
@@ -78,65 +95,13 @@ export default function EditorPage() {
     [slug, validPageType, queryClient],
   );
 
-  const overrides = useMemo(
-    () => ({
-      header: ({ actions }: { actions: React.ReactNode }) => (
-        <EditorHeader actions={actions} pageTitle={pageTitle} />
-      ),
-      headerActions: () => <PublishButton onPublish={handlePublish} />,
-      drawer: ({ children }: { children: React.ReactNode }) => (
-        <EditorDrawer>{children}</EditorDrawer>
-      ),
-      drawerItem: ({ name }: { name: string }) => (
-        <EditorDrawerItem name={name} />
-      ),
-      fieldTypes: {
-        text: EditorTextField,
-        number: EditorNumberField,
-        textarea: EditorTextareaField,
-        select: EditorSelectField,
-      },
-      fields: ({
-        children,
-        isLoading,
-        itemSelector,
-      }: {
-        children: React.ReactNode;
-        isLoading: boolean;
-        itemSelector?: { index: number; zone?: string } | null;
-      }) => (
-        <EditorFieldsPanel isLoading={isLoading} itemSelector={itemSelector}>
-          {children}
-        </EditorFieldsPanel>
-      ),
-      fieldLabel: ({
-        children,
-        icon,
-        label,
-        el,
-        readOnly,
-        className,
-      }: {
-        children?: React.ReactNode;
-        icon?: React.ReactNode;
-        label: string;
-        el?: "label" | "div";
-        readOnly?: boolean;
-        className?: string;
-      }) => (
-        <EditorFieldLabel
-          className={className}
-          el={el}
-          icon={icon}
-          label={label}
-          readOnly={readOnly}
-        >
-          {children}
-        </EditorFieldLabel>
-      ),
-    }),
-    [pageTitle, handlePublish],
-  );
+  const overrides = useEditorOverrides({
+    pageTitle,
+    handlePublish,
+    headerFragment,
+    footerFragment,
+    isEditingFragment,
+  });
 
   if (isPending) {
     return (

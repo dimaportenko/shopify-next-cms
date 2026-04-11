@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Render } from "@puckeditor/core";
 import { notFound } from "next/navigation";
 import { CollectionProductsSection } from "@/components/collection-products-section";
+import { CmsPageShell } from "@/components/cms-page-shell";
 import { puckConfig } from "@/app/cms/_lib/config";
 import { getCollectionByHandle } from "@/lib/shopify/queries/collections";
 import { getCmsPageBySlug } from "@/lib/shopify/queries/cms-pages";
@@ -28,17 +29,19 @@ export default async function CollectionPage({
   }
 
   return (
-    <main className="min-h-screen bg-background">
-      {page && page.status === "published" ? (
-        <Render
-          config={puckConfig}
-          data={page.puckData}
-          metadata={{ collection }}
-        />
-      ) : (
-        <CollectionProductsSection collection={collection} />
-      )}
-    </main>
+    <CmsPageShell page={page}>
+      <main className="min-h-screen bg-background">
+        {page && page.status === "published" ? (
+          <Render
+            config={puckConfig}
+            data={page.puckData}
+            metadata={{ collection }}
+          />
+        ) : (
+          <CollectionProductsSection collection={collection} />
+        )}
+      </main>
+    </CmsPageShell>
   );
 }
 

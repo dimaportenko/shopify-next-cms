@@ -3,6 +3,7 @@ export const PAGE_TYPES = [
   { label: "Product", value: "product" },
   { label: "Collection", value: "collection" },
   { label: "Home", value: "home" },
+  { label: "Fragment", value: "fragment" },
 ] as const;
 
 export type PageType = (typeof PAGE_TYPES)[number]["value"];
