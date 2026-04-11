@@ -34,23 +34,17 @@ export const puckConfig: Config<Props, CmsRootProps> = {
       type: {
         type: "select",
         label: "Page Type",
-        options: PAGE_TYPES as unknown as { label: string; value: string }[],
+        options: PAGE_TYPES,
       },
       hideHeader: {
         type: "radio",
         label: "Site Header",
-        options: SHOW_HIDE_OPTIONS as unknown as {
-          label: string;
-          value: string;
-        }[],
+        options: SHOW_HIDE_OPTIONS,
       },
       hideFooter: {
         type: "radio",
         label: "Site Footer",
-        options: SHOW_HIDE_OPTIONS as unknown as {
-          label: string;
-          value: string;
-        }[],
+        options: SHOW_HIDE_OPTIONS,
       },
     },
   },
