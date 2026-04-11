@@ -11,6 +11,7 @@ import {
 } from "@cms/_components/editor/editor-inspector";
 import {
   EditorNumberField,
+  EditorRadioField,
   EditorSelectField,
   EditorTextField,
   EditorTextareaField,
@@ -49,6 +50,7 @@ export function useEditorOverrides({
         number: EditorNumberField,
         textarea: EditorTextareaField,
         select: EditorSelectField,
+        radio: EditorRadioField,
       },
       fields: ({
         children,

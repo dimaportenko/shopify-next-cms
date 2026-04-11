@@ -4,11 +4,12 @@ import type { ComponentType, ReactNode } from "react";
 import type {
   FieldProps,
   NumberField,
+  RadioField,
   SelectField,
   TextField,
   TextareaField,
 } from "@puckeditor/core";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, CircleCheckBig } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -205,4 +206,75 @@ export function EditorSelectField({
   }
 
   return select;
+}
+
+export function EditorRadioField({
+  field,
+  name,
+  onChange,
+  readOnly,
+  value,
+  label,
+  labelIcon,
+  Label,
+}: PuckFieldProps<RadioField, RadioField["options"][number]["value"]>) {
+  const radioGroup = (
+    <div
+      className={cn(
+        "flex overflow-hidden rounded-xl border border-input bg-background shadow-sm",
+        readOnly && "opacity-70",
+      )}
+    >
+      {field.options.map((option, index) => {
+        const isSelected = Object.is(option.value, value);
+
+        return (
+          <label
+            key={`${name}-${index}`}
+            className={cn(
+              "group relative flex-1 border-l border-input first:border-l-0",
+              !readOnly && "cursor-pointer",
+            )}
+          >
+            <input
+              checked={isSelected}
+              className="sr-only"
+              disabled={readOnly}
+              name={name}
+              type="radio"
+              value={String(index)}
+              onChange={() => onChange(option.value)}
+            />
+            <span
+              className={cn(
+                "flex h-9 items-center justify-center px-4 text-sm font-medium transition-colors duration-150",
+                isSelected
+                  ? "bg-secondary text-primary"
+                  : "bg-background text-muted-foreground group-hover:bg-accent/60 group-hover:text-foreground",
+                !readOnly &&
+                  "group-focus-within:ring-ring/40 group-focus-within:ring-2 group-focus-within:ring-inset",
+              )}
+            >
+              {option.label}
+            </span>
+          </label>
+        );
+      })}
+    </div>
+  );
+
+  if (Label && label) {
+    return (
+      <Label
+        label={label}
+        icon={labelIcon ?? <CircleCheckBig className="size-4" />}
+        readOnly={readOnly}
+        el="div"
+      >
+        {radioGroup}
+      </Label>
+    );
+  }
+
+  return radioGroup;
 }
