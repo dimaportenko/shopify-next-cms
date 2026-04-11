@@ -5,11 +5,18 @@ description: CMS dashboard, page creation, and editor authentication.
 
 ## Dashboard (`/cms`)
 
-The CMS dashboard at `/cms` is a React Server Component that directly fetches all CMS pages from Shopify. It displays each page with its title, page type badge, slug, status (draft/published), and action buttons for editing, viewing, and deleting.
+The CMS dashboard at `/cms` is a React Server Component that directly fetches all CMS pages from Shopify.
+
+It now has two sections:
+
+- **Site Fragments** — fixed entries for shared `header` and `footer` fragments, each with an Edit action that creates the fragment record on demand and redirects to its editor route
+- **CMS Pages** — regular CMS pages with title, page type badge, slug, status (draft/published), and action buttons for editing, viewing, and deleting
 
 ## Creating Pages (`/cms/new`)
 
-The create page form accepts a page type (General, Product, Collection, Home), title, and automatically generates a URL slug. On submit, it calls the `createPageAction` Server Action which creates a new metaobject in Shopify with empty Puck data and the selected page type, then redirects to the editor.
+The create page form accepts a page type (General, Product, Collection, Home, Fragment), title, and automatically generates a URL slug. In practice, shared fragments are usually entered from the dashboard's **Site Fragments** section so the slug stays fixed (`header` or `footer`).
+
+On submit, it calls the `createPageAction` Server Action which creates a new metaobject in Shopify with empty Puck data and the selected page type, then redirects to the editor.
 
 ## Editor (`/cms/[pageType]/[slug]/edit`)
 
@@ -21,6 +28,7 @@ The editor page is a client component (`"use client"`) that:
 4. Ensures `root.props.title` is backfilled from the saved page title when older page data does not yet include it
 5. Renders the full-screen `<Puck>` editor with the page's saved data and CMS-specific UI overrides
 6. On publish, calls `publishPageAction(slug, pageType, data)`, invalidates the TanStack Query cache for the current page, and stays on the same editor route instead of redirecting back to the dashboard
+7. When editing regular pages, wraps the iframe preview with the current published header/footer fragments so authors preview page chrome in context
 
 ## Editor UI Overrides
 
@@ -29,7 +37,7 @@ The editor route customizes Puck in two layers:
 1. **Puck overrides** in `src/app/cms/[pageType]/[slug]/edit/page.tsx`
 2. **Scoped CSS theming** in `src/app/cms/cms.css` for editor surfaces without stable override hooks
 
-Current override components live in `src/app/cms/_components/editor/` and cover:
+Current override components live in `src/app/cms/_components/editor/` and are wired together through `src/app/cms/_lib/use-editor-overrides.tsx`. They cover:
 
 - custom editor header and publish actions
 - custom editor and preview theme toggles in the header
@@ -37,7 +45,9 @@ Current override components live in `src/app/cms/_components/editor/` and cover:
 - custom fields panel and field labels
 - custom field renderers for `text`, `number`, `textarea`, and `select`
 
-Root-level Puck fields now provide explicit labels such as **Title** and **Page Type**, and the custom field renderers can wrap controls in a shared label component when Puck passes label metadata.
+Root-level Puck fields now provide explicit labels such as **Title**, **Page Type**, **Site Header**, and **Site Footer**. The last two fields are radio controls that let authors hide shared fragments on a per-page basis.
+
+The custom field renderers can wrap controls in a shared label component when Puck passes label metadata.
 
 The CSS layer is still responsible for theming Puck-managed shells and states such as:
 
@@ -76,16 +86,17 @@ The login page (`/cms/login`) sets a `cms-token` cookie when the correct `CMS_SE
 
 All mutations use Server Actions defined in `src/app/cms/_lib/actions.ts`:
 
-| Action                                      | Description                                                                                         |
-| ------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `createPageAction(title, slug, pageType)`   | Creates a new CMS page metaobject with the given type                                               |
-| `publishPageAction(slug, pageType, data)`   | Saves Puck data, syncs page type and title from root props when present, sets status to "published" |
-| `savePageDraftAction(slug, pageType, data)` | Saves Puck data and persists the edited root title to the CMS page record                           |
-| `deletePageAction(id)`                      | Deletes a CMS page metaobject                                                                       |
+| Action                                      | Description                                                                                                    |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `createPageAction(title, slug, pageType)`   | Creates a new CMS page metaobject with the given type                                                          |
+| `publishPageAction(slug, pageType, data)`   | Saves Puck data, syncs page type and title from root props when present, sets status to "published"            |
+| `savePageDraftAction(slug, pageType, data)` | Saves Puck data and persists the edited root title to the CMS page record                                      |
+| `deletePageAction(id)`                      | Deletes a CMS page metaobject                                                                                  |
+| `editFragmentAction(formData)`              | Ensures a fixed fragment page exists for a known slug (`header`/`footer`) and redirects to `/cms/fragment/...` |
 
 Each action calls `revalidatePath` to invalidate Next.js caches after mutations.
 
-For the editor route specifically, publish also invalidates the `['cms-page', pageType, slug]` query so the editor keeps showing fresh data after save without forcing the author back to `/cms`.
+For the editor route specifically, publish also invalidates the `['cms-page', pageType, slug]` query so the editor keeps showing fresh data after save without forcing the author back to `/cms`. Publishing a regular page revalidates that page path; publishing a fragment revalidates the root layout so shared chrome updates across storefront routes.
 
 ## CMS Theme Modes
 

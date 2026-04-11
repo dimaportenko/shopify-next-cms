@@ -25,8 +25,8 @@ Public Pages (/[slug])     ←  <Render> (RSC)  ←  Storefront API (read)
 
 1. **Create** — User selects a page type and title from the CMS dashboard (`/cms/new`)
 2. **Edit** — Puck editor at `/cms/{pageType}/{slug}/edit` loads page data via API route and caches the client fetch with TanStack Query
-3. **Publish** — `onPublish` triggers a Server Action that saves to Shopify, syncs root-level title/type metadata, revalidates the path, invalidates the cached editor query, and keeps the author on the current edit route
-4. **View** — Public page at `/{slug}` renders via React Server Component using `<Render>`
+3. **Publish** — `onPublish` triggers a Server Action that saves to Shopify, syncs root-level title/type metadata, revalidates the path (or the root layout for fragments), invalidates the cached editor query, and keeps the author on the current edit route
+4. **View** — Public pages render through a shared `CmsPageShell` that can inject published site fragments before and after the page body
 
 ## Route Structure
 
@@ -40,7 +40,8 @@ src/app/
     _components/             # Private: Puck block components
       editor/                # Custom Puck editor UI overrides
     _lib/
-      config.tsx             # Puck component registry
+      config.tsx             # Puck component registry + root visibility fields
+      fragments.ts           # Shared fragment definitions + root prop helpers
       page-types.ts          # Page type constants + validation
       actions.ts             # Server Actions ('use server')
     cms.css                  # Scoped editor chrome theme overrides
@@ -55,19 +56,23 @@ src/app/
 
 ## Key Files
 
-| File                                          | Purpose                                                                                  |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `src/app/cms/_lib/config.tsx`                 | Puck configuration — registers all components + root fields (title, type)                |
-| `src/app/cms/_lib/page-types.ts`              | Page type constants (`general`, `product`, `collection`, `home`)                         |
-| `src/app/cms/_lib/actions.ts`                 | Server Actions for CRUD operations                                                       |
-| `src/app/cms/_lib/cms-theme-provider.tsx`     | Stores editor and preview theme preferences and syncs preview theme into the Puck iframe |
-| `src/app/cms/_components/`                    | Puck block components (Hero, TextBlock, etc.)                                            |
-| `src/app/cms/_components/editor/`             | Custom editor header, drawer, inspector, field types, and drawer item UI                 |
-| `src/app/cms/cms.css`                         | Scoped CMS styling for Puck surfaces that do not have stable override APIs               |
-| `src/app/cms/[pageType]/[slug]/edit/page.tsx` | Puck editor page (`"use client"`)                                                        |
-| `src/components/providers/query-provider.tsx` | App-level TanStack Query provider for client-side server-state fetching                  |
-| `src/app/(storefront)/[slug]/page.tsx`        | Public page renderer (RSC)                                                               |
-| `src/proxy.ts`                                | Next.js 16 proxy for CMS auth                                                            |
+| File                                          | Purpose                                                                                             |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `src/app/cms/_lib/config.tsx`                 | Puck configuration — registers all components + root fields (title, type, header/footer visibility) |
+| `src/app/cms/_lib/fragments.ts`               | Shared fragment slugs, definitions, and helpers for root props                                      |
+| `src/app/cms/_lib/page-types.ts`              | Page type constants (`general`, `product`, `collection`, `home`, `fragment`)                        |
+| `src/app/cms/_lib/actions.ts`                 | Server Actions for CRUD operations + fragment editing redirect                                      |
+| `src/app/cms/_lib/cms-theme-provider.tsx`     | Stores editor and preview theme preferences and syncs preview theme into the Puck iframe            |
+| `src/app/cms/_components/`                    | Puck block components (Hero, TextBlock, etc.)                                                       |
+| `src/app/cms/_components/editor/`             | Custom editor header, drawer, inspector, field types, and drawer item UI                            |
+| `src/app/cms/cms.css`                         | Scoped CMS styling for Puck surfaces that do not have stable override APIs                          |
+| `src/app/cms/[pageType]/[slug]/edit/page.tsx` | Puck editor page (`"use client"`)                                                                   |
+| `src/app/cms/_lib/use-editor-overrides.tsx`   | Centralized Puck override configuration, including iframe preview chrome                            |
+| `src/components/providers/query-provider.tsx` | App-level TanStack Query provider for client-side server-state fetching                             |
+| `src/components/cms-page-shell.tsx`           | Shared storefront wrapper that loads header/footer fragments per page                               |
+| `src/components/cms-page-chrome.tsx`          | Shared renderer for fragment-based header/footer chrome                                             |
+| `src/app/(storefront)/[slug]/page.tsx`        | Public page renderer (RSC)                                                                          |
+| `src/proxy.ts`                                | Next.js 16 proxy for CMS auth                                                                       |
 
 ## Editor Customization Strategy
 
@@ -89,3 +94,19 @@ Currently the CSS fallback layer is used for:
 - preview overlay and drop zone selection / hover states
 
 This keeps the editor visually consistent while limiting dependence on Puck internals to the smallest practical surface area.
+
+## Shared Fragments
+
+The CMS now supports a dedicated `fragment` page type for shared site chrome. Fragments are managed from the `/cms` dashboard and currently include:
+
+- `header` — shared site header
+- `footer` — shared site footer
+
+Storefront routes render through `CmsPageShell`, which:
+
+1. Reads root props from the current page
+2. Checks whether `hideHeader` or `hideFooter` are set to `"hide"`
+3. Fetches the corresponding published fragment pages when needed
+4. Falls back to the built-in `<Header />` when no published header fragment exists
+
+This makes header/footer content authorable in Puck without forcing every page to duplicate those blocks.

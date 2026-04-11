@@ -5,11 +5,12 @@ description: How published CMS pages are rendered on the storefront.
 
 ## Public Page Route
 
-Published CMS pages are served at `/[slug]` via the catch-all route `src/app/(storefront)/[slug]/page.tsx`. This is a React Server Component that:
+Published CMS pages are served at `/[slug]` via `src/app/(storefront)/[slug]/page.tsx`. This is a React Server Component that:
 
 1. Fetches the page data from Shopify using `getCmsPageBySlug(slug)`
 2. Returns `notFound()` if the page doesn't exist or isn't published
-3. Renders the page using Puck's `<Render>` component
+3. Wraps the page with `CmsPageShell`
+4. Renders the page body using Puck's `<Render>` component
 
 ```tsx
 export default async function CmsPage({
@@ -24,9 +25,26 @@ export default async function CmsPage({
     notFound();
   }
 
-  return <Render config={puckConfig} data={page.puckData} />;
+  return (
+    <CmsPageShell page={page}>
+      <Render config={puckConfig} data={page.puckData} />
+    </CmsPageShell>
+  );
 }
 ```
+
+## Shared Page Chrome
+
+`CmsPageShell` centralizes storefront chrome for CMS-authored routes. It reads root props from the current page, checks whether the author hid the site header or footer, and then fetches shared fragments as needed.
+
+Current behavior:
+
+- If a published `header` fragment exists, it is rendered before the page body
+- Otherwise the storefront falls back to the built-in `<Header />`
+- If a published `footer` fragment exists, it is rendered after the page body
+- Fragment rendering is skipped entirely when the current page sets `hideHeader: "hide"` or `hideFooter: "hide"`
+
+This same chrome wrapper is reused inside the Puck iframe preview for non-fragment pages so the editor matches the storefront more closely.
 
 ## Contextual Rendering with `metadata`
 
@@ -44,7 +62,9 @@ This keeps Puck page data small and reusable while still allowing route-specific
 
 ## Route Group: `(storefront)`
 
-The homepage and CMS pages live inside the `(storefront)` route group. This is a Next.js convention that:
+The homepage, collections, and CMS pages live inside the `(storefront)` route group. The group layout no longer renders the shared header directly. Instead, storefront routes opt into `CmsPageShell` where needed so page-level visibility settings and fragment-backed chrome can be applied consistently.
+
+This route group still:
 
 - Groups related routes without affecting the URL
 - Separates storefront concerns from `/cms` admin routes
@@ -72,4 +92,6 @@ All dynamic routes use the Next.js 15+/16 async params pattern where `params` is
 
 ## Cache Revalidation
 
-When a page is published via the editor, `revalidatePath` is called with the page path in the Server Action. This invalidates the Next.js cache for that specific page, ensuring the next visitor sees the updated content.
+When a regular page is published via the editor, `revalidatePath` is called with the page path in the Server Action. This invalidates the Next.js cache for that specific page, ensuring the next visitor sees the updated content.
+
+When a shared fragment is published, the CMS revalidates the root layout instead. That allows header/footer changes to propagate across storefront routes without manually revalidating every page path.
