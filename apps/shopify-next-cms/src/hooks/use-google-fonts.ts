@@ -2,24 +2,23 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
 import {
   type FontCategory,
   type GoogleFontInfo,
-  fetchGoogleFonts,
   getCategoryForSlot,
   getFontFamilyValue,
-  googleFontsQueryKey,
   loadGoogleFont,
 } from "@/lib/google-fonts";
 
 export function useGoogleFonts(slot: "font-sans" | "font-serif" | "font-mono") {
   const [search, setSearch] = useState("");
   const categories = useMemo(() => getCategoryForSlot(slot), [slot]);
+  const trpc = useTRPC();
 
-  const { data: allFonts = [], isPending } = useQuery({
-    queryKey: googleFontsQueryKey,
-    queryFn: fetchGoogleFonts,
-  });
+  const { data: allFonts = [], isPending } = useQuery(
+    trpc.fonts.list.queryOptions(),
+  );
 
   const filteredFonts = useMemo(() => {
     const byCategory = allFonts.filter((font) =>

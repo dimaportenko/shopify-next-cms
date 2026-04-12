@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server"
+import { publicProcedure, router } from "../init";
+import type { GoogleFontInfo } from "@/lib/google-fonts";
 
-const FALLBACK_FONTS = [
+const FALLBACK_FONTS: GoogleFontInfo[] = [
   { family: "Inter", category: "sans-serif" },
   { family: "Roboto", category: "sans-serif" },
   { family: "Open Sans", category: "sans-serif" },
@@ -36,31 +37,31 @@ const FALLBACK_FONTS = [
   { family: "Space Mono", category: "monospace" },
   { family: "Inconsolata", category: "monospace" },
   { family: "Ubuntu Mono", category: "monospace" },
-]
+];
 
-export async function GET() {
-  const apiKey = process.env.GOOGLE_FONTS_API_KEY
-  if (!apiKey) {
-    return NextResponse.json(FALLBACK_FONTS)
-  }
-
-  try {
-    const res = await fetch(
-      `https://www.googleapis.com/webfonts/v1/webfonts?sort=popularity&key=${apiKey}`,
-      { next: { revalidate: 86400 } } // cache for 24h
-    )
-    if (!res.ok) throw new Error("Google Fonts API error")
-
-    const data = (await res.json()) as {
-      items?: { family: string; category: string }[]
+export const fontsRouter = router({
+  list: publicProcedure.query(async (): Promise<GoogleFontInfo[]> => {
+    const apiKey = process.env.GOOGLE_FONTS_API_KEY;
+    if (!apiKey) {
+      return FALLBACK_FONTS;
     }
-    const fonts = (data.items ?? []).map((item) => ({
-      family: item.family,
-      category: item.category,
-    }))
 
-    return NextResponse.json(fonts)
-  } catch {
-    return NextResponse.json(FALLBACK_FONTS)
-  }
-}
+    try {
+      const res = await fetch(
+        `https://www.googleapis.com/webfonts/v1/webfonts?sort=popularity&key=${apiKey}`,
+        { next: { revalidate: 86400 } },
+      );
+      if (!res.ok) throw new Error("Google Fonts API error");
+
+      const data = (await res.json()) as {
+        items?: GoogleFontInfo[];
+      };
+      return (data.items ?? []).map((item) => ({
+        family: item.family,
+        category: item.category,
+      }));
+    } catch {
+      return FALLBACK_FONTS;
+    }
+  }),
+});

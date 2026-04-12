@@ -1,4 +1,4 @@
-import type { Config } from "@puckeditor/core";
+import type { Config, Data } from "@puckeditor/core";
 import { heroConfig } from "@cms/_components/blocks/hero";
 import { textBlockConfig } from "@cms/_components/blocks/text-block";
 import { productCategoryBlockConfig } from "@cms/_components/blocks/product-category-block";
@@ -27,6 +27,8 @@ type Props = {
   Header: HeaderBlockProps;
 };
 
+export type CmsData = Data<Props, CmsRootProps>;
+
 export const puckConfig: Config<Props, CmsRootProps> = {
   root: {
     fields: {
@@ -35,6 +37,10 @@ export const puckConfig: Config<Props, CmsRootProps> = {
         type: "select",
         label: "Page Type",
         options: PAGE_TYPES,
+      },
+      collectionHandle: {
+        type: "text",
+        label: "Collection Handle",
       },
       hideHeader: {
         type: "radio",
@@ -46,6 +52,14 @@ export const puckConfig: Config<Props, CmsRootProps> = {
         label: "Site Footer",
         options: SHOW_HIDE_OPTIONS,
       },
+    },
+    resolveFields: (data, { fields }) => {
+      if (data.props?.type !== "collection") {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { collectionHandle, ...rest } = fields;
+        return rest;
+      }
+      return fields;
     },
   },
   categories: {

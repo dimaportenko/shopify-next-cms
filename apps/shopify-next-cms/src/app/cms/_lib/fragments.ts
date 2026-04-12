@@ -46,6 +46,7 @@ export interface CmsRootProps {
   type?: PageType;
   hideHeader?: SitePartVisibility;
   hideFooter?: SitePartVisibility;
+  collectionHandle?: string;
 }
 
 export function getCmsRootProps(

@@ -10,18 +10,6 @@ export interface GoogleFontInfo {
   category: FontCategory;
 }
 
-export const googleFontsQueryKey = ["google-fonts"] as const;
-
-export async function fetchGoogleFonts(): Promise<GoogleFontInfo[]> {
-  const response = await fetch("/api/fonts");
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch fonts");
-  }
-
-  return (await response.json()) as GoogleFontInfo[];
-}
-
 // Track which fonts have been loaded to avoid duplicate <link> tags
 const loadedFonts = new Set<string>();
 

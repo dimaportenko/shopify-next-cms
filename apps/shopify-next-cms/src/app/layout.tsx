@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { QueryProvider } from "@/components/providers/query-provider";
+import { TRPCReactProvider } from "@/trpc/client";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import "./globals.css";
 
@@ -32,7 +32,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <QueryProvider>
+        <TRPCReactProvider>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -41,7 +41,7 @@ export default function RootLayout({
           >
             {children}
           </ThemeProvider>
-        </QueryProvider>
+        </TRPCReactProvider>
       </body>
     </html>
   );

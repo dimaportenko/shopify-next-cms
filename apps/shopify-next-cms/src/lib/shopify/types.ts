@@ -77,12 +77,12 @@ export class ShopifyNetworkError extends Error {
 import type { PageType } from "@/app/cms/_lib/page-types";
 export type { PageType };
 
-export interface CmsPage {
+export interface CmsPage<D extends Data = Data> {
   id: string;
   title: string;
   slug: string;
   pageType: PageType;
-  puckData: Data;
+  puckData: D;
   status: "draft" | "published";
   updatedAt: string;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
 
 export interface MediaImage {
   id: string;
@@ -10,26 +11,13 @@ export interface MediaImage {
   height: number;
 }
 
-interface MediaPage {
-  images: MediaImage[];
-  pageInfo: { hasNextPage: boolean; endCursor: string | null };
-}
-
 export function useMediaLibrary(search?: string) {
-  return useInfiniteQuery({
-    queryKey: ["cms", "media", search],
-    queryFn: async ({ pageParam }): Promise<MediaPage> => {
-      const params = new URLSearchParams();
-      if (pageParam) params.set("after", pageParam);
-      if (search) params.set("search", search);
-      const res = await fetch(`/api/cms/media?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to load media");
-      return res.json();
-    },
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) =>
-      lastPage.pageInfo.hasNextPage
-        ? (lastPage.pageInfo.endCursor ?? undefined)
-        : undefined,
-  });
+  const trpc = useTRPC();
+
+  return useInfiniteQuery(
+    trpc.media.list.infiniteQueryOptions(
+      { search },
+      { getNextPageParam: (lastPage) => lastPage.nextCursor },
+    ),
+  );
 }
