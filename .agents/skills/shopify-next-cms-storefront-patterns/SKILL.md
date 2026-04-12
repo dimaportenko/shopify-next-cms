@@ -25,6 +25,30 @@ Apply this skill for:
 - Keep route pages focused on data loading, metadata, and composition.
 - Follow current Next.js async route patterns: `params` is promise-based and must be awaited.
 
+## CMS-backed collection templates
+
+Collection pages support CMS templates via Puck. The storefront renders the CMS template when published, falling back to the default `CollectionProductsSection` component:
+
+```tsx
+// collections/[handle]/page.tsx
+const [collection, page] = await Promise.all([
+  getCollection({ handle }),
+  getCmsPage({ slug: "default", pageType: "collection" }).catch(() => null),
+]);
+
+{page && page.status === "published" ? (
+  <Render config={puckConfig} data={page.puckData} metadata={{ collection }} />
+) : (
+  <CollectionProductsSection collection={collection} />
+)}
+```
+
+The `metadata={{ collection }}` prop passes the collection data from the route's `[handle]` param into Puck blocks. Blocks access it via `puck.metadata.collection`.
+
+### Collection handle in the CMS editor
+
+The CMS editor provides a `collectionHandle` root field (visible only when page type is "collection") so editors can preview blocks with real collection data. The editor reads this field via Puck's `onChange` callback and fetches the collection via a tRPC procedure, then passes it back as Puck's `metadata` prop. See the `puck-cms-patterns` skill for the full implementation pattern.
+
 ## UI implementation patterns
 
 - Prefer the project’s shadcn-compatible components and theme tokens.

@@ -1,6 +1,6 @@
 ---
 name: puck-cms-patterns
-description: Patterns for building Puck visual editor blocks, custom fields, and Shopify CMS integrations. Use when creating or modifying Puck component configs, adding custom Puck field types, building array fields with sub-fields, implementing Shopify file/media uploads via staged upload API, writing API routes that call Shopify Admin GraphQL, or connecting react-query to CMS data. Triggers on tasks involving ComponentConfig, puck fields, puck blocks, media pickers, Shopify stagedUploadsCreate, fileCreate, or CMS editor features.
+description: Patterns for building Puck visual editor blocks, custom fields, and Shopify CMS integrations. Use when creating or modifying Puck component configs, adding custom Puck field types, building array fields with sub-fields, implementing Shopify file/media uploads via staged upload API, writing tRPC procedures that call Shopify Admin GraphQL, connecting tRPC + react-query to CMS data, using Puck metadata to pass external context to blocks, or conditionally showing/hiding root fields with resolveFields. Triggers on tasks involving ComponentConfig, puck fields, puck blocks, puck metadata, resolveFields, media pickers, Shopify stagedUploadsCreate, fileCreate, tRPC routers for CMS data, or CMS editor features.
 ---
 
 # Puck CMS Patterns
@@ -91,6 +91,113 @@ export function mediaPickerFieldConfig(label = "Image") {
 
 This factory pattern lets you use the field in both standalone configs and as `arrayFields` sub-fields.
 
+## Puck Metadata — Passing External Context to Blocks
+
+Use Puck's `metadata` prop to inject server-fetched data (like a Shopify collection) into blocks without making blocks fetch their own data:
+
+**On the rendering side** (`<Render>` for storefront, `<Puck>` for editor):
+```tsx
+<Render config={puckConfig} data={page.puckData} metadata={{ collection }} />
+// or in the editor:
+<Puck config={puckConfig} data={initialData} metadata={{ collection: collectionData ?? null }} />
+```
+
+**Inside the block**, access metadata via `puck.metadata`:
+```tsx
+function CollectionProductsBlockRender({
+  puck,
+}: CollectionProductsBlockProps & {
+  puck?: { metadata?: { collection?: CollectionDto | null } };
+}) {
+  const collection = puck?.metadata?.collection ?? null;
+  return <CollectionProductsSection collection={collection} />;
+}
+```
+
+The `metadata` prop is typed as `{ [key: string]: any }` — Puck passes it through to all blocks. When metadata is absent (e.g., no collection selected), blocks should render a graceful empty state.
+
+### Fetching Metadata in the Editor
+
+The editor page needs to bridge between Puck's root props (where the user enters a collection handle) and the fetched data (passed back as metadata). Use Puck's `onChange` callback to track root prop changes:
+
+```tsx
+const [collectionHandle, setCollectionHandle] = useState("");
+const activeHandle = collectionHandle || getRootHandle(initialData);
+
+const { data: collectionData } = useCollectionByHandle(
+  isCollectionPage && activeHandle ? activeHandle : null,
+);
+
+const handleDataChange = useCallback(
+  (data: CmsData) => {
+    if (!isCollectionPage) return;
+    setCollectionHandle((prev) => {
+      const next = getRootHandle(data);
+      return next === prev ? prev : next;
+    });
+  },
+  [isCollectionPage],
+);
+```
+
+The functional updater `(prev) => next === prev ? prev : next` prevents re-renders when the handle hasn't changed — Puck's `onChange` fires on every keystroke in any field.
+
+## Conditional Root Fields with `resolveFields`
+
+Use `resolveFields` on the root config to show/hide fields based on other root prop values. This runs on every field panel render, so avoid expensive work:
+
+```tsx
+export const puckConfig: Config<Props, CmsRootProps> = {
+  root: {
+    fields: {
+      title: { type: "text", label: "Title" },
+      type: { type: "select", label: "Page Type", options: PAGE_TYPES },
+      collectionHandle: { type: "text", label: "Collection Handle" },
+      // ...
+    },
+    resolveFields: (data, { fields }) => {
+      if (data.props?.type !== "collection") {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { collectionHandle, ...rest } = fields;
+        return rest;
+      }
+      return fields;
+    },
+  },
+};
+```
+
+Add the field to `CmsRootProps` in `fragments.ts` so it's part of the typed root props interface.
+
+## Typed Puck Data
+
+Define `CmsData` as a parameterized `Data` type to get proper typing on root props:
+
+```tsx
+// config.tsx
+import type { Config, Data } from "@puckeditor/core";
+export type CmsData = Data<Props, CmsRootProps>;
+```
+
+Make `CmsPage` generic so consumers can narrow the puck data type:
+
+```tsx
+// types.ts
+export interface CmsPage<D extends Data = Data> {
+  id: string;
+  puckData: D;
+  // ...
+}
+```
+
+The stored JSON from Shopify is untyped, so a cast is needed at the consumption boundary:
+
+```tsx
+const puckData = (page.puckData || EMPTY_DATA) as CmsData;
+```
+
+This is a legitimate boundary narrowing — the cast belongs at the point of use where you know the data matches your config's shape.
+
 ## Shopify Admin API Integration
 
 ### GraphQL Queries
@@ -139,51 +246,113 @@ The file may not have a CDN URL immediately after step 3 (Shopify processes asyn
 
 Add `shopify-staged-uploads.storage.googleapis.com` to `next.config.ts` `remotePatterns` — staged upload URLs use this hostname.
 
-## API Route Patterns
+## tRPC Integration
+
+The project uses tRPC v11 for end-to-end type-safe API calls. All CMS data fetching goes through tRPC procedures — no manual API routes or `as` casts on `response.json()`.
+
+### Router Structure
+
+```
+src/trpc/
+├── init.ts           — initTRPC, exports router + publicProcedure
+├── client.tsx        — TRPCReactProvider, useTRPC, trpcClient (shared singleton)
+└── routers/
+    ├── _app.ts       — merged root router, exports AppRouter type
+    ├── cms.ts        — getPageBySlug, getCollectionByHandle
+    ├── media.ts      — list (cursor pagination), create, stagedUpload
+    └── fonts.ts      — list
+```
+
+The catch-all handler lives at `src/app/api/trpc/[trpc]/route.ts`.
+
+### Queries with useTRPC
+
+Use `useTRPC()` hook to get the typed proxy, then pass `queryOptions()` to `useQuery`:
+
+```tsx
+const trpc = useTRPC();
+const { data: page } = useQuery(
+  trpc.cms.getPageBySlug.queryOptions({ slug, pageType }),
+);
+```
+
+For cache invalidation, use `queryKey()`:
+```tsx
+await queryClient.invalidateQueries({
+  queryKey: trpc.cms.getPageBySlug.queryKey({ slug, pageType }),
+});
+```
+
+### Infinite Queries with Cursor Pagination
+
+Use `cursor: z.string().nullish()` in the input schema and return `nextCursor` from the procedure:
+
+```tsx
+list: publicProcedure
+  .input(z.object({ cursor: z.string().nullish(), search: z.string().optional() }))
+  .query(async ({ input }) => {
+    const data = await adminQuery(QUERY, { after: input.cursor ?? undefined });
+    return {
+      images,
+      nextCursor: data.pageInfo.hasNextPage ? data.pageInfo.endCursor : undefined,
+    };
+  }),
+```
+
+Client side, use `infiniteQueryOptions`:
+```tsx
+const trpc = useTRPC();
+return useInfiniteQuery(
+  trpc.media.list.infiniteQueryOptions(
+    { search },
+    { getNextPageParam: (lastPage) => lastPage.nextCursor },
+  ),
+);
+```
+
+### Imperative Mutations (Multi-Step Flows)
+
+For multi-step flows like file upload (staged upload -> S3 upload -> file create), import the shared `trpcClient` singleton for imperative `.mutate()` calls:
+
+```tsx
+import { trpcClient, useTRPC } from "@/trpc/client";
+
+const staged = await trpcClient.media.stagedUpload.mutate({ filename, mimeType, fileSize });
+// ... upload to S3 ...
+const result = await trpcClient.media.create.mutate({ resourceUrl, filename });
+```
+
+The singleton `trpcClient` is the same instance used by `TRPCReactProvider`, so HTTP batching is shared.
 
 ### Input Validation with Zod
 
-API routes are system boundaries — validate input with Zod schemas instead of type assertions. This gives runtime validation and type inference in one step:
+tRPC procedures use Zod schemas for input validation. For TypeScript union types that already exist, use `z.enum()` instead of `z.string()` with manual coercion:
 
 ```tsx
-import { z } from "zod";
+import { PAGE_TYPE_VALUES } from "@/app/cms/_lib/page-types";
 
-const bodySchema = z.object({
-  resourceUrl: z.string().min(1),
-  filename: z.string().min(1),
-  alt: z.string().optional(),
-});
-
-export async function POST(request: Request) {
-  const parsed = bodySchema.safeParse(await request.json());
-  if (!parsed.success) {
-    return Response.json({ error: "..." }, { status: 400 });
-  }
-  const { resourceUrl, filename, alt } = parsed.data;  // fully typed
-}
+const pageTypeSchema = z.enum(PAGE_TYPE_VALUES as [PageType, ...PageType[]]).default("general");
 ```
 
-### Handling Nullable Shopify Responses
+### Handling Nullable Shopify Responses in tRPC
 
-Shopify mutations return deeply optional types (`Maybe<{ files?: Maybe<Array<...>> }>`). Check each level explicitly and return appropriate error responses instead of using non-null assertions (`!`):
+Shopify mutations return deeply optional types. Use `TRPCError` with appropriate codes instead of `Response.json()`:
 
 ```tsx
+import { TRPCError } from "@trpc/server";
+
 const result = data.fileCreate;
 if (!result) {
-  return Response.json({ error: "Mutation returned no result" }, { status: 500 });
+  throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Mutation returned no result" });
 }
 if (result.userErrors.length > 0) {
-  return Response.json({ error: result.userErrors[0].message }, { status: 400 });
-}
-const file = result.files?.[0];
-if (!file) {
-  return Response.json({ error: "No file returned" }, { status: 500 });
+  throw new TRPCError({ code: "BAD_REQUEST", message: result.userErrors[0].message });
 }
 ```
 
 ### Type-Safe Filtering of Union Types
 
-Shopify file queries return unions (`MediaImage | Video | GenericFile | ...`). Use a type guard with `flatMap` instead of `filter().map()` — TypeScript narrows within the `flatMap` callback but loses narrowing across `filter` → `map`:
+Shopify file queries return unions (`MediaImage | Video | GenericFile | ...`). Use a type guard with `flatMap` instead of `filter().map()` — TypeScript narrows within the `flatMap` callback but loses narrowing across `filter` -> `map`:
 
 ```tsx
 type MediaImageNode = Extract<FilesQuery["files"]["edges"][number]["node"], { image?: unknown }>;
@@ -200,50 +369,11 @@ const images = data.files.edges.flatMap((edge) => {
 });
 ```
 
-## React Query Integration
+## Editor UI Components
 
-### Cache Invalidation After Mutations
+Use `<img>` (not `next/image`) in editor panel components. The editor sidebar shows thumbnails for content editors — image URLs may come from any domain, and `next/image` requires all hostnames to be whitelisted. The `@next/next/no-img-element` eslint disable is the standard acknowledgment for this intentional choice.
 
-When a mutation changes data that a query caches, invalidate the query. Otherwise users see stale data when navigating back:
-
-```tsx
-const queryClient = useQueryClient();
-
-// After publishing a page:
-await publishPageAction(slug, pageType, data);
-await queryClient.invalidateQueries({ queryKey: ["cms-page", pageType, slug] });
-
-// After uploading media:
-const mutation = useMutation({
-  mutationFn: uploadFile,
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ["cms", "media"] });
-  },
-});
-```
-
-### Upload Hooks
-
-Extract the upload logic into a pure async function and wrap it with `useMutation`. This gives you `isPending`, `error`, and automatic cache invalidation — no manual `useState` needed:
-
-```tsx
-async function uploadFile(file: File): Promise<string> {
-  // validation, 3-step upload, return CDN URL
-}
-
-export function useMediaUpload() {
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: uploadFile,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cms", "media"] }),
-  });
-  return {
-    upload: mutation.mutateAsync,
-    isUploading: mutation.isPending,
-    error: mutation.error?.message ?? null,
-  };
-}
-```
+For media library modals in the Puck editor, use shadcn `Dialog` with `createPortal` or the standard dialog pattern — the modal needs to escape Puck's panel z-index context.
 
 ## React 19 Event Types
 
@@ -260,9 +390,3 @@ const handleSubmit = (event: SubmitEvent) => { ... }
 // Other events — import directly, not via React namespace
 import { type ChangeEvent, type DragEvent } from "react";
 ```
-
-## Editor UI Components
-
-Use `<img>` (not `next/image`) in editor panel components. The editor sidebar shows thumbnails for content editors — image URLs may come from any domain, and `next/image` requires all hostnames to be whitelisted. The `@next/next/no-img-element` eslint disable is the standard acknowledgment for this intentional choice.
-
-For media library modals in the Puck editor, use shadcn `Dialog` with `createPortal` or the standard dialog pattern — the modal needs to escape Puck's panel z-index context.
