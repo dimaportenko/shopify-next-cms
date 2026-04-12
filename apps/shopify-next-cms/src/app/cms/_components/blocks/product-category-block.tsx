@@ -5,6 +5,7 @@ import {
   type CategoryItem,
 } from "@/components/product-category";
 import { mediaPickerFieldConfig } from "@cms/_components/editor/media-picker";
+import { collectionPickerFieldConfig } from "@cms/_components/editor/collection-picker";
 
 export interface ProductCategoryBlockProps {
   heading: string;
@@ -41,12 +42,12 @@ export const productCategoryBlockConfig: ComponentConfig<ProductCategoryBlockPro
         arrayFields: {
           name: { type: "text", label: "Name" },
           image: mediaPickerFieldConfig("Image"),
-          href: { type: "text", label: "Link URL" },
+          href: collectionPickerFieldConfig("Collection"),
         },
         defaultItemProps: {
           name: "New Category",
           image: "",
-          href: "#",
+          href: "",
         },
         getItemSummary: (item) => item.name || "Untitled",
       },

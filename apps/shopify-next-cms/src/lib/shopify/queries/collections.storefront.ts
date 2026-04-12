@@ -23,3 +23,19 @@ export const GET_COLLECTION_BY_HANDLE = `#graphql
     }
   }
 `;
+
+export const SEARCH_COLLECTIONS = `#graphql
+  query SearchCollections($query: String, $first: Int!) {
+    collections(first: $first, query: $query) {
+      nodes {
+        id
+        handle
+        title
+        image {
+          url
+          altText
+        }
+      }
+    }
+  }
+`;

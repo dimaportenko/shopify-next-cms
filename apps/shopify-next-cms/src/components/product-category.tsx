@@ -21,45 +21,51 @@ export const DEFAULT_CATEGORIES: CategoryItem[] = [
     name: "Tops",
     image:
       "https://cdn.shopify.com/s/files/1/0985/3655/4867/files/Blue_Top_Category.png?v=1775327136",
-    href: "/collections/women-tops",
+    href: "women-tops",
   },
   {
     name: "Hoodies",
     image:
       "https://cdn.shopify.com/s/files/1/0985/3655/4867/files/Hoodie_Category.png?v=1775328264",
-    href: "/collections/women-tops-hoodies-sweatshirts",
+    href: "women-tops-hoodies-sweatshirts",
   },
   {
     name: "Pants",
     image:
       "https://cdn.shopify.com/s/files/1/0985/3655/4867/files/Pink_pants_category.png?v=1775327382",
-    href: "/collections/women-bottoms-pants",
+    href: "women-bottoms-pants",
   },
   {
     name: "Jackets",
     image:
       "https://cdn.shopify.com/s/files/1/0985/3655/4867/files/Blue_Jacket_Category.png?v=1775327993",
-    href: "/collections/women-tops-jackets",
+    href: "women-tops-jackets",
   },
   {
     name: "Shorts",
     image:
       "https://cdn.shopify.com/s/files/1/0985/3655/4867/files/wsh01-green_main.png?v=1775326685",
-    href: "/collections/women-bottoms-shorts",
+    href: "women-bottoms-shorts",
   },
   {
     name: "Gear",
     image:
       "https://cdn.shopify.com/s/files/1/0985/3655/4867/files/Gear_Category.png?v=1775328430",
-    href: "/collections/gear",
+    href: "gear",
   },
   {
     name: "Bags",
     image:
       "https://cdn.shopify.com/s/files/1/0985/3655/4867/files/bags-category.png?v=1775326869",
-    href: "/collections/gear-bags",
+    href: "gear-bags",
   },
 ];
+
+function toCollectionHref(href: string): string {
+  if (!href) return "#";
+  if (href.startsWith("/")) return href;
+  return `/collections/${href}`;
+}
 
 interface ProductCategoryProps {
   heading?: string;
@@ -100,7 +106,7 @@ export function ProductCategory({
                 className="basis-full pl-6 min-[475px]:basis-1/2 md:basis-1/4 xl:basis-1/6"
               >
                 <Link
-                  href={category.href}
+                  href={toCollectionHref(category.href)}
                   className="flex flex-col items-center justify-center"
                 >
                   <div className="mb-6 flex size-35 items-center justify-center rounded-full bg-linear-to-b from-primary/25 to-muted/5 hover:border-2 hover:border-primary">

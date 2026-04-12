@@ -8,6 +8,7 @@ import { collectionProductsBlockConfig } from "@cms/_components/blocks/collectio
 import { headerBlockConfig } from "@cms/_components/blocks/header-block";
 import { PAGE_TYPES } from "@cms/_lib/page-types";
 import { SHOW_HIDE_OPTIONS, type CmsRootProps } from "@cms/_lib/fragments";
+import { collectionPickerFieldConfig } from "@cms/_components/editor/collection-picker";
 
 import type { HeroProps } from "@cms/_components/blocks/hero";
 import type { TextBlockProps } from "@cms/_components/blocks/text-block";
@@ -38,10 +39,7 @@ export const puckConfig: Config<Props, CmsRootProps> = {
         label: "Page Type",
         options: PAGE_TYPES,
       },
-      collectionHandle: {
-        type: "text",
-        label: "Collection Handle",
-      },
+      collectionHandle: collectionPickerFieldConfig("Collection Handle"),
       hideHeader: {
         type: "radio",
         label: "Site Header",
@@ -56,7 +54,7 @@ export const puckConfig: Config<Props, CmsRootProps> = {
     resolveFields: (data, { fields }) => {
       if (data.props?.type !== "collection") {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { collectionHandle, ...rest } = fields;
+        const { collectionHandle, ...rest } = fields;
         return rest;
       }
       return fields;

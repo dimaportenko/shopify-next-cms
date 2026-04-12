@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../init";
 import { getCmsPageBySlug } from "@/lib/shopify/queries/cms-pages";
-import { getCollectionByHandle } from "@/lib/shopify/queries/collections";
+import {
+  getCollectionByHandle,
+  searchCollections,
+} from "@/lib/shopify/queries/collections";
 import { PAGE_TYPE_VALUES } from "@/app/cms/_lib/page-types";
 import type { PageType } from "@/lib/shopify/types";
 import { TRPCError } from "@trpc/server";
@@ -46,5 +49,16 @@ export const cmsRouter = router({
       }
 
       return collection;
+    }),
+
+  searchCollections: publicProcedure
+    .input(
+      z.object({
+        query: z.string().optional(),
+        first: z.number().min(1).max(50).default(10),
+      }),
+    )
+    .query(async ({ input }) => {
+      return searchCollections({ query: input.query, first: input.first });
     }),
 });

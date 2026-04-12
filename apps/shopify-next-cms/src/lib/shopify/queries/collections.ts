@@ -1,10 +1,15 @@
 import type {
   GetCollectionByHandleQuery,
   GetCollectionByHandleQueryVariables,
+  SearchCollectionsQuery,
+  SearchCollectionsQueryVariables,
 } from "@generated-types/storefront.generated";
 import { storefrontQuery } from "../storefront-client";
 import type { CollectionDto } from "../types";
-import { GET_COLLECTION_BY_HANDLE } from "./collections.storefront";
+import {
+  GET_COLLECTION_BY_HANDLE,
+  SEARCH_COLLECTIONS,
+} from "./collections.storefront";
 import { toImageDto, toProductDto } from "./products";
 
 type CollectionNode = NonNullable<GetCollectionByHandleQuery["collection"]>;
@@ -35,4 +40,34 @@ export async function getCollectionByHandle({
   }
 
   return toCollectionDto(data.collection);
+}
+
+export interface CollectionSummaryDto {
+  id: string;
+  handle: string;
+  title: string;
+  imageUrl: string | null;
+}
+
+export async function searchCollections({
+  query,
+  first = 10,
+}: {
+  query?: string;
+  first?: number;
+}): Promise<CollectionSummaryDto[]> {
+  const data = await storefrontQuery<
+    SearchCollectionsQuery,
+    SearchCollectionsQueryVariables
+  >(SEARCH_COLLECTIONS, { query: query ?? null, first });
+
+  return data.collections.nodes.map(
+    (node) =>
+      ({
+        id: node.id,
+        handle: node.handle,
+        title: node.title,
+        imageUrl: node.image?.url ?? null,
+      }) satisfies CollectionSummaryDto,
+  );
 }
