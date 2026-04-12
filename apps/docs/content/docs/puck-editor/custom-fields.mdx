@@ -1,6 +1,6 @@
 ---
 title: Custom Fields
-description: Custom Puck editor fields including the Shopify media picker.
+description: Custom Puck editor fields including the Shopify media and collection pickers.
 ---
 
 Puck supports custom field types beyond the built-in text, textarea, number, select, and radio controls. Custom fields use `type: "custom"` with a `render` function that receives `value`, `onChange`, and `readOnly` props.
@@ -70,6 +70,61 @@ File uploads go through Shopify's 3-step staged upload process:
 After upload, the media library query cache is invalidated with `trpc.media.list.queryKey()` so the new image appears in the browse modal.
 
 See [Media Uploads](/docs/shopify-integration/media-uploads) for the server-side procedure details.
+
+## Collection Picker Field
+
+The collection picker lets authors search Shopify collections instead of typing collection handles manually. It is used for the root-level `collectionHandle` field on collection templates and for block fields such as `ProductCategory.categories[].href`.
+
+**Location:** `src/app/cms/_components/editor/collection-picker/`
+
+### Usage
+
+Use the `collectionPickerFieldConfig()` factory anywhere a field should store a Shopify collection handle:
+
+```tsx
+import { collectionPickerFieldConfig } from "@cms/_components/editor/collection-picker";
+
+export const puckConfig: Config<Props, CmsRootProps> = {
+  root: {
+    fields: {
+      collectionHandle: collectionPickerFieldConfig("Collection Handle"),
+    },
+  },
+};
+```
+
+It also works inside array fields:
+
+```tsx
+categories: {
+  type: "array",
+  arrayFields: {
+    name: { type: "text", label: "Name" },
+    image: mediaPickerFieldConfig("Image"),
+    href: collectionPickerFieldConfig("Collection"),
+  },
+},
+```
+
+### Features
+
+- **Debounced search** — waits briefly before querying Shopify as the author types
+- **Collection metadata** — shows collection title, handle, and image when available
+- **Single-click selection** — stores the selected collection handle in Puck data
+- **Clear action** — removes the current selection without editing raw JSON
+
+### Architecture
+
+| File                                                | Purpose                                                        |
+| --------------------------------------------------- | -------------------------------------------------------------- |
+| `collection-picker-field-config.tsx`                | Factory function returning Puck custom field config            |
+| `collection-picker-field.tsx`                       | Search input, selected-value chip, and results dropdown        |
+| `use-collection-search.ts`                          | React Query hook backed by `trpc.cms.searchCollections`        |
+| `src/trpc/routers/cms.ts`                           | tRPC procedures for collection lookup and collection search    |
+| `src/lib/shopify/queries/collections.ts`            | Storefront search DTO mapping and `searchCollections()` helper |
+| `src/lib/shopify/queries/collections.storefront.ts` | Storefront GraphQL document for collection search              |
+
+The picker stores collection handles, not full URLs. Storefront components can then convert those handles into route paths such as `/collections/{handle}`.
 
 ## Built-in Field Overrides
 

@@ -11,21 +11,22 @@ It fetches Shopify collection data from the Storefront API, then optionally rend
 
 Key files involved in collection rendering:
 
-| File                                                           | Responsibility                                      |
-| -------------------------------------------------------------- | --------------------------------------------------- |
-| `src/app/(storefront)/collections/[handle]/page.tsx`           | Collection route: data loading + CMS render         |
-| `src/components/cms-page-shell.tsx`                            | Loads shared header/footer fragments per page       |
-| `src/components/cms-page-chrome.tsx`                           | Renders fragment-backed chrome with Header fallback |
-| `src/components/collection-products-section.tsx`               | Fallback collection section and grid                |
-| `src/components/collection-product-card.tsx`                   | Product card with image carousel                    |
-| `src/app/cms/_components/blocks/collection-products-block.tsx` | Puck block that reads collection metadata           |
-| `src/app/cms/_lib/config.tsx`                                  | Registers the `CollectionProducts` block            |
-| `src/app/(storefront)/layout.tsx`                              | Minimal storefront route wrapper                    |
-| `src/components/header.tsx`                                    | Built-in header fallback and theme controls         |
-| `src/lib/shopify/queries/collections.storefront.ts`            | Collection GraphQL query                            |
-| `src/lib/shopify/queries/products.storefront.ts`               | Reusable product fragment                           |
-| `src/lib/shopify/queries/collections.ts`                       | Collection query-to-DTO mapping                     |
-| `src/lib/shopify/queries/products.ts`                          | Reusable image/money/product mappers                |
+| File                                                           | Responsibility                                                      |
+| -------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `src/app/(storefront)/collections/[handle]/page.tsx`           | Collection route: data loading + CMS render                         |
+| `src/components/cms-page-shell.tsx`                            | Loads shared header/footer fragments per page                       |
+| `src/components/cms-page-chrome.tsx`                           | Renders fragment-backed chrome with Header fallback                 |
+| `src/components/collection-products-section.tsx`               | Fallback collection section and grid                                |
+| `src/components/collection-product-card.tsx`                   | Product card with image carousel                                    |
+| `src/app/cms/_components/blocks/collection-products-block.tsx` | Puck block that reads collection metadata                           |
+| `src/app/cms/_components/editor/collection-picker/`            | Reusable collection search field for the CMS editor                 |
+| `src/app/cms/_lib/config.tsx`                                  | Registers the `CollectionProducts` block and root collection picker |
+| `src/app/(storefront)/layout.tsx`                              | Minimal storefront route wrapper                                    |
+| `src/components/header.tsx`                                    | Built-in header fallback and theme controls                         |
+| `src/lib/shopify/queries/collections.storefront.ts`            | Collection GraphQL query                                            |
+| `src/lib/shopify/queries/products.storefront.ts`               | Reusable product fragment                                           |
+| `src/lib/shopify/queries/collections.ts`                       | Collection query-to-DTO mapping                                     |
+| `src/lib/shopify/queries/products.ts`                          | Reusable image/money/product mappers                                |
 
 ## CMS-Backed Collection Templates
 
@@ -62,6 +63,16 @@ This gives you a safe rollout path:
 The `CollectionProducts` Puck block reads Shopify collection data from `puck.metadata.collection` instead of storing product data inside the CMS JSON.
 
 That keeps the CMS page reusable across all collection handles while still rendering handle-specific Shopify data at request time.
+
+### Collection Picker in the Editor
+
+Collection templates now use a searchable `Collection Handle` custom field instead of free-text input. The picker:
+
+- searches Shopify collections through `trpc.cms.searchCollections`
+- stores the selected collection handle in Puck data
+- fetches the full collection preview through `trpc.cms.getCollectionByHandle`
+
+The same custom field is also reused by the `ProductCategory` block so category cards link to selected Shopify collections instead of manually entered collection URLs.
 
 ## Shared Header
 

@@ -30,7 +30,7 @@ Content block with customizable alignment.
 
 ### ProductCategory
 
-Carousel of product categories with configurable items. Each category has a name, image (via Shopify media upload), and link URL.
+Carousel of product categories with configurable items. Each category has a name, image (via Shopify media upload), and a Shopify collection target.
 
 | Field        | Type     | Default                  |
 | ------------ | -------- | ------------------------ |
@@ -41,11 +41,13 @@ Carousel of product categories with configurable items. Each category has a name
 
 Each item in the `categories` array has:
 
-| Sub-field | Type                  | Description                                 |
-| --------- | --------------------- | ------------------------------------------- |
-| `name`    | text                  | Category display name                       |
-| `image`   | custom (media picker) | Image uploaded to Shopify via staged upload |
-| `href`    | text                  | Link URL                                    |
+| Sub-field | Type                       | Description                                 |
+| --------- | -------------------------- | ------------------------------------------- |
+| `name`    | text                       | Category display name                       |
+| `image`   | custom (media picker)      | Image uploaded to Shopify via staged upload |
+| `href`    | custom (collection picker) | Selected Shopify collection handle          |
+
+At render time, bare handles are converted to `/collections/{handle}`. Existing slash-prefixed paths still work, which keeps older content compatible.
 
 ### ImageBanner
 
@@ -67,6 +69,8 @@ Collection product grid for storefront collection templates.
 | _none_ | —    | —       |
 
 This block does not store product data in Puck JSON. Instead, it reads live Shopify collection data from `puck.metadata.collection`, which is injected by the storefront collection route.
+
+When editing a collection template, authors choose the preview collection through the root-level `Collection Handle` picker rather than typing the handle manually.
 
 If the block is rendered without collection metadata, it shows a preview fallback message instead of crashing.
 
