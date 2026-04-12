@@ -3,15 +3,17 @@ title: Media Uploads
 description: Uploading and browsing files via Shopify's staged upload API.
 ---
 
-The CMS provides API routes for uploading images to Shopify and browsing the media library. These power the [media picker field](/docs/puck-editor/custom-fields) in the Puck editor.
+The CMS exposes media operations through tRPC procedures in `src/trpc/routers/media.ts`. These power the [media picker field](/docs/puck-editor/custom-fields) in the Puck editor.
 
-## API Routes
+From the browser, the procedures are transported through the shared `/api/trpc` route via the tRPC client, so there are no longer separate `/api/cms/media*` REST handlers to maintain.
 
-### POST /api/cms/media/staged-upload
+## tRPC Procedures
+
+### `media.stagedUpload` (mutation)
 
 Prepares a file for upload by requesting a staged upload URL from Shopify.
 
-**Request body:**
+**Input:**
 
 ```json
 {
@@ -21,7 +23,7 @@ Prepares a file for upload by requesting a staged upload URL from Shopify.
 }
 ```
 
-**Response:**
+**Result:**
 
 ```json
 {
@@ -36,11 +38,11 @@ Prepares a file for upload by requesting a staged upload URL from Shopify.
 
 The client then uploads the file directly to the returned `url` as a multipart `FormData`, appending all `parameters` before the file.
 
-### POST /api/cms/media
+### `media.create` (mutation)
 
 Registers an uploaded file in Shopify's file system via the `fileCreate` mutation.
 
-**Request body:**
+**Input:**
 
 ```json
 {
@@ -50,7 +52,7 @@ Registers an uploaded file in Shopify's file system via the `fileCreate` mutatio
 }
 ```
 
-**Response:**
+**Result:**
 
 ```json
 {
@@ -60,21 +62,21 @@ Registers an uploaded file in Shopify's file system via the `fileCreate` mutatio
 }
 ```
 
-If the CDN URL is not immediately available (Shopify processes files asynchronously), the route polls up to 5 times before falling back to the `resourceUrl`.
+If the CDN URL is not immediately available, the procedure polls up to 5 times before falling back to the `resourceUrl`.
 
-### GET /api/cms/media
+### `media.list` (query)
 
 Browses existing images in the Shopify media library with pagination and search.
 
-**Query parameters:**
+**Input:**
 
-| Param | Type | Default | Description |
-|-------|------|---------|-------------|
-| `first` | number | 20 | Number of images to return |
-| `after` | string | — | Cursor for pagination |
-| `search` | string | — | Search by filename |
+| Field    | Type           | Default | Description                |
+| -------- | -------------- | ------- | -------------------------- |
+| `first`  | number         | `20`    | Number of images to return |
+| `cursor` | string \| null | —       | Cursor for the next page   |
+| `search` | string         | —       | Search by filename         |
 
-**Response:**
+**Result:**
 
 ```json
 {
@@ -87,23 +89,22 @@ Browses existing images in the Shopify media library with pagination and search.
       "height": 600
     }
   ],
-  "pageInfo": {
-    "hasNextPage": true,
-    "endCursor": "eyJsYXN0X..."
-  }
+  "nextCursor": "eyJsYXN0X..."
 }
 ```
+
+The editor's infinite query passes `nextCursor` back into `media.list` to load more results.
 
 ## GraphQL Queries
 
 All media-related GraphQL operations are defined in `src/lib/shopify/queries/media.admin.ts`:
 
-| Query | Operation | Purpose |
-|-------|-----------|---------|
-| `STAGED_UPLOADS_CREATE` | Mutation | Get presigned upload URL |
-| `FILE_CREATE` | Mutation | Register uploaded file |
-| `FILE_BY_ID_QUERY` | Query | Poll for processed CDN URL |
-| `FILES_QUERY` | Query | List media with pagination |
+| Query                   | Operation | Purpose                    |
+| ----------------------- | --------- | -------------------------- |
+| `STAGED_UPLOADS_CREATE` | Mutation  | Get presigned upload URL   |
+| `FILE_CREATE`           | Mutation  | Register uploaded file     |
+| `FILE_BY_ID_QUERY`      | Query     | Poll for processed CDN URL |
+| `FILES_QUERY`           | Query     | List media with pagination |
 
 Types are generated via `pnpm codegen:admin` and imported from `@generated-types/admin.generated`.
 
@@ -111,8 +112,8 @@ Types are generated via `pnpm codegen:admin` and imported from `@generated-types
 
 The following domains must be in `next.config.ts` `remotePatterns` for images to render:
 
-| Domain | Purpose |
-|--------|---------|
-| `cdn.shopify.com` | Final CDN URLs for processed images |
-| `shopify-staged-uploads.storage.googleapis.com` | Staged upload URLs (fallback) |
-| `cdn.shadcnstudio.com` | Default placeholder images |
+| Domain                                          | Purpose                             |
+| ----------------------------------------------- | ----------------------------------- |
+| `cdn.shopify.com`                               | Final CDN URLs for processed images |
+| `shopify-staged-uploads.storage.googleapis.com` | Staged upload URLs (fallback)       |
+| `cdn.shadcnstudio.com`                          | Default placeholder images          |

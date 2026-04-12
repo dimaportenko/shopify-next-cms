@@ -28,8 +28,8 @@ The theme customizer is a side-panel UI that lets you tweak your shadcn/ui theme
 - `components/theme/theme-provider.tsx` — wraps app with `next-themes` provider
 - `components/theme/theme-toggle.tsx` — light/dark mode toggle button
 - `hooks/use-theme-customizer.ts` — state management, CSS variable application, localStorage persistence
-- `hooks/use-google-fonts.ts` — fetches font list with TanStack Query and manages dynamic loading
-- `lib/google-fonts.ts` — query key, font fetcher, and client-side font loading via `<link>` injection
+- `hooks/use-google-fonts.ts` — fetches `trpc.fonts.list` and manages dynamic loading
+- `lib/google-fonts.ts` — font category helpers and client-side font loading via `<link>` injection
 - `lib/theme-presets.ts` — color preset definitions and type interfaces
-- `app/api/fonts/route.ts` — server-side proxy for the Google Fonts API
-- `components/providers/query-provider.tsx` — shared TanStack Query provider used by client-side data fetching hooks
+- `trpc/routers/fonts.ts` — server-side Google Fonts lookup with fallback data
+- `trpc/client.tsx` — shared TanStack Query + tRPC provider used by client-side data fetching hooks

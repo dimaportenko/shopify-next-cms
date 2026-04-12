@@ -3,11 +3,11 @@ title: Custom Fields
 description: Custom Puck editor fields including the Shopify media picker.
 ---
 
-Puck supports custom field types beyond the built-in text, textarea, number, and select. Custom fields use `type: "custom"` with a `render` function that receives `value`, `onChange`, and `readOnly` props.
+Puck supports custom field types beyond the built-in text, textarea, number, select, and radio controls. Custom fields use `type: "custom"` with a `render` function that receives `value`, `onChange`, and `readOnly` props.
 
 ## Media Picker Field
 
-The media picker allows editors to upload images to Shopify or browse the existing media library. It uses Shopify's staged upload API for secure file handling.
+The media picker allows editors to upload images to Shopify or browse the existing media library. It uses Shopify's staged upload API for secure file handling, while the editor talks to the backend through tRPC procedures.
 
 **Location:** `src/app/cms/_components/editor/media-picker/`
 
@@ -50,25 +50,32 @@ categories: {
 
 The media picker consists of:
 
-| File | Purpose |
-|------|---------|
-| `media-picker-field-config.tsx` | Factory function returning Puck custom field config |
-| `media-picker-field.tsx` | Main UI component with upload zone and controls |
-| `media-library-modal.tsx` | Dialog for browsing existing Shopify media |
-| `use-media-upload.ts` | React Query mutation hook for 3-step Shopify upload |
-| `use-media-library.ts` | Infinite query hook for paginated media browsing |
+| File                            | Purpose                                                                                      |
+| ------------------------------- | -------------------------------------------------------------------------------------------- |
+| `media-picker-field-config.tsx` | Factory function returning Puck custom field config                                          |
+| `media-picker-field.tsx`        | Main UI component with upload zone and controls                                              |
+| `media-library-modal.tsx`       | Dialog for browsing existing Shopify media                                                   |
+| `use-media-upload.ts`           | React Query mutation hook that calls tRPC media procedures and performs the direct file POST |
+| `use-media-library.ts`          | Infinite query hook backed by `trpc.media.list`                                              |
+| `src/trpc/routers/media.ts`     | Server-side staged upload, file registration, and media browsing procedures                  |
 
 ### Upload Flow
 
 File uploads go through Shopify's 3-step staged upload process:
 
-1. **Get staged URL** — `POST /api/cms/media/staged-upload` calls `stagedUploadsCreate`
+1. **Get staged URL** — `trpcClient.media.stagedUpload.mutate()` calls `stagedUploadsCreate`
 2. **Upload to staged URL** — browser POSTs the file directly to Shopify's storage
-3. **Register the file** — `POST /api/cms/media` calls `fileCreate` to finalize
+3. **Register the file** — `trpcClient.media.create.mutate()` calls `fileCreate` to finalize
 
-After upload, the media library query cache is automatically invalidated so the new image appears in the browse modal.
+After upload, the media library query cache is invalidated with `trpc.media.list.queryKey()` so the new image appears in the browse modal.
 
-See [Media Uploads](/docs/shopify-integration/media-uploads) for API route details.
+See [Media Uploads](/docs/shopify-integration/media-uploads) for the server-side procedure details.
+
+## Built-in Field Overrides
+
+The editor also restyles several built-in Puck field types in `src/app/cms/_components/editor/editor-field-types.tsx`. That now includes `radio`, which is used for root-level visibility controls such as **Site Header** and **Site Footer**.
+
+These are still standard Puck field types — the project overrides their rendering so they match the CMS UI without redefining them as custom fields.
 
 ## Creating a Custom Field
 

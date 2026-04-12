@@ -43,27 +43,27 @@ Then fill in the `GOOGLE_FONTS_API_KEY` value.
 
 ## How it works
 
-The key is only used **server-side** in the `/api/fonts` route handler. It is never sent to the browser.
+The key is only used **server-side** in `src/trpc/routers/fonts.ts`. It is never sent to the browser.
 
 ```
-Browser  →  /api/fonts  →  Google Fonts API (with key)
-                ↓
-         JSON response (family + category list)
-                ↓
-         Cached for 24 hours (Next.js revalidate)
+Browser  →  trpc.fonts.list  →  /api/trpc  →  Google Fonts API (with key)
+                                ↓
+                         JSON response (family + category list)
+                                ↓
+                         Cached for 24 hours (Next.js revalidate)
 ```
 
 When a user selects a font in the customizer, the actual font files are loaded directly from `fonts.googleapis.com` via a `<link>` tag — this public CDN does not require an API key.
 
 ## Without an API key
 
-If `GOOGLE_FONTS_API_KEY` is not set, the `/api/fonts` route returns a built-in fallback list covering the most popular fonts across all three categories:
+If `GOOGLE_FONTS_API_KEY` is not set, `fonts.list` returns a built-in fallback list covering the most popular fonts across all three categories:
 
-| Category | Included fonts |
-| --- | --- |
-| Sans-serif | Inter, Roboto, Open Sans, Poppins, DM Sans, Manrope, and more |
-| Serif | Merriweather, Playfair Display, Lora, EB Garamond, and more |
-| Monospace | JetBrains Mono, Fira Code, Source Code Pro, IBM Plex Mono, and more |
+| Category   | Included fonts                                                      |
+| ---------- | ------------------------------------------------------------------- |
+| Sans-serif | Inter, Roboto, Open Sans, Poppins, DM Sans, Manrope, and more       |
+| Serif      | Merriweather, Playfair Display, Lora, EB Garamond, and more         |
+| Monospace  | JetBrains Mono, Fira Code, Source Code Pro, IBM Plex Mono, and more |
 
 The customizer is fully functional without the key — only the font selection is smaller.
 

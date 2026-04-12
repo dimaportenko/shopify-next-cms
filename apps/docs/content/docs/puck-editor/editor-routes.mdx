@@ -23,12 +23,15 @@ On submit, it calls the `createPageAction` Server Action which creates a new met
 The editor page is a client component (`"use client"`) that:
 
 1. Reads `pageType` and `slug` from route params, validates `pageType` with `isValidPageType()`
-2. Fetches the page data via `GET /api/cms/pages/[slug]?pageType=[pageType]`
+2. Fetches the page data via `trpc.cms.getPageBySlug`
 3. Uses TanStack Query on the client to cache the page request and handle loading/error state
 4. Ensures `root.props.title` is backfilled from the saved page title when older page data does not yet include it
-5. Renders the full-screen `<Puck>` editor with the page's saved data and CMS-specific UI overrides
-6. On publish, calls `publishPageAction(slug, pageType, data)`, invalidates the TanStack Query cache for the current page, and stays on the same editor route instead of redirecting back to the dashboard
-7. When editing regular pages, wraps the iframe preview with the current published header/footer fragments so authors preview page chrome in context
+5. Resolves live collection preview data through `trpc.cms.getCollectionByHandle` when editing a collection template with a `collectionHandle`
+6. Renders the full-screen `<Puck>` editor with the page's saved data and CMS-specific UI overrides
+7. On publish, calls `publishPageAction(slug, pageType, data)`, invalidates the TanStack Query cache for the current page, and stays on the same editor route instead of redirecting back to the dashboard
+8. When editing regular pages, wraps the iframe preview with the current published header/footer fragments so authors preview page chrome in context
+
+All of those client-side reads are transported through the shared `/api/trpc` route handler.
 
 ## Editor UI Overrides
 
@@ -43,7 +46,7 @@ Current override components live in `src/app/cms/_components/editor/` and are wi
 - custom editor and preview theme toggles in the header
 - custom drawer wrapper and drawer block items
 - custom fields panel and field labels
-- custom field renderers for `text`, `number`, `textarea`, and `select`
+- custom field renderers for `text`, `number`, `textarea`, `select`, and `radio`
 
 Root-level Puck fields now provide explicit labels such as **Title**, **Page Type**, **Site Header**, and **Site Footer**. The last two fields are radio controls that let authors hide shared fragments on a per-page basis.
 
@@ -96,7 +99,7 @@ All mutations use Server Actions defined in `src/app/cms/_lib/actions.ts`:
 
 Each action calls `revalidatePath` to invalidate Next.js caches after mutations.
 
-For the editor route specifically, publish also invalidates the `['cms-page', pageType, slug]` query so the editor keeps showing fresh data after save without forcing the author back to `/cms`. Publishing a regular page revalidates that page path; publishing a fragment revalidates the root layout so shared chrome updates across storefront routes.
+For the editor route specifically, publish also invalidates the current `trpc.cms.getPageBySlug` query so the editor keeps showing fresh data after save without forcing the author back to `/cms`. Publishing a regular page revalidates that page path; publishing a fragment revalidates the root layout so shared chrome updates across storefront routes.
 
 ## CMS Theme Modes
 

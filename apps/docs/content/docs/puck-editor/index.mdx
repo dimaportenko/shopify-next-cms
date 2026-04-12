@@ -8,9 +8,11 @@ The CMS uses [Puck](https://puckeditor.com) as a visual page editor. Puck is an 
 ## Architecture
 
 ```
-Editor (/cms/[pageType]/[slug]/edit)  →  Server Actions  →  Shopify Metaobjects (Admin API)
-                                                          ↓
-Public Pages (/[slug])     ←  <Render> (RSC)  ←  Storefront API (read)
+Editor (/cms/[pageType]/[slug]/edit)
+  → TanStack Query + tRPC client  →  /api/trpc  →  Shopify Admin / Storefront APIs
+  → Server Actions                →  Shopify Metaobjects (writes)
+
+Public Pages (/[slug])  ←  <Render> (RSC) + CmsPageShell  ←  Shopify reads
 ```
 
 - **Editor** — Client component using `<Puck>` with drag-and-drop UI
@@ -18,13 +20,14 @@ Public Pages (/[slug])     ←  <Render> (RSC)  ←  Storefront API (read)
 - **CMS theming** — The admin UI supports a dedicated editor theme and a separate preview theme for the Puck iframe
 - **Render** — Server component using `<Render>` for SSR performance
 - **Storage** — Page content stored as JSON in a Shopify Metaobject field
-- **Mutations** — Server Actions for create/update/delete (no REST API routes needed)
+- **Client data layer** — tRPC procedures power editor page loading, fragment lookup, collection preview data, media library workflows, and Google Fonts lookup
+- **Writes** — Server Actions handle page create/update/delete/publish; media uploads still POST the file directly to Shopify after the staged upload target is requested
 - **Auth** — Simple secret-based proxy (`proxy.ts`) protecting `/cms/*` routes
 
 ## Data Flow
 
 1. **Create** — User selects a page type and title from the CMS dashboard (`/cms/new`)
-2. **Edit** — Puck editor at `/cms/{pageType}/{slug}/edit` loads page data via API route and caches the client fetch with TanStack Query
+2. **Edit** — Puck editor at `/cms/{pageType}/{slug}/edit` loads page data through `trpc.cms.getPageBySlug` and caches it with TanStack Query
 3. **Publish** — `onPublish` triggers a Server Action that saves to Shopify, syncs root-level title/type metadata, revalidates the path (or the root layout for fragments), invalidates the cached editor query, and keeps the author on the current edit route
 4. **View** — Public pages render through a shared `CmsPageShell` that can inject published site fragments before and after the page body
 
@@ -51,7 +54,16 @@ src/app/
     new/page.tsx             # Create page form (with type selector)
     [pageType]/[slug]/edit/page.tsx  # Puck editor
   api/
-    cms/pages/[slug]/route.ts  # GET — editor data loading (?pageType= query param)
+    trpc/[trpc]/route.ts     # tRPC transport for cms/media/fonts procedures
+
+src/trpc/
+  client.tsx                 # Shared tRPC + TanStack Query client/provider
+  init.ts                    # tRPC initialization
+  routers/
+    _app.ts                  # Root router
+    cms.ts                   # Page + collection read procedures
+    media.ts                 # Media library + staged upload procedures
+    fonts.ts                 # Google Fonts lookup procedure
 ```
 
 ## Key Files
@@ -68,7 +80,11 @@ src/app/
 | `src/app/cms/cms.css`                         | Scoped CMS styling for Puck surfaces that do not have stable override APIs                          |
 | `src/app/cms/[pageType]/[slug]/edit/page.tsx` | Puck editor page (`"use client"`)                                                                   |
 | `src/app/cms/_lib/use-editor-overrides.tsx`   | Centralized Puck override configuration, including iframe preview chrome                            |
-| `src/components/providers/query-provider.tsx` | App-level TanStack Query provider for client-side server-state fetching                             |
+| `src/app/api/trpc/[trpc]/route.ts`            | Single Next.js route handler that serves tRPC procedures                                            |
+| `src/trpc/client.tsx`                         | Shared `TRPCReactProvider`, browser query client, and `useTRPC()` helper                            |
+| `src/trpc/routers/cms.ts`                     | tRPC queries for editor page reads and collection preview data                                      |
+| `src/trpc/routers/media.ts`                   | tRPC procedures for media library browsing, staged upload setup, and file registration              |
+| `src/trpc/routers/fonts.ts`                   | tRPC query for Google Fonts catalog lookup with fallback data                                       |
 | `src/components/cms-page-shell.tsx`           | Shared storefront wrapper that loads header/footer fragments per page                               |
 | `src/components/cms-page-chrome.tsx`          | Shared renderer for fragment-based header/footer chrome                                             |
 | `src/app/(storefront)/[slug]/page.tsx`        | Public page renderer (RSC)                                                                          |

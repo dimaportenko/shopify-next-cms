@@ -11,19 +11,21 @@ It fetches Shopify collection data from the Storefront API, then optionally rend
 
 Key files involved in collection rendering:
 
-| File                                                           | Responsibility                              |
-| -------------------------------------------------------------- | ------------------------------------------- |
-| `src/app/(storefront)/collections/[handle]/page.tsx`           | Collection route: data loading + CMS render |
-| `src/components/collection-products-section.tsx`               | Fallback collection section and grid        |
-| `src/components/collection-product-card.tsx`                   | Product card with image carousel            |
-| `src/app/cms/_components/blocks/collection-products-block.tsx` | Puck block that reads collection metadata   |
-| `src/app/cms/_lib/config.tsx`                                  | Registers the `CollectionProducts` block    |
-| `src/app/(storefront)/layout.tsx`                              | Shared storefront shell                     |
-| `src/components/header.tsx`                                    | Shared storefront header                    |
-| `src/lib/shopify/queries/collections.storefront.ts`            | Collection GraphQL query                    |
-| `src/lib/shopify/queries/products.storefront.ts`               | Reusable product fragment                   |
-| `src/lib/shopify/queries/collections.ts`                       | Collection query-to-DTO mapping             |
-| `src/lib/shopify/queries/products.ts`                          | Reusable image/money/product mappers        |
+| File                                                           | Responsibility                                      |
+| -------------------------------------------------------------- | --------------------------------------------------- |
+| `src/app/(storefront)/collections/[handle]/page.tsx`           | Collection route: data loading + CMS render         |
+| `src/components/cms-page-shell.tsx`                            | Loads shared header/footer fragments per page       |
+| `src/components/cms-page-chrome.tsx`                           | Renders fragment-backed chrome with Header fallback |
+| `src/components/collection-products-section.tsx`               | Fallback collection section and grid                |
+| `src/components/collection-product-card.tsx`                   | Product card with image carousel                    |
+| `src/app/cms/_components/blocks/collection-products-block.tsx` | Puck block that reads collection metadata           |
+| `src/app/cms/_lib/config.tsx`                                  | Registers the `CollectionProducts` block            |
+| `src/app/(storefront)/layout.tsx`                              | Minimal storefront route wrapper                    |
+| `src/components/header.tsx`                                    | Built-in header fallback and theme controls         |
+| `src/lib/shopify/queries/collections.storefront.ts`            | Collection GraphQL query                            |
+| `src/lib/shopify/queries/products.storefront.ts`               | Reusable product fragment                           |
+| `src/lib/shopify/queries/collections.ts`                       | Collection query-to-DTO mapping                     |
+| `src/lib/shopify/queries/products.ts`                          | Reusable image/money/product mappers                |
 
 ## CMS-Backed Collection Templates
 
@@ -63,22 +65,36 @@ That keeps the CMS page reusable across all collection handles while still rende
 
 ## Shared Header
 
-All storefront routes now share the same header through the `(storefront)` layout:
+Collection routes no longer get their header from the `(storefront)` layout. Instead, the collection page renders through `CmsPageShell`:
 
 ```tsx
-import { Header } from "@/components/header";
-
-export default function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen bg-background font-sans">
-      <Header />
-      {children}
-    </div>
-  );
-}
+return (
+  <CmsPageShell page={page}>
+    <main className="min-h-screen bg-background">
+      {page && page.status === "published" ? (
+        <Render
+          config={puckConfig}
+          data={page.puckData}
+          metadata={{ collection }}
+        />
+      ) : (
+        <CollectionProductsSection collection={collection} />
+      )}
+    </main>
+  </CmsPageShell>
+);
 ```
 
-This means the homepage, CMS-rendered storefront pages, and collection pages all use the same top-level navigation and theme controls.
+`CmsPageShell` loads the shared `header` and `footer` fragments, then `CmsPageChrome` renders them around the page body.
+
+Current behavior:
+
+- if a published `header` fragment exists, it is rendered before the collection content
+- otherwise the storefront falls back to the built-in `<Header />`
+- if a published `footer` fragment exists, it is rendered after the collection content
+- page root props such as `hideHeader` and `hideFooter` can hide those shared fragments per page
+
+The `(storefront)` layout is now only a minimal wrapper (`min-h-screen bg-background font-sans`). Shared storefront chrome lives in `CmsPageShell`, which keeps collection pages aligned with CMS-authored storefront pages and the homepage.
 
 ## Reusable Product Fragment
 
