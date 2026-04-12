@@ -250,6 +250,14 @@ Add `shopify-staged-uploads.storage.googleapis.com` to `next.config.ts` `remoteP
 
 The project uses tRPC v11 for end-to-end type-safe API calls. All CMS data fetching goes through tRPC procedures — no manual API routes or `as` casts on `response.json()`.
 
+For detailed tRPC reference beyond the project-specific patterns below, load the relevant skill from `node_modules`:
+- Client setup / links: `node_modules/@trpc/client/skills/client-setup/SKILL.md`
+- Server routers / procedures: `node_modules/@trpc/server/skills/server-setup/SKILL.md`
+- Zod input validation: `node_modules/@trpc/server/skills/validators/SKILL.md`
+- Error handling / TRPCError: `node_modules/@trpc/server/skills/error-handling/SKILL.md`
+- React Query integration: `node_modules/@trpc/tanstack-react-query/skills/react-query-setup/SKILL.md`
+- Auth middleware: `node_modules/@trpc/server/skills/auth/SKILL.md`
+
 ### Router Structure
 
 ```
