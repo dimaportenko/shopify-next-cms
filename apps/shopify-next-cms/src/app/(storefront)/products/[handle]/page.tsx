@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Render } from "@puckeditor/core";
 import { notFound } from "next/navigation";
 import { CmsPageShell } from "@/components/cms-page-shell";
+import { ProductDetail } from "@/components/product-detail";
 import { puckConfig } from "@/app/cms/_lib/config";
 import { getCmsPageBySlug } from "@/lib/shopify/queries/cms-pages";
 import { getProductByHandle } from "@/lib/shopify/queries/products";
@@ -37,9 +38,7 @@ export default async function ProductPage({
             metadata={{ product }}
           />
         ) : (
-          <div>
-            <h1>{product?.title}</h1>
-          </div>
+          <ProductDetail product={product} />
         )}
       </main>
     </CmsPageShell>

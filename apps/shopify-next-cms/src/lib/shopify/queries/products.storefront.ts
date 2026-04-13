@@ -42,15 +42,51 @@ export const PRODUCT_FRAGMENT = `#graphql
         currencyCode
       }
     }
+    options {
+      name
+      values
+    }
+  }
+`;
+
+export const VARIANT_FRAGMENT = `#graphql
+  fragment VariantFragment on ProductVariant {
+    id
+    title
+    availableForSale
+    selectedOptions {
+      name
+      value
+    }
+    price {
+      amount
+      currencyCode
+    }
+    compareAtPrice {
+      amount
+      currencyCode
+    }
+    image {
+      url
+      altText
+      width
+      height
+    }
   }
 `;
 
 export const GET_PRODUCT_BY_HANDLE = `#graphql
   ${PRODUCT_FRAGMENT}
+  ${VARIANT_FRAGMENT}
 
   query GetProductByHandle($handle: String!) {
     product(handle: $handle) {
       ...ProductFragment
+      variants(first: 100) {
+        nodes {
+          ...VariantFragment
+        }
+      }
     }
   }
 `;

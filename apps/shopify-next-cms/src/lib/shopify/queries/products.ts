@@ -3,7 +3,7 @@ import type {
   GetProductByHandleQueryVariables,
   ProductFragmentFragment,
 } from "@generated-types/storefront.generated";
-import type { ImageDto, MoneyDto, ProductDto } from "../types";
+import type { ImageDto, MoneyDto, ProductDto, VariantDto } from "../types";
 import { storefrontQuery } from "../storefront-client";
 import { GET_PRODUCT_BY_HANDLE } from "./products.storefront";
 
@@ -70,6 +70,31 @@ export function toProductDto(product: ProductFragmentFragment): ProductDto {
         ? toMoneyDto(product.compareAtPriceRange.maxVariantPrice)
         : null,
     },
+    options: product.options.map((opt) => ({
+      name: opt.name,
+      values: opt.values,
+    })),
+  };
+}
+
+type ProductDetailNode = NonNullable<GetProductByHandleQuery["product"]>;
+
+function toVariantDto(
+  variant: ProductDetailNode["variants"]["nodes"][number],
+): VariantDto {
+  return {
+    id: variant.id,
+    title: variant.title,
+    availableForSale: variant.availableForSale,
+    selectedOptions: variant.selectedOptions.map((opt) => ({
+      name: opt.name,
+      value: opt.value,
+    })),
+    price: toMoneyDto(variant.price),
+    compareAtPrice: variant.compareAtPrice
+      ? toMoneyDto(variant.compareAtPrice)
+      : null,
+    image: toImageDto(variant.image),
   };
 }
 
@@ -87,5 +112,8 @@ export async function getProductByHandle({
     return null;
   }
 
-  return toProductDto(data.product);
+  return {
+    ...toProductDto(data.product),
+    variants: data.product.variants.nodes.map(toVariantDto),
+  };
 }

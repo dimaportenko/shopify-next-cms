@@ -108,6 +108,21 @@ export interface MoneyDto {
   currencyCode: string;
 }
 
+export interface ProductOptionDto {
+  name: string;
+  values: string[];
+}
+
+export interface VariantDto {
+  id: string;
+  title: string;
+  availableForSale: boolean;
+  selectedOptions: { name: string; value: string }[];
+  price: MoneyDto;
+  compareAtPrice: MoneyDto | null;
+  image: ImageDto | null;
+}
+
 export interface ProductDto {
   id: string;
   handle: string;
@@ -127,6 +142,8 @@ export interface ProductDto {
     minVariantPrice: MoneyDto | null;
     maxVariantPrice: MoneyDto | null;
   };
+  options: ProductOptionDto[];
+  variants?: VariantDto[];
 }
 
 export interface CollectionDto {
