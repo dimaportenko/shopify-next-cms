@@ -12,6 +12,7 @@
     "typecheck:sample-data": "pnpm typecheck --filter=@shopify-next-cms/sample-data",
     "lint": "pnpm lint",
     "lint:web": "pnpm lint --filter=shopify-next-cms",
-    "lint:docs": "pnpm lint --filter=docs"
+    "lint:docs": "pnpm lint --filter=docs",
+    "codegen:web": "pnpm  --filter=shopify-next-cms run codegen"
   }
 }

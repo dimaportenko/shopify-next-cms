@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ROUTES } from "@/lib/routes";
 import { ThemeCustomizer } from "@/components/theme/theme-customizer";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 
@@ -10,7 +11,7 @@ export function Header() {
     <header className="border-b border-border/60 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-3">
+          <Link href={ROUTES.HOME} className="flex items-center gap-3">
             <Image
               className="dark:invert"
               src="/next.svg"

@@ -9,6 +9,7 @@ import {
   CarouselPrevious,
   CarouselNext,
 } from "@/components/ui/carousel";
+import { getCollectionPath } from "@/lib/routes";
 
 export interface CategoryItem {
   name: string;
@@ -64,7 +65,7 @@ export const DEFAULT_CATEGORIES: CategoryItem[] = [
 function toCollectionHref(href: string): string {
   if (!href) return "#";
   if (href.startsWith("/")) return href;
-  return `/collections/${href}`;
+  return getCollectionPath(href);
 }
 
 interface ProductCategoryProps {

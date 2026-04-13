@@ -32,9 +32,20 @@ export type ProductFragmentFragment = (
   & { featuredImage?: StorefrontTypes.Maybe<Pick<StorefrontTypes.Image, 'url' | 'altText' | 'width' | 'height'>>, images: { nodes: Array<Pick<StorefrontTypes.Image, 'url' | 'altText' | 'width' | 'height'>> }, priceRange: { minVariantPrice: Pick<StorefrontTypes.MoneyV2, 'amount' | 'currencyCode'>, maxVariantPrice: Pick<StorefrontTypes.MoneyV2, 'amount' | 'currencyCode'> }, compareAtPriceRange: { minVariantPrice: Pick<StorefrontTypes.MoneyV2, 'amount' | 'currencyCode'>, maxVariantPrice: Pick<StorefrontTypes.MoneyV2, 'amount' | 'currencyCode'> } }
 );
 
+export type GetProductByHandleQueryVariables = StorefrontTypes.Exact<{
+  handle: StorefrontTypes.Scalars['String']['input'];
+}>;
+
+
+export type GetProductByHandleQuery = { product?: StorefrontTypes.Maybe<(
+    Pick<StorefrontTypes.Product, 'id' | 'handle' | 'title' | 'description' | 'vendor' | 'availableForSale' | 'onlineStoreUrl' | 'tags'>
+    & { featuredImage?: StorefrontTypes.Maybe<Pick<StorefrontTypes.Image, 'url' | 'altText' | 'width' | 'height'>>, images: { nodes: Array<Pick<StorefrontTypes.Image, 'url' | 'altText' | 'width' | 'height'>> }, priceRange: { minVariantPrice: Pick<StorefrontTypes.MoneyV2, 'amount' | 'currencyCode'>, maxVariantPrice: Pick<StorefrontTypes.MoneyV2, 'amount' | 'currencyCode'> }, compareAtPriceRange: { minVariantPrice: Pick<StorefrontTypes.MoneyV2, 'amount' | 'currencyCode'>, maxVariantPrice: Pick<StorefrontTypes.MoneyV2, 'amount' | 'currencyCode'> } }
+  )> };
+
 interface GeneratedQueryTypes {
   "#graphql\n  #graphql\n  fragment ProductFragment on Product {\n    id\n    handle\n    title\n    description\n    vendor\n    availableForSale\n    onlineStoreUrl\n    tags\n    featuredImage {\n      url\n      altText\n      width\n      height\n    }\n    images(first: 10) {\n      nodes {\n        url\n        altText\n        width\n        height\n      }\n    }\n    priceRange {\n      minVariantPrice {\n        amount\n        currencyCode\n      }\n      maxVariantPrice {\n        amount\n        currencyCode\n      }\n    }\n    compareAtPriceRange {\n      minVariantPrice {\n        amount\n        currencyCode\n      }\n      maxVariantPrice {\n        amount\n        currencyCode\n      }\n    }\n  }\n\n\n  query GetCollectionByHandle($handle: String!) {\n    collection(handle: $handle) {\n      id\n      handle\n      title\n      description\n      image {\n        url\n        altText\n        width\n        height\n      }\n      products(first: 12) {\n        nodes {\n          ...ProductFragment\n        }\n      }\n    }\n  }\n": {return: GetCollectionByHandleQuery, variables: GetCollectionByHandleQueryVariables},
   "#graphql\n  query SearchCollections($query: String, $first: Int!) {\n    collections(first: $first, query: $query) {\n      nodes {\n        id\n        handle\n        title\n        image {\n          url\n          altText\n        }\n      }\n    }\n  }\n": {return: SearchCollectionsQuery, variables: SearchCollectionsQueryVariables},
+  "#graphql\n  #graphql\n  fragment ProductFragment on Product {\n    id\n    handle\n    title\n    description\n    vendor\n    availableForSale\n    onlineStoreUrl\n    tags\n    featuredImage {\n      url\n      altText\n      width\n      height\n    }\n    images(first: 10) {\n      nodes {\n        url\n        altText\n        width\n        height\n      }\n    }\n    priceRange {\n      minVariantPrice {\n        amount\n        currencyCode\n      }\n      maxVariantPrice {\n        amount\n        currencyCode\n      }\n    }\n    compareAtPriceRange {\n      minVariantPrice {\n        amount\n        currencyCode\n      }\n      maxVariantPrice {\n        amount\n        currencyCode\n      }\n    }\n  }\n\n\n  query GetProductByHandle($handle: String!) {\n    product(handle: $handle) {\n      ...ProductFragment\n    }\n  }\n": {return: GetProductByHandleQuery, variables: GetProductByHandleQueryVariables},
 }
 
 interface GeneratedMutationTypes {

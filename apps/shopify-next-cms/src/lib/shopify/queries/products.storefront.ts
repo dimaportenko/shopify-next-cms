@@ -44,3 +44,13 @@ export const PRODUCT_FRAGMENT = `#graphql
     }
   }
 `;
+
+export const GET_PRODUCT_BY_HANDLE = `#graphql
+  ${PRODUCT_FRAGMENT}
+
+  query GetProductByHandle($handle: String!) {
+    product(handle: $handle) {
+      ...ProductFragment
+    }
+  }
+`;

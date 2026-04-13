@@ -1,6 +1,7 @@
 "use client";
 
 import { CollectionProductCard } from "@/components/collection-product-card";
+import { getCollectionPath } from "@/lib/routes";
 import type { CollectionDto } from "@/lib/shopify/types";
 
 interface CollectionProductsSectionProps {
@@ -50,7 +51,7 @@ export function CollectionProductsSection({
             <CollectionProductCard
               key={product.id}
               product={product}
-              fallbackHref={`/collections/${collection.handle}`}
+              fallbackHref={getCollectionPath(collection.handle)}
             />
           ))}
         </div>

@@ -12,6 +12,7 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
+import { getProductPath } from "@/lib/routes";
 import type { ProductDto } from "@/lib/shopify/types";
 
 interface CollectionProductCardProps {
@@ -92,15 +93,17 @@ export function CollectionProductCard({
             <CarouselContent className="ml-0">
               {slides.map((slide, index) => (
                 <CarouselItem key={`${product.id}-${index}`} className="pl-0">
-                  <div className="relative aspect-4/5 w-full">
-                    <Image
-                      src={slide.url}
-                      alt={slide.altText ?? product.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
-                  </div>
+                  <Link href={getProductPath(product.handle)}>
+                    <div className="relative aspect-4/5 w-full">
+                      <Image
+                        src={slide.url}
+                        alt={slide.altText ?? product.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                    </div>
+                  </Link>
                 </CarouselItem>
               ))}
             </CarouselContent>

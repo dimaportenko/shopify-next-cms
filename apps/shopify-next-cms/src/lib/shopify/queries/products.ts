@@ -1,5 +1,11 @@
-import type { ProductFragmentFragment } from "@generated-types/storefront.generated";
+import type {
+  GetProductByHandleQuery,
+  GetProductByHandleQueryVariables,
+  ProductFragmentFragment,
+} from "@generated-types/storefront.generated";
 import type { ImageDto, MoneyDto, ProductDto } from "../types";
+import { storefrontQuery } from "../storefront-client";
+import { GET_PRODUCT_BY_HANDLE } from "./products.storefront";
 
 type ShopifyImageLike = {
   url: string;
@@ -65,4 +71,21 @@ export function toProductDto(product: ProductFragmentFragment): ProductDto {
         : null,
     },
   };
+}
+
+export async function getProductByHandle({
+  handle,
+}: {
+  handle: string;
+}): Promise<ProductDto | null> {
+  const data = await storefrontQuery<
+    GetProductByHandleQuery,
+    GetProductByHandleQueryVariables
+  >(GET_PRODUCT_BY_HANDLE, { handle });
+
+  if (!data.product) {
+    return null;
+  }
+
+  return toProductDto(data.product);
 }
