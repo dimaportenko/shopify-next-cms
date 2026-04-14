@@ -6,6 +6,8 @@ import { imageBannerConfig } from "@cms/_components/blocks/image-banner";
 import { spacerConfig } from "@cms/_components/blocks/spacer";
 import { collectionProductsBlockConfig } from "@cms/_components/blocks/collection-products-block";
 import { headerBlockConfig } from "@cms/_components/blocks/header-block";
+import { gridConfig } from "@cms/_components/blocks/grid";
+import { flexConfig } from "@cms/_components/blocks/flex";
 import { PAGE_TYPES } from "@cms/_lib/page-types";
 import { SHOW_HIDE_OPTIONS, type CmsRootProps } from "@cms/_lib/fragments";
 import { collectionPickerFieldConfig } from "@cms/_components/editor/collection-picker";
@@ -17,6 +19,8 @@ import type { ImageBannerProps } from "@cms/_components/blocks/image-banner";
 import type { SpacerProps } from "@cms/_components/blocks/spacer";
 import type { CollectionProductsBlockProps } from "@cms/_components/blocks/collection-products-block";
 import type { HeaderBlockProps } from "@cms/_components/blocks/header-block";
+import type { GridProps } from "@cms/_components/blocks/grid";
+import type { FlexProps } from "@cms/_components/blocks/flex";
 
 type Props = {
   Hero: HeroProps;
@@ -26,6 +30,8 @@ type Props = {
   Spacer: SpacerProps;
   CollectionProducts: CollectionProductsBlockProps;
   Header: HeaderBlockProps;
+  Grid: GridProps;
+  Flex: FlexProps;
 };
 
 export type CmsData = Data<Props, CmsRootProps>;
@@ -70,7 +76,7 @@ export const puckConfig: Config<Props, CmsRootProps> = {
       title: "Commerce",
     },
     layout: {
-      components: ["Spacer"],
+      components: ["Spacer", "Grid", "Flex"],
       title: "Layout",
     },
     fragments: {
@@ -86,5 +92,7 @@ export const puckConfig: Config<Props, CmsRootProps> = {
     Spacer: spacerConfig,
     CollectionProducts: collectionProductsBlockConfig,
     Header: headerBlockConfig,
+    Grid: gridConfig,
+    Flex: flexConfig,
   },
 };

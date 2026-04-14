@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import type { ComponentConfig } from "@puckeditor/core";
 import Image from "next/image";
 
@@ -18,7 +19,7 @@ function ImageBannerRender({
     height === "sm" ? "h-48" : height === "lg" ? "h-[500px]" : "h-80";
 
   return (
-    <section className={`relative w-full overflow-hidden ${heightClass}`}>
+    <section className={cn("relative w-full overflow-hidden", heightClass)}>
       {imageUrl ? (
         <Image
           src={imageUrl}
