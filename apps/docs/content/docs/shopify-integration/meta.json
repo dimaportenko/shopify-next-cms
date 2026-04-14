@@ -4,6 +4,7 @@
     "api-clients",
     "graphql-codegen",
     "storefront-collections",
+    "storefront-products",
     "metaobject-schema",
     "media-uploads"
   ]

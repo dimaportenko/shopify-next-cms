@@ -230,6 +230,8 @@ export interface ProductDto {
     minVariantPrice: MoneyDto | null;
     maxVariantPrice: MoneyDto | null;
   };
+  options: ProductOptionDto[];
+  variants?: VariantDto[];
 }
 ```
 
@@ -277,6 +279,30 @@ function getSlides(product: ProductDto) {
 ```
 
 This allows collection cards to reflect real Shopify product galleries instead of repeating the same featured image.
+
+## Product Links and Route Helpers
+
+Collection cards now deep-link their product images to the internal product route with `getProductPath(product.handle)`, while CTA buttons still use `onlineStoreUrl` when Shopify provides one and otherwise fall back to the current collection route.
+
+Route strings are now centralized in `src/lib/routes.ts`:
+
+```ts
+export const ROUTES = {
+  HOME: "/",
+  PRODUCTS: "/products",
+  COLLECTIONS: "/collections",
+} as const;
+
+export function getProductPath(handle: string) {
+  return `${ROUTES.PRODUCTS}/${handle}`;
+}
+
+export function getCollectionPath(handle: string) {
+  return `${ROUTES.COLLECTIONS}/${handle}`;
+}
+```
+
+`CollectionProductsSection` and `ProductCategory` both use these helpers so collection and product links stay consistent across storefront components and CMS-authored content.
 
 ## Maintenance Notes
 

@@ -1,0 +1,187 @@
+---
+title: Storefront Products
+description: Product page routing, CMS-backed product templates, variant-aware DTOs, and the fallback product detail UI.
+---
+
+The storefront product route lives at `apps/shopify-next-cms/src/app/(storefront)/products/[handle]/page.tsx`.
+
+It fetches Shopify product data from the Storefront API, then optionally renders a published Puck page template for product pages. If no published product CMS page is available, the route falls back to the built-in interactive product detail UI.
+
+## Route Structure
+
+Key files involved in product rendering:
+
+| File                                                         | Responsibility                                                 |
+| ------------------------------------------------------------ | -------------------------------------------------------------- |
+| `src/app/(storefront)/products/[handle]/page.tsx`            | Product route: data loading, CMS render, and metadata          |
+| `src/components/product-detail/index.tsx`                    | Fallback product detail layout                                 |
+| `src/components/product-detail/product-image-gallery.tsx`    | Image carousel with variant-aware slide sync                   |
+| `src/components/product-detail/product-variant-selector.tsx` | Option selector that resolves matching variants                |
+| `src/components/product-detail/product-actions.tsx`          | Quantity control and buy action                                |
+| `src/components/product-detail/utils.ts`                     | Money formatting, slide selection, and variant lookup helpers  |
+| `src/components/cms-page-shell.tsx`                          | Loads shared header/footer fragments per page                  |
+| `src/lib/routes.ts`                                          | Shared `getProductPath()` / `getCollectionPath()` helpers      |
+| `src/lib/shopify/queries/products.storefront.ts`             | Reusable product and variant GraphQL fragments                 |
+| `src/lib/shopify/queries/products.ts`                        | Product/variant DTO mapping and `getProductByHandle()`         |
+| `src/lib/shopify/types.ts`                                   | `ProductDto`, `ProductOptionDto`, and `VariantDto` definitions |
+
+## CMS-Backed Product Templates
+
+Product routes now support a shared CMS template for `pageType: "product"`.
+
+The route loads two resources in parallel:
+
+1. the Shopify product by `handle`
+2. the CMS page with `slug: "default"` and `pageType: "product"`
+
+```tsx
+const [product, page] = await Promise.all([
+  getProduct({ handle }),
+  getCmsPage({ slug: "default", pageType: "product" }).catch(() => null),
+]);
+
+return page && page.status === "published" ? (
+  <Render config={puckConfig} data={page.puckData} metadata={{ product }} />
+) : (
+  <ProductDetail product={product} />
+);
+```
+
+Current behavior:
+
+- **published product CMS page exists** → product route uses the CMS layout
+- **CMS page missing, draft, or fetch fails** → route falls back to the built-in `ProductDetail`
+- **Shopify product missing** → route returns `notFound()`
+
+`generateMetadata()` also reads the product so the page title and description match the current Shopify product.
+
+## Fallback Product Detail UI
+
+When no published product template exists, `ProductDetail` renders a client-side product page with live variant state.
+
+### Current UX
+
+- gallery carousel built from `product.images`, falling back to `featuredImage`
+- initial option state picked from the first available variant
+- option buttons rendered from `product.options`
+- variant image selection synced back to the gallery when a matching variant has its own image
+- price, compare-at price, discount badge, and stock state updated from the selected variant
+- quantity stepper and a `Buy Now` action that opens Shopify's `onlineStoreUrl` when available
+
+The buy action is intentionally lightweight: it links out to Shopify's product page instead of implementing a local cart flow. If Shopify does not return `onlineStoreUrl`, the fallback button only reflects availability state inside the UI.
+
+## Variant-Aware Storefront Query
+
+`GET_PRODUCT_BY_HANDLE` now extends the shared product fragment with variant data so the fallback detail page can resolve prices and availability per option combination.
+
+```ts
+export const VARIANT_FRAGMENT = `#graphql
+  fragment VariantFragment on ProductVariant {
+    id
+    title
+    availableForSale
+    selectedOptions {
+      name
+      value
+    }
+    price {
+      amount
+      currencyCode
+    }
+    compareAtPrice {
+      amount
+      currencyCode
+    }
+    image {
+      url
+      altText
+      width
+      height
+    }
+  }
+`;
+```
+
+The product fragment also now includes product options:
+
+```ts
+options {
+  name
+  values
+}
+```
+
+That data is mapped into DTOs in `src/lib/shopify/queries/products.ts`.
+
+## Product DTO Changes
+
+`ProductDto` is no longer collection-only. It now carries the option and variant data needed for both collection cards and the standalone product page:
+
+```ts
+export interface ProductOptionDto {
+  name: string;
+  values: string[];
+}
+
+export interface VariantDto {
+  id: string;
+  title: string;
+  availableForSale: boolean;
+  selectedOptions: { name: string; value: string }[];
+  price: MoneyDto;
+  compareAtPrice: MoneyDto | null;
+  image: ImageDto | null;
+}
+
+export interface ProductDto {
+  // ...shared product fields
+  options: ProductOptionDto[];
+  variants?: VariantDto[];
+}
+```
+
+This keeps the shared product mapper reusable while allowing product routes to layer on richer detail-page behavior.
+
+## Route Helpers and Linking
+
+Storefront route strings now live in `src/lib/routes.ts`:
+
+```ts
+export const ROUTES = {
+  HOME: "/",
+  PRODUCTS: "/products",
+  COLLECTIONS: "/collections",
+} as const;
+
+export function getProductPath(handle: string) {
+  return `${ROUTES.PRODUCTS}/${handle}`;
+}
+```
+
+Current usage:
+
+- collection product cards deep-link gallery images to `/products/{handle}`
+- collection and category links use `getCollectionPath()` instead of hardcoded strings
+- the storefront header uses `ROUTES.HOME`
+
+This makes route changes easier to maintain across both CMS-authored and built-in storefront UI.
+
+## Maintenance Notes
+
+When changing fields used by product pages:
+
+1. Update `PRODUCT_FRAGMENT` and/or `VARIANT_FRAGMENT`
+2. Run `pnpm --filter shopify-next-cms codegen`
+3. Update `ProductDto` / `VariantDto` mapping in `products.ts`
+4. Validate the storefront app with:
+
+```bash
+pnpm --filter shopify-next-cms lint
+pnpm --filter shopify-next-cms typecheck
+```
+
+If the UI changes, smoke-test a product route with Playwright, for example:
+
+```bash
+playwright-cli open http://localhost:3000/products/wayfarer-messenger-bag
+```

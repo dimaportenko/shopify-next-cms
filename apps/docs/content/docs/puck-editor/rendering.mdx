@@ -50,19 +50,23 @@ This same chrome wrapper is reused inside the Puck iframe preview for non-fragme
 
 Puck's `<Render>` component can receive extra runtime context through the `metadata` prop. Components can then read that data from `puck.metadata` inside their render functions.
 
-This project uses that pattern for collection templates. The collection route fetches the Shopify collection and passes it into Puck:
+This project uses that pattern for storefront templates that need live Shopify data at request time:
 
 ```tsx
 <Render config={puckConfig} data={page.puckData} metadata={{ collection }} />
+<Render config={puckConfig} data={page.puckData} metadata={{ product }} />
 ```
 
-The `CollectionProducts` block then reads `puck.metadata.collection` and renders the live Shopify products for the current collection handle.
+Current usage:
+
+- collection templates inject `collection`, and the `CollectionProducts` block reads `puck.metadata.collection`
+- product templates inject `product`, so CMS-authored product layouts can compose around the live Shopify product without storing it in Puck JSON
 
 This keeps Puck page data small and reusable while still allowing route-specific storefront data to be rendered inside CMS-authored layouts.
 
 ## Route Group: `(storefront)`
 
-The homepage, collections, and CMS pages live inside the `(storefront)` route group. The group layout no longer renders the shared header directly. Instead, storefront routes opt into `CmsPageShell` where needed so page-level visibility settings and fragment-backed chrome can be applied consistently.
+The homepage, product pages, collection pages, and CMS pages live inside the `(storefront)` route group. The group layout no longer renders the shared header directly. Instead, storefront routes opt into `CmsPageShell` where needed so page-level visibility settings and fragment-backed chrome can be applied consistently.
 
 This route group still:
 
